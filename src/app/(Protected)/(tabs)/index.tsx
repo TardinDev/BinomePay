@@ -14,9 +14,16 @@ export default function HomePage() {
   const matches = useAppStore((s) => s.matches)
   const suggested = useAppStore((s) => s.suggested)
   const [countryFilter, setCountryFilter] = useState<string | null>(null)
-  const countries = useMemo(() => suggested.map(s => s.destCountryName), [suggested])
+  
+  const countries = useMemo(
+    () => Array.from(new Set(suggested.map(s => s.destCountryName))),
+    [suggested]
+  )
+  
   const filteredSuggested = useMemo(
-    () => (countryFilter ? suggested.filter(s => s.destCountryName === countryFilter) : suggested),
+    () => countryFilter 
+      ? suggested.filter(s => s.destCountryName === countryFilter) 
+      : suggested,
     [suggested, countryFilter]
   )
 

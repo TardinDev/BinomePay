@@ -2,15 +2,18 @@ import React from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { SuggestedItem } from '@/store/useAppStore'
 import { router } from 'expo-router'
+import { useFormattedDate } from '@/utils/dateUtils'
 
 type Props = { item: SuggestedItem }
 
 export default function SuggestedCard({ item }: Props) {
+  const formattedTime = useFormattedDate(item.createdAt, 'time')
+  
   return (
     <View className="border border-gray-800 rounded-2xl p-4 mb-3 bg-neutral-900">
       <View className="flex-row items-center justify-between">
         <Text className="text-white font-semibold">{item.amount} {item.currency} → {item.destCountryName}</Text>
-        <Text className="text-gray-400 text-xs">{new Date(item.createdAt).toLocaleTimeString()}</Text>
+        <Text className="text-gray-400 text-xs">{formattedTime}</Text>
       </View>
       <Text className="text-gray-400 mt-1">Par: {item.senderName}</Text>
       <View className="mt-2 flex-row justify-end">

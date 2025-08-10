@@ -1,22 +1,40 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, Text } from 'react-native'
 import { MatchItem } from '@/store/useAppStore'
 
 type Props = { item: MatchItem }
 
+const getStatusStyle = (status: string) => {
+  const normalizedStatus = status.toLowerCase()
+  
+  if (normalizedStatus.includes('accept')) {
+    return {
+      containerClass: 'bg-emerald-500/20 border-emerald-900',
+      textClass: 'text-emerald-400',
+      label: 'Accepté'
+    }
+  }
+  
+  if (normalizedStatus.includes('expire')) {
+    return {
+      containerClass: 'bg-rose-500/20 border-rose-900',
+      textClass: 'text-rose-400',
+      label: 'Expiré'
+    }
+  }
+  
+  return {
+    containerClass: 'bg-yellow-500/20 border-amber-900',
+    textClass: 'text-yellow-400',
+    label: 'En attente'
+  }
+}
+
 export default function RecentMatchCard({ item }: Props) {
-  const status = String(item.status ?? '').toLowerCase()
-  const statusContainerClass = status.includes('accept')
-    ? 'bg-emerald-500/20 border-emerald-900'
-    : status.includes('expire')
-    ? 'bg-rose-500/20 border-rose-900'
-    : 'bg-yellow-500/20 border-amber-900'
-  const statusTextClass = status.includes('accept')
-    ? 'text-emerald-400'
-    : status.includes('expire')
-    ? 'text-rose-400'
-    : 'text-yellow-400'
-  const statusLabel = status.includes('accept') ? 'Accepté' : status.includes('expire') ? 'Expiré' : 'En attente'
+  const { containerClass, textClass, label } = useMemo(
+    () => getStatusStyle(String(item.status ?? '')),
+    [item.status]
+  )
 
   return (
     <View className="rounded-2xl flex-row gap-10 px-4 py-2 w-[228px] bg-[#0B0F1A] border border-[#273244] shadow-lg shadow-black/50">
@@ -32,8 +50,8 @@ export default function RecentMatchCard({ item }: Props) {
               {item.amount} {item.currency}
             </Text>
           </View>
-          <View className={`rounded-full border py-1 px-2 mt-4 ${statusContainerClass}`}>
-            <Text className={`text-[10px] font-bold ${statusTextClass}`}>{statusLabel}</Text>
+          <View className={`rounded-full border py-1 px-2 mt-4 ${containerClass}`}>
+            <Text className={`text-[10px] font-bold ${textClass}`}>{label}</Text>
           </View>
         </View>
       

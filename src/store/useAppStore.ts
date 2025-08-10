@@ -65,7 +65,7 @@ type AppState = {
 const useAppStore = create<AppState>((set, get) => ({
   user: {
     id: 'u_1',
-    name: 'Alex',
+    name: 'Tardin',
     kycStatus: 'verified',
     ratingAvg: 4.8,
   },

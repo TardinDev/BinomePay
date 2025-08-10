@@ -17,6 +17,15 @@ export default function SuggestedList({ data }: Props) {
         )}
         ListFooterComponent={() => <View className="h-24" />}
         renderItem={({ item }) => <SuggestedCard item={item} />}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={8}
+        windowSize={15}
+        initialNumToRender={6}
+        getItemLayout={(data, index) => ({
+          length: 100,
+          offset: 100 * index + (index > 0 ? 12 * index : 0),
+          index,
+        })}
       />
     </View>
   )

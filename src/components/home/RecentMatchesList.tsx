@@ -21,6 +21,15 @@ export default function RecentMatchesList({ data }: Props) {
           )}
           ListFooterComponent={() => <View className="w-3" />}
           renderItem={({ item }) => <RecentMatchCard item={item} />}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          windowSize={10}
+          initialNumToRender={3}
+          getItemLayout={(data, index) => ({
+            length: 228,
+            offset: 228 * index + (index > 0 ? 14 * index : 0),
+            index,
+          })}
         />
       </View>
     </>

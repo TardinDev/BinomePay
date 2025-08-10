@@ -6,7 +6,9 @@ import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 
 export default function TabsLayout() {
-  const unreadTotal = useAppStore((s) => s.conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0))
+  const unreadTotal = useAppStore((s) => 
+    s.conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
+  )
   return (
     <Tabs
       screenOptions={{
