@@ -11,6 +11,8 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [accepted, setAccepted] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const isValid = () => email.includes('@') && password.trim().length >= 6 && password === confirm && accepted
 
@@ -33,7 +35,6 @@ export default function RegisterScreen() {
         setError(signUpError.message)
         return
       }
-      // Selon la configuration Supabase, un email de confirmation peut être requis
       router.replace('/(auth)/login')
     } catch (e: any) {
       setError(e?.message ?? 'Erreur inconnue')
@@ -59,6 +60,8 @@ export default function RegisterScreen() {
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
             keyboardType="email-address"
             className="text-white ml-3 flex-1"
           />
@@ -72,9 +75,16 @@ export default function RegisterScreen() {
             placeholderTextColor="#6B7280"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="new-password"
+            textContentType="newPassword"
             className="text-white ml-3 flex-1"
           />
+          <Pressable onPress={() => setShowPassword((v) => !v)} accessibilityLabel="Afficher/masquer le mot de passe">
+            <Ionicons name={showPassword ? 'eye-off' : 'eye'} color="#9CA3AF" size={18} />
+          </Pressable>
         </View>
 
         <Text className="text-gray-300 mb-2 mt-4">Confirmer le mot de passe</Text>
@@ -85,9 +95,18 @@ export default function RegisterScreen() {
             placeholderTextColor="#6B7280"
             value={confirm}
             onChangeText={setConfirm}
-            secureTextEntry
+            secureTextEntry={!showConfirm}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="password"
+            textContentType="password"
+            returnKeyType="done"
+            onSubmitEditing={() => {}}
             className="text-white ml-3 flex-1"
           />
+          <Pressable onPress={() => setShowConfirm((v) => !v)} accessibilityLabel="Afficher/masquer la confirmation">
+            <Ionicons name={showConfirm ? 'eye-off' : 'eye'} color="#9CA3AF" size={18} />
+          </Pressable>
         </View>
 
         {error && (

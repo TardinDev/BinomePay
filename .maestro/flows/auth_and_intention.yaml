@@ -1,0 +1,49 @@
+appId: com.binomepay.app
+name: Auth & Create Intention
+tags:
+  - e2e
+env:
+  EMAIL: test+{{randomInt}}@example.com
+  PASSWORD: Password123
+onError:
+  captureScreen: true
+steps:
+  - launchApp:
+      clearState: true
+  - tapOn:
+      id: nav-to-register
+  - inputText:
+      id: register-email
+      text: ${EMAIL}
+  - inputText:
+      id: register-password
+      text: ${PASSWORD}
+  - inputText:
+      id: register-confirm
+      text: ${PASSWORD}
+  - tapOn:
+      id: register-terms
+  - tapOn:
+      id: register-submit
+  - assertVisible:
+      text: Connexion
+  - inputText:
+      id: login-email
+      text: ${EMAIL}
+  - inputText:
+      id: login-password
+      text: ${PASSWORD}
+  - tapOn:
+      id: login-submit
+  - assertVisible:
+      text: Binome Pay
+  # Optionnel: naviguer vers créer une intention via le bouton
+  - tapOn:
+      text: "Créer une intention"
+  - scroll
+  - inputText:
+      text: "Ex: 150"
+      label: Montant
+  # la suite dépend des testIDs non présents; ce flow couvre Auth + navigation
+
+

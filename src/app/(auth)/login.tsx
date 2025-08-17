@@ -9,6 +9,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const isValid = () => email.includes('@') && password.trim().length >= 6
 
@@ -33,6 +34,8 @@ export default function LoginScreen() {
     }
   }
 
+  
+
   return (
     <ScrollView className="flex-1 bg-black px-5 pt-10" contentContainerStyle={{ paddingBottom: 36 }}>
       <View className="items-center mb-6">
@@ -50,6 +53,8 @@ export default function LoginScreen() {
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
             keyboardType="email-address"
             className="text-white ml-3 flex-1"
           />
@@ -63,9 +68,22 @@ export default function LoginScreen() {
             placeholderTextColor="#6B7280"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="password"
+            textContentType="password"
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (isValid() && !loading) {
+                handleLogin()
+              }
+            }}
             className="text-white ml-3 flex-1"
           />
+          <Pressable onPress={() => setShowPassword((v) => !v)} accessibilityLabel="Afficher/masquer le mot de passe">
+            <Ionicons name={showPassword ? 'eye-off' : 'eye'} color="#9CA3AF" size={18} />
+          </Pressable>
         </View>
 
         {error && (

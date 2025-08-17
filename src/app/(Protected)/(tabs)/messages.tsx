@@ -3,6 +3,7 @@ import { View, Text, FlatList, Pressable } from 'react-native'
 import useAppStore, { Conversation } from '@/store/useAppStore'
 import { Ionicons } from '@expo/vector-icons'
 import { useFormattedDate } from '@/utils/dateUtils'
+import { router } from 'expo-router'
 
 const ConversationItem = ({ item, onPress }: { item: Conversation; onPress: (id: string) => void }) => {
   const formattedDate = useFormattedDate(item.updatedAt, 'datetime')
@@ -53,7 +54,13 @@ export default function MessagesPage() {
           index,
         })}
         renderItem={({ item }) => (
-          <ConversationItem item={item} onPress={markConversationRead} />
+          <ConversationItem
+            item={item}
+            onPress={(id) => {
+              markConversationRead(id)
+              router.push(`/\(Protected\)/\(tabs\)/messages/${id}`)
+            }}
+          />
         )}
       />
     </View>
