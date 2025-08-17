@@ -4,9 +4,9 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 import { LinearGradient } from 'expo-linear-gradient'
+import { supabase } from '@/lib/supabase'
 
 export default function NewIntentionPage() {
-  const addRequest = useAppStore((s) => s.addRequest)
 
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('EUR')
@@ -43,18 +43,36 @@ export default function NewIntentionPage() {
     return Number.isFinite(a) && a > 0 && currency.trim().length > 0 && originCountry.trim().length > 0 && destCountry.trim().length > 0
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid()) {
       Alert.alert('Champs invalides', 'Veuillez vérifier le montant et les champs obligatoires.')
       return
     }
-    addRequest({
-      type: 'SEND',
-      amount: Number(amount),
-      currency,
-      originCountry,
-      destCountry,
-    })
+    const { data: userData, error: userErr } = await supabase.auth.getUser()
+    if (userErr || !userData.user?.id) {
+      Alert.alert('Session requise', 'Veuillez vous reconnecter.')
+      router.replace('/(auth)/login')
+      return
+    }
+    const userId = userData.user.id
+
+    const { error } = await supabase
+      .from('intents')
+      .insert([
+        {
+          user_id: userId,
+          direction: 'SEND',
+          amount: Number(amount),
+          currency,
+          origin_country: originCountry,
+          dest_country: destCountry,
+          status: 'OPEN',
+        },
+      ])
+    if (error) {
+      Alert.alert('Erreur', error.message)
+      return
+    }
     router.replace('/(Protected)/intention-success')
   }
 

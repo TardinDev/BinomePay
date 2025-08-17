@@ -1,8 +1,9 @@
 import React from 'react'
-import { View, Text, Pressable, ScrollView } from 'react-native'
+import { View, Text, Pressable, ScrollView, Alert } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
+import { supabase } from '@/lib/supabase'
 
 export default function ProfileScreen() {
   const user = useAppStore((s) => s.user)
@@ -43,6 +44,22 @@ export default function ProfileScreen() {
             <Text className="text-white text-lg font-bold">—</Text>
           </View>
         </View>
+      </View>
+
+      <View className="mt-6">
+        <Pressable
+          onPress={async () => {
+            const { error } = await supabase.auth.signOut()
+            if (error) {
+              Alert.alert('Erreur', error.message)
+            }
+            // La redirection est gérée par _layout via l'état de session
+          }}
+          className="rounded-xl items-center"
+          style={{ backgroundColor: '#EF4444', paddingVertical: 12 }}
+        >
+          <Text className="text-white font-extrabold">Se déconnecter</Text>
+        </Pressable>
       </View>
     </ScrollView>
   )

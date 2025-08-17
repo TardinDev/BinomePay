@@ -45,7 +45,7 @@ export default function RecentMatchCard({ item }: Props) {
         </View>
       
         <View className="items-end">
-          <View className="bg-yellow-500/15 border border-yellow-500 rounded-full py-1/2 px-2.5">
+          <View className="bg-yellow-500/15 border border-yellow-500 rounded-full py-0.5 px-2.5">
             <Text className="text-black font-extrabold text-xs" style={{ color: '#FDE68A' }}>
               {item.amount} {item.currency}
             </Text>

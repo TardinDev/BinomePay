@@ -34,11 +34,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaView className='flex-1 bg-black'>
-      {showAnimatedSplash ? (
-        <AnimatedSplash ready={isReady} />
-      ) : (
-        <Slot />
-      )}
+      {showAnimatedSplash ? <AnimatedSplash ready={isReady} /> : <Slot />}
     </SafeAreaView>
   )
 }
