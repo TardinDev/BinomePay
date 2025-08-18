@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import AnimatedSplash from '@/components/AnimatedSplash'
+import { ClerkProvider } from '@clerk/clerk-expo'
+import { clerkPublishableKey, tokenCache } from '@/lib/clerk'
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false)
@@ -32,9 +34,13 @@ export default function RootLayout() {
     }
   }, [isReady])
 
+  // plus de gestion Supabase ici; Clerk gère ses liens automatiquement
+
   return (
-    <SafeAreaView className='flex-1 bg-black'>
-      {showAnimatedSplash ? <AnimatedSplash ready={isReady} /> : <Slot />}
-    </SafeAreaView>
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}> 
+      <SafeAreaView className='flex-1 bg-black'>
+        {showAnimatedSplash ? <AnimatedSplash ready={isReady} /> : <Slot />}
+      </SafeAreaView>
+    </ClerkProvider>
   )
 }

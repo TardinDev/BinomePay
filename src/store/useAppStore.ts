@@ -8,6 +8,8 @@ export type User = {
   name: string
   kycStatus: KycStatus
   ratingAvg: number
+  avatarUrl?: string
+  avatarUpdatedAt?: number
 }
 
 export type RequestItem = {

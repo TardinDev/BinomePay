@@ -2,9 +2,10 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, Pressable, Alert, ScrollView } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { supabase } from '@/lib/supabase'
+import { useSignIn } from '@clerk/clerk-expo'
 
 export default function LoginScreen() {
+  const { signIn, setActive, isLoaded } = useSignIn()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,12 +22,14 @@ export default function LoginScreen() {
     try {
       setLoading(true)
       setError(null)
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInError) {
-        setError(signInError.message)
-        return
+      if (!isLoaded) return
+      const res = await signIn.create({ identifier: email, password })
+      if (res.status === 'complete') {
+        await setActive({ session: res.createdSessionId })
+        router.replace('/(Protected)/(tabs)')
+      } else {
+        setError('Connexion incomplète')
       }
-      router.replace('/(Protected)/(tabs)/index')
     } catch (e: any) {
       setError(e?.message ?? 'Erreur inconnue')
     } finally {
@@ -106,24 +109,7 @@ export default function LoginScreen() {
             Pas de compte ? <Text className="text-yellow-400 font-bold">Créer un compte</Text>
           </Text>
         </Pressable>
-        <Pressable
-          onPress={async () => {
-            const emailTrim = email.trim()
-            if (!emailTrim || !emailTrim.includes('@')) {
-              Alert.alert('Email requis', "Entrez votre email pour recevoir le lien de réinitialisation.")
-              return
-            }
-            const { error } = await supabase.auth.resetPasswordForEmail(emailTrim, {
-              redirectTo: 'binomepay://reset-password',
-            })
-            if (error) {
-              Alert.alert('Erreur', error.message)
-              return
-            }
-            Alert.alert('Email envoyé', 'Vérifiez votre boîte mail pour réinitialiser votre mot de passe.')
-          }}
-          className="mt-3"
-        >
+        <Pressable onPress={() => Alert.alert('Mot de passe', 'Réinitialisation à configurer dans Clerk (magic link).')} className="mt-3">
           <Text className="text-gray-300 underline">Mot de passe oublié ?</Text>
         </Pressable>
       </View>

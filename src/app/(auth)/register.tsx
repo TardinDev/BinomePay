@@ -2,9 +2,11 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, Pressable, ScrollView, Alert } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { supabase } from '@/lib/supabase'
+import { useSignUp } from '@clerk/clerk-expo'
 
 export default function RegisterScreen() {
+  const { signUp, setActive, isLoaded } = useSignUp()
+  const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -14,28 +16,25 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const isValid = () => email.includes('@') && password.trim().length >= 6 && password === confirm && accepted
+  const isValid = () => firstName.trim().length > 0 && email.includes('@') && password.trim().length >= 6 && password === confirm && accepted
 
   const handleRegister = async () => {
     if (!isValid()) {
-      setError("Vérifiez vos informations (email valide, 6 caractères minimum, mots de passe identiques).")
+      setError('Vérifiez vos informations (prénom requis, email valide, 6 caractères minimum, mots de passe identiques).')
       return
     }
     try {
       setLoading(true)
       setError(null)
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { terms_accepted_at: new Date().toISOString() },
-        },
-      })
-      if (signUpError) {
-        setError(signUpError.message)
-        return
+      if (!isLoaded) return
+      const res = await signUp.create({ emailAddress: email, password, firstName: firstName.trim() })
+      if (res.status === 'complete') {
+        await setActive({ session: res.createdSessionId })
+        router.replace('/(Protected)/(tabs)')
+      } else if (res.status === 'missing_requirements') {
+        await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+        router.replace({ pathname: '/(auth)/verify', params: { email } })
       }
-      router.replace('/(auth)/login')
     } catch (e: any) {
       setError(e?.message ?? 'Erreur inconnue')
     } finally {
@@ -51,7 +50,20 @@ export default function RegisterScreen() {
       </View>
 
       <View className="bg-neutral-900 rounded-2xl p-5 border" style={{ borderColor: '#334155' }}>
-        <Text className="text-gray-300 mb-2">Email</Text>
+        <Text className="text-gray-300 mb-2">Prénom</Text>
+        <View className="flex-row items-center bg-black/30 rounded-xl border border-gray-700 px-4 py-3">
+          <Ionicons name="person-outline" color="#9CA3AF" size={18} />
+          <TextInput
+            placeholder="Ex: Jean"
+            placeholderTextColor="#6B7280"
+            value={firstName}
+            onChangeText={setFirstName}
+            autoCapitalize="words"
+            className="text-white ml-3 flex-1"
+          />
+        </View>
+
+        <Text className="text-gray-300 mb-2 mt-4">Email</Text>
         <View className="flex-row items-center bg-black/30 rounded-xl border border-gray-700 px-4 py-3">
           <Ionicons name="mail-outline" color="#9CA3AF" size={18} />
           <TextInput

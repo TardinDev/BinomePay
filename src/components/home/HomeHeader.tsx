@@ -3,6 +3,7 @@ import { View, Text, Pressable, Modal } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { User } from '@/store/useAppStore'
+import { useUser as useClerkUser } from '@clerk/clerk-expo'
 
 type Props = {
   user: User | null
@@ -51,6 +52,8 @@ const HowItWorksModal = ({ visible, onClose }: { visible: boolean; onClose: () =
 
 export default function HomeHeader({ user }: Props) {
   const [showHowItWorks, setShowHowItWorks] = useState(false)
+  const { user: clerkUser } = useClerkUser()
+  const displayName = clerkUser?.firstName || user?.name || ''
   
   const closeModal = useCallback(() => setShowHowItWorks(false), [])
   
@@ -67,7 +70,7 @@ export default function HomeHeader({ user }: Props) {
             <Ionicons name="globe-outline" color="#EAB308" size={18} />
           </View>
           <View className="ml-3">
-            <Text className="text-white text-xl font-extrabold">Bonjour{user?.name ? `, ${user.name}` : ''} 👋</Text>
+            <Text className="text-white text-xl font-extrabold">Bonjour{displayName ? `, ${displayName}` : ''} 👋</Text>
             <Text className="text-gray-400 text-xs">Prêt à échanger en toute confiance</Text>
             <Pressable onPress={() => setShowHowItWorks(true)} className="flex-row items-center mt-1">
               <Ionicons name="chevron-down" size={14} color="#9CA3AF" />

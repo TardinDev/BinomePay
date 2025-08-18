@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { View, Text, FlatList, TextInput, Pressable, KeyboardAvoidingView, Platform, Alert } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -28,7 +28,6 @@ export default function ConversationDetails() {
 
       if (!id) return
 
-      // Charger les messages existants
       const { data, error } = await supabase
         .from('messages')
         .select('id, sender_id, content, created_at')
@@ -36,10 +35,8 @@ export default function ConversationDetails() {
         .order('created_at', { ascending: true })
       if (!error) setMessages(data ?? [])
 
-      // Marquer comme lu
       await supabase.rpc('mark_conversation_read', { p_conversation_id: id as string })
 
-      // Realtime sur cette conversation
       channel = supabase
         .channel(`messages-${id}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` }, (payload) => {
@@ -134,5 +131,6 @@ export default function ConversationDetails() {
     </KeyboardAvoidingView>
   )
 }
+
 
 

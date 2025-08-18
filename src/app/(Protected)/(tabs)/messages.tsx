@@ -58,7 +58,7 @@ export default function MessagesPage() {
             item={item}
             onPress={(id) => {
               markConversationRead(id)
-              router.push(`/\(Protected\)/\(tabs\)/messages/${id}`)
+              router.push(`/(Protected)/(tabs)/messages/${id}`)
             }}
           />
         )}

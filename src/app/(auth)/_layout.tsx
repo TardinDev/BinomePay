@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Stack, router, usePathname } from 'expo-router'
+import { useAuth } from '@clerk/clerk-expo'
 
 function AuthSwitcher() {
   const pathname = usePathname()
@@ -28,6 +29,12 @@ function AuthSwitcher() {
 }
 
 export default function AuthLayout() {
+  const { isLoaded, isSignedIn } = useAuth()
+  if (!isLoaded) return null
+  if (isSignedIn) {
+    router.replace('/(Protected)/(tabs)')
+    return null
+  }
   return (
     <Stack
       screenOptions={{
