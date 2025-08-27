@@ -10,8 +10,31 @@ export default function SuggestedDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useUser()
   const suggested = useAppStore((s) => s.suggested)
+  const matches = useAppStore((s) => s.matches)
+  const acceptSuggestion = useAppStore((s) => s.acceptSuggestion)
+  const conversations = useAppStore((s) => s.conversations)
   
   const item = suggested.find((s) => s.id === id)
+  
+  // Check if this suggestion has been accepted (exists in matches)
+  const isAccepted = matches.some(match => 
+    match.counterpartName === item?.senderName && 
+    match.amount === item?.amount &&
+    match.currency === item?.currency
+  )
+
+  const timeAgo = React.useMemo(() => {
+    if (!item) return ''
+    const now = Date.now()
+    const diff = now - item.createdAt
+    const minutes = Math.floor(diff / (1000 * 60))
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+    
+    if (days > 0) return `il y a ${days}j`
+    if (hours > 0) return `il y a ${hours}h`
+    return `il y a ${minutes}min`
+  }, [item])
   
   if (!item) {
     return (
@@ -30,8 +53,6 @@ export default function SuggestedDetailPage() {
       </View>
     )
   }
-
-  const acceptSuggestion = useAppStore((s) => s.acceptSuggestion)
 
   const handleAccept = async () => {
     if (!user?.id) {
@@ -77,17 +98,20 @@ export default function SuggestedDetailPage() {
     )
   }
 
-  const timeAgo = React.useMemo(() => {
-    const now = Date.now()
-    const diff = now - item.createdAt
-    const minutes = Math.floor(diff / (1000 * 60))
-    const hours = Math.floor(minutes / 60)
-    const days = Math.floor(hours / 24)
+  const handleMessage = () => {
+    // Find the conversation for this match
+    const conversation = conversations.find(conv => 
+      conv.counterpartName === item.senderName &&
+      conv.matchDetails?.amount === item.amount &&
+      conv.matchDetails?.currency === item.currency
+    )
     
-    if (days > 0) return `il y a ${days}j`
-    if (hours > 0) return `il y a ${hours}h`
-    return `il y a ${minutes}min`
-  }, [item.createdAt])
+    if (conversation) {
+      router.push(`/(Protected)/messages/${conversation.id}`)
+    } else {
+      Alert.alert('Erreur', 'Conversation introuvable')
+    }
+  }
 
   return (
     <ScrollView className="flex-1 bg-black px-5 pt-6" contentContainerStyle={{ paddingBottom: 36 }}>
@@ -142,19 +166,35 @@ export default function SuggestedDetailPage() {
         </Text>
       </View>
 
-      <Pressable onPress={handleAccept} className="rounded-xl overflow-hidden mb-4">
-        <LinearGradient
-          colors={['#10B981', '#059669']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ paddingVertical: 16, paddingHorizontal: 20, borderRadius: 12 }}
-        >
-          <View className="flex-row items-center justify-center">
-            <Ionicons name="checkmark-circle" color="#FFFFFF" size={24} />
-            <Text className="ml-2 text-white font-extrabold text-lg">Accepter la proposition</Text>
-          </View>
-        </LinearGradient>
-      </Pressable>
+      {isAccepted ? (
+        <Pressable onPress={handleMessage} className="rounded-xl overflow-hidden mb-4">
+          <LinearGradient
+            colors={['#3B82F6', '#1D4ED8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ paddingVertical: 16, paddingHorizontal: 20, borderRadius: 12 }}
+          >
+            <View className="flex-row items-center justify-center">
+              <Ionicons name="chatbubble-ellipses" color="#FFFFFF" size={24} />
+              <Text className="ml-2 text-white font-extrabold text-lg">Messagerie</Text>
+            </View>
+          </LinearGradient>
+        </Pressable>
+      ) : (
+        <Pressable onPress={handleAccept} className="rounded-xl overflow-hidden mb-4">
+          <LinearGradient
+            colors={['#10B981', '#059669']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ paddingVertical: 16, paddingHorizontal: 20, borderRadius: 12 }}
+          >
+            <View className="flex-row items-center justify-center">
+              <Ionicons name="checkmark-circle" color="#FFFFFF" size={24} />
+              <Text className="ml-2 text-white font-extrabold text-lg">Accepter la proposition</Text>
+            </View>
+          </LinearGradient>
+        </Pressable>
+      )}
 
       <Pressable 
         onPress={() => router.back()} 
