@@ -13,7 +13,7 @@ const ConversationItem = ({ item, onPress }: { item: Conversation; onPress: (id:
       onPress={() => onPress(item.id)}
       className="border border-gray-800 rounded-xl p-4 mb-3 bg-neutral-900"
     >
-      <View className="flex-row items-center justify-between">
+      <View className="flex-row items-center justify-between mb-2">
         <Text className="text-white font-semibold">{item.counterpartName}</Text>
         {item.unreadCount > 0 && (
           <View className="bg-yellow-400 rounded-full px-2 py-0.5">
@@ -21,6 +21,15 @@ const ConversationItem = ({ item, onPress }: { item: Conversation; onPress: (id:
           </View>
         )}
       </View>
+      
+      {item.matchDetails && (
+        <View className="mb-2">
+          <Text className="text-yellow-400 text-sm font-semibold">
+            {item.matchDetails.amount} {item.matchDetails.currency} • {item.matchDetails.corridor}
+          </Text>
+        </View>
+      )}
+      
       <View className="flex-row items-center mt-1">
         <Ionicons name="chatbubble" color="#9CA3AF" size={14} />
         <Text className="text-gray-400 ml-1" numberOfLines={1}>{item.lastMessage}</Text>
@@ -58,7 +67,7 @@ export default function MessagesPage() {
             item={item}
             onPress={(id) => {
               markConversationRead(id)
-              router.push(`/(Protected)/(tabs)/messages/${id}`)
+              router.push(`/(Protected)/messages/${id}`)
             }}
           />
         )}

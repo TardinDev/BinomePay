@@ -10,14 +10,18 @@ export default function SuggestedCard({ item }: Props) {
   const formattedTime = useFormattedDate(item.createdAt, 'time')
   
   return (
-    <View className="border border-gray-800 rounded-2xl p-4 mb-3 bg-neutral-900">
+    <View className="border border-gray-800 rounded-2xl px-4 py-1/2 mb-3 bg-neutral-900">
       <View className="flex-row items-center justify-between">
-        <Text className="text-white font-semibold">{item.amount} {item.currency} → {item.destCountryName}</Text>
+        <Text className="text-white font-semibold">{item.amount} {item.currency}</Text>
         <Text className="text-gray-400 text-xs">{formattedTime}</Text>
       </View>
-      <Text className="text-gray-400 mt-1">Par: {item.senderName}</Text>
+      <Text className="text-gray-400 mt-1">{item.originCountryName} → {item.destCountryName}</Text>
+      <Text className="text-gray-400 text-sm">Par: {item.senderName}</Text>
       <View className="mt-2 flex-row justify-end">
-        <Pressable onPress={() => router.push(`/(Protected)/suggested/${item.id}`)} className="px-3 py-2 rounded-full bg-gray-800">
+        <Pressable 
+          onPress={() => router.push(`/(Protected)/suggested/${item.id}`)} 
+          className="px-3 py-2 rounded-full bg-gray-800"
+        >
           <Text className="text-white text-xs font-bold">Voir</Text>
         </Pressable>
       </View>

@@ -15,7 +15,7 @@ export default function SuggestedList({ data }: Props) {
         ListEmptyComponent={() => (
           <Text className="text-gray-400">Aucune proposition pour le moment.</Text>
         )}
-        ListFooterComponent={() => <View className="h-24" />}
+        ListFooterComponent={() => <View className="h-20" />}
         renderItem={({ item }) => <SuggestedCard item={item} />}
         removeClippedSubviews={true}
         maxToRenderPerBatch={8}

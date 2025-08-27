@@ -79,13 +79,13 @@ export default function MessageDetailPage() {
   if (!conversation) {
     return (
       <View className="flex-1 bg-black px-5 pt-6">
-        <View className="flex-row items-center mb-6 mt-6">
+        <View className="flex-row items-center mb-6">
           <Pressable 
-            onPress={() => router.push('/(Protected)/(tabs)/messages')} 
-            className="mr-4 p-3 rounded-full"
-            style={{ backgroundColor: '#1F2937', borderWidth: 1, borderColor: '#374151' }}
+            onPress={() => router.back()} 
+            className="mr-3"
+            style={{ padding: 10, borderRadius: 9999, backgroundColor: '#111827', borderWidth: 1, borderColor: '#1F2937' }}
           >
-            <Ionicons name="arrow-back" color="#FFFFFF" size={24} />
+            <Ionicons name="arrow-back" color="#E5E7EB" size={20} />
           </Pressable>
           <Text className="text-white text-xl font-bold">Conversation introuvable</Text>
         </View>
@@ -116,23 +116,18 @@ export default function MessageDetailPage() {
 
   return (
     <View className="flex-1 bg-black">
-      <View className="px-5 pt-12 pb-4 border-b border-gray-800 bg-black">
+      <View className="px-5 pt-6 pb-4 border-b border-gray-800">
         <View className="flex-row items-center">
           <Pressable 
-            onPress={() => router.push('/(Protected)/(tabs)/messages')} 
-            className="mr-4 p-3 rounded-full"
-            style={{ backgroundColor: '#1F2937', borderWidth: 1, borderColor: '#374151' }}
+            onPress={() => router.back()} 
+            className="mr-3"
+            style={{ padding: 10, borderRadius: 9999, backgroundColor: '#111827', borderWidth: 1, borderColor: '#1F2937' }}
           >
-            <Ionicons name="arrow-back" color="#FFFFFF" size={24} />
+            <Ionicons name="arrow-back" color="#E5E7EB" size={20} />
           </Pressable>
           <View className="flex-1">
             <Text className="text-white text-xl font-bold">{conversation.counterpartName}</Text>
-            {conversation.matchDetails && (
-              <Text className="text-yellow-400 text-sm font-semibold">
-                {conversation.matchDetails.amount} {conversation.matchDetails.currency} • {conversation.matchDetails.corridor}
-              </Text>
-            )}
-            <Text className="text-green-400 text-xs">En ligne</Text>
+            <Text className="text-green-400 text-sm">En ligne</Text>
           </View>
           <Pressable 
             className="p-2"
@@ -188,5 +183,3 @@ export default function MessageDetailPage() {
     </View>
   )
 }
-
-

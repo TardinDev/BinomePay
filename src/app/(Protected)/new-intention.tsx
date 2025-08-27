@@ -5,9 +5,10 @@ import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '@/lib/supabase'
+import { useUser } from '@clerk/clerk-expo'
 
 export default function NewIntentionPage() {
-
+  const { user } = useUser()
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('EUR')
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false)
@@ -43,37 +44,63 @@ export default function NewIntentionPage() {
     return Number.isFinite(a) && a > 0 && currency.trim().length > 0 && originCountry.trim().length > 0 && destCountry.trim().length > 0
   }
 
+  const addRequest = useAppStore((s) => s.addRequest)
+  const addSuggested = useAppStore((s) => s.addSuggested)
+
   const handleSubmit = async () => {
     if (!isValid()) {
       Alert.alert('Champs invalides', 'Veuillez vérifier le montant et les champs obligatoires.')
       return
     }
-    const { data: userData, error: userErr } = await supabase.auth.getUser()
-    if (userErr || !userData.user?.id) {
+    
+    if (!user?.id) {
       Alert.alert('Session requise', 'Veuillez vous reconnecter.')
       router.replace('/(auth)/login')
       return
     }
-    const userId = userData.user.id
 
-    const { error } = await supabase
-      .from('intents')
-      .insert([
-        {
-          user_id: userId,
-          direction: 'SEND',
-          amount: Number(amount),
-          currency,
-          origin_country: originCountry,
-          dest_country: destCountry,
-          status: 'OPEN',
-        },
-      ])
-    if (error) {
-      Alert.alert('Erreur', error.message)
-      return
+    try {
+      // Ajouter à la store locale (mock data pour développement)
+      // 1. Ajouter à mes intentions
+      addRequest({
+        type: 'SEND',
+        amount: Number(amount),
+        currency,
+        originCountry,
+        destCountry,
+      })
+
+      // 2. Ajouter aux propositions pour les autres utilisateurs
+      // Si je veux ENVOYER, les autres voient une proposition de RECEPTION
+      addSuggested({
+        amount: Number(amount),
+        currency,
+        originCountryName: originCountry,
+        destCountryName: destCountry,
+        senderName: user?.firstName || user?.username || 'Utilisateur',
+        createdAt: Date.now(),
+      })
+
+      // Pour production: synchroniser avec Supabase
+      // const { error } = await supabase
+      //   .from('intents')
+      //   .insert([
+      //     {
+      //       user_id: user.id,
+      //       direction: 'SEND',
+      //       amount: Number(amount),
+      //       currency,
+      //       origin_country: originCountry,
+      //       dest_country: destCountry,
+      //       status: 'OPEN',
+      //     },
+      //   ])
+      // if (error) throw error
+
+      router.replace('/(Protected)/intention-success')
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Une erreur est survenue')
     }
-    router.replace('/(Protected)/intention-success')
   }
 
   return (

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Stack, router, usePathname } from 'expo-router'
 import { useAuth } from '@clerk/clerk-expo'
@@ -30,11 +30,15 @@ function AuthSwitcher() {
 
 export default function AuthLayout() {
   const { isLoaded, isSignedIn } = useAuth()
+  
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace('/(Protected)/(tabs)')
+    }
+  }, [isLoaded, isSignedIn])
+  
   if (!isLoaded) return null
-  if (isSignedIn) {
-    router.replace('/(Protected)/(tabs)')
-    return null
-  }
+  if (isSignedIn) return null
   return (
     <Stack
       screenOptions={{
