@@ -70,6 +70,11 @@ type AppState = {
   isLoadingMatches: boolean
   isLoadingSuggested: boolean
   
+  // Optimistic UI states
+  isAcceptingMatch: boolean
+  isSendingMessage: boolean
+  isCreatingIntention: boolean
+  
   // Error states
   error: string | null
   
@@ -103,6 +108,11 @@ type AppState = {
   acceptSuggestion: (suggestionId: string, myUserId: string) => Promise<string | null>
   removeSuggestion: (suggestionId: string) => void
   
+  // Optimistic UI actions
+  setAcceptingMatch: (loading: boolean) => void
+  setSendingMessage: (loading: boolean) => void
+  setCreatingIntention: (loading: boolean) => void
+  
   // General utilities
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -124,6 +134,11 @@ const useAppStore = create<AppState>((set, get) => ({
   isLoadingRequests: false,
   isLoadingMatches: false,
   isLoadingSuggested: false,
+  
+  // Optimistic UI states
+  isAcceptingMatch: false,
+  isSendingMessage: false,
+  isCreatingIntention: false,
   
   // Error states (for future dynamic data)
   error: null,
@@ -361,6 +376,9 @@ const useAppStore = create<AppState>((set, get) => ({
     
     if (!suggestion) return null
 
+    // Start optimistic loading
+    set({ isAcceptingMatch: true })
+
     try {
       // 1. Créer une nouvelle conversation
       const conversationId = state.addConversation({
@@ -401,6 +419,8 @@ const useAppStore = create<AppState>((set, get) => ({
     } catch (error: any) {
       state.setError('Erreur lors de l\'acceptation du match')
       return null
+    } finally {
+      set({ isAcceptingMatch: false })
     }
   },
 
@@ -409,6 +429,11 @@ const useAppStore = create<AppState>((set, get) => ({
       suggested: s.suggested.filter((item) => item.id !== suggestionId),
     }))
   },
+
+  // Optimistic UI actions
+  setAcceptingMatch: (loading: boolean) => set({ isAcceptingMatch: loading }),
+  setSendingMessage: (loading: boolean) => set({ isSendingMessage: loading }),
+  setCreatingIntention: (loading: boolean) => set({ isCreatingIntention: loading }),
 
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   setError: (error: string | null) => set({ error }),
@@ -424,6 +449,9 @@ const useAppStore = create<AppState>((set, get) => ({
     isLoadingRequests: false,
     isLoadingMatches: false,
     isLoadingSuggested: false,
+    isAcceptingMatch: false,
+    isSendingMessage: false,
+    isCreatingIntention: false,
     error: null,
   }),
 }))
