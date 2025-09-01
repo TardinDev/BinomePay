@@ -29,6 +29,48 @@ export const formatDate = (timestamp: number, format: 'time' | 'datetime' = 'dat
 }
 
 // Hook pour memoization React
+// Hook pour memoization React
 export const useFormattedDate = (timestamp: number, format: 'time' | 'datetime' = 'datetime') => {
-  return useMemo(() => formatDate(timestamp, format), [timestamp, format])
+  return useMemo(() => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffMs = now.getTime() - timestamp
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    // Si c'est aujourd'hui (moins de 24h)
+    if (diffHours < 24 && date.getDate() === now.getDate()) {
+      return new Intl.DateTimeFormat('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(date)
+    }
+    
+    // Si c'est hier
+    if (diffDays === 1) {
+      return 'Hier'
+    }
+    
+    // Si c'est cette semaine (moins de 7 jours)
+    if (diffDays < 7) {
+      return new Intl.DateTimeFormat('fr-FR', {
+        weekday: 'short',
+      }).format(date)
+    }
+    
+    // Si c'est cette année
+    if (date.getFullYear() === now.getFullYear()) {
+      return new Intl.DateTimeFormat('fr-FR', {
+        day: 'numeric',
+        month: 'short',
+      }).format(date)
+    }
+    
+    // Date complète pour les années précédentes
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(date)
+  }, [timestamp, format])
 }

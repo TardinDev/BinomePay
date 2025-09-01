@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## User Preferences
+
+### File Modification Confirmation
+- **CONFIRM_FILE_CHANGES**: `true`
+- When set to `true`, Claude must ask for user confirmation before saving any file modifications
+- After each file edit, Claude should ask: "Do you want to keep these changes? (y/n)"
+- If user responds with "n" or "no", revert the changes
+- If user responds with "y" or "yes", keep the changes
+
 ## Development Commands
 
 - `npm start` - Start the Expo development server

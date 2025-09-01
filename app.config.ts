@@ -3,13 +3,15 @@ import type { ExpoConfig } from '@expo/config'
 
 const config: ExpoConfig = {
   name: 'BinomePay',
-  slug: 'BinomePay',
+  slug: 'binomepay',
   scheme: 'binomepay',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
   newArchEnabled: true,
+  description: 'BinomePay - Application de change de devises entre particuliers',
+  privacy: 'public',
   splash: {
     image: './assets/splash-icon.png',
     resizeMode: 'contain',
@@ -19,11 +21,24 @@ const config: ExpoConfig = {
     supportsTablet: true,
   },
   android: {
+    package: 'com.binomepay.app',
+    versionCode: 1,
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#ffffff',
     },
     edgeToEdgeEnabled: true,
+    permissions: [
+      'CAMERA',
+      'READ_EXTERNAL_STORAGE',
+      'WRITE_EXTERNAL_STORAGE',
+      'NOTIFICATIONS',
+      'INTERNET',
+      'ACCESS_NETWORK_STATE'
+    ],
+    blockedPermissions: [
+      'RECORD_AUDIO'
+    ]
   },
   web: {
     favicon: './assets/favicon.png',

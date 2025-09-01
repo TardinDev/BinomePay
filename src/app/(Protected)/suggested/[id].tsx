@@ -1,10 +1,12 @@
-import React from 'react'
-import { View, Text, Pressable, ScrollView, Alert } from 'react-native'
+import React, { useState } from 'react'
+import { View, Text, Pressable, ScrollView } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import useAppStore from '@/store/useAppStore'
 import { useUser } from '@clerk/clerk-expo'
+import CustomModal from '@/components/CustomModal'
+import { useToast } from '@/hooks/useToast'
 
 export default function SuggestedDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -13,6 +15,13 @@ export default function SuggestedDetailPage() {
   const matches = useAppStore((s) => s.matches)
   const acceptSuggestion = useAppStore((s) => s.acceptSuggestion)
   const conversations = useAppStore((s) => s.conversations)
+  
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [createdConversationId, setCreatedConversationId] = useState<string | null>(null)
+  
+  const { showError } = useToast()
   
   const item = suggested.find((s) => s.id === id)
   
@@ -56,46 +65,32 @@ export default function SuggestedDetailPage() {
 
   const handleAccept = async () => {
     if (!user?.id) {
-      Alert.alert('Erreur', 'Vous devez être connecté pour accepter une proposition.')
+      showError('Vous devez être connecté pour accepter une proposition.')
       return
     }
 
-    Alert.alert(
-      'Accepter la proposition',
-      `Voulez-vous accepter cette proposition de ${item.senderName} pour ${item.amount} ${item.currency} vers ${item.destCountryName} ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Accepter', 
-          onPress: async () => {
-            try {
-              const conversationId = await acceptSuggestion(item.id, user.id)
-              
-              if (conversationId) {
-                Alert.alert(
-                  'Succès', 
-                  'Proposition acceptée ! Un match a été créé et vous pouvez maintenant discuter avec votre partenaire.',
-                  [
-                    {
-                      text: 'Voir la conversation',
-                      onPress: () => router.push(`/(Protected)/(tabs)/messages`)
-                    },
-                    {
-                      text: 'Plus tard',
-                      onPress: () => router.back()
-                    }
-                  ]
-                )
-              } else {
-                Alert.alert('Erreur', 'Impossible d\'accepter cette proposition. Veuillez réessayer.')
-              }
-            } catch (error) {
-              Alert.alert('Erreur', 'Une erreur s\'est produite lors de l\'acceptation.')
-            }
-          }
-        }
-      ]
-    )
+    setShowConfirmModal(true)
+  }
+
+  const confirmAccept = async () => {
+    setIsProcessing(true)
+    try {
+      const conversationId = await acceptSuggestion(item!.id, user!.id)
+      
+      if (conversationId) {
+        setCreatedConversationId(conversationId)
+        setShowConfirmModal(false)
+        setShowSuccessModal(true)
+      } else {
+        setShowConfirmModal(false)
+        showError('Impossible d\'accepter cette proposition. Veuillez réessayer.')
+      }
+    } catch (error) {
+      setShowConfirmModal(false)
+      showError('Une erreur s\'est produite lors de l\'acceptation.')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const handleMessage = () => {
@@ -109,7 +104,7 @@ export default function SuggestedDetailPage() {
     if (conversation) {
       router.push(`/(Protected)/messages/${conversation.id}`)
     } else {
-      Alert.alert('Erreur', 'Conversation introuvable')
+      showError('Conversation introuvable')
     }
   }
 
@@ -202,6 +197,57 @@ export default function SuggestedDetailPage() {
       >
         <Text className="text-center text-gray-300 font-semibold">Retour</Text>
       </Pressable>
+
+      {/* Modal de confirmation */}
+      <CustomModal
+        visible={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Accepter la proposition"
+        message={`Voulez-vous accepter cette proposition de ${item?.senderName} pour ${item?.amount} ${item?.currency} vers ${item?.destCountryName} ?\n\nUn match sera créé et vous pourrez discuter avec votre partenaire.`}
+        icon="handshake-outline"
+        iconColor="#10B981"
+        buttons={[
+          {
+            text: 'Annuler',
+            style: 'secondary',
+            onPress: () => setShowConfirmModal(false),
+          },
+          {
+            text: 'Accepter la proposition',
+            style: 'primary',
+            loading: isProcessing,
+            onPress: confirmAccept,
+          },
+        ]}
+      />
+
+      {/* Modal de succès */}
+      <CustomModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="🎉 Proposition acceptée !"
+        message="Un match a été créé avec succès ! Vous pouvez maintenant discuter avec votre partenaire et organiser votre échange."
+        icon="checkmark-circle"
+        iconColor="#10B981"
+        buttons={[
+          {
+            text: 'Voir la conversation',
+            style: 'primary',
+            onPress: () => {
+              setShowSuccessModal(false)
+              router.push(`/(Protected)/(tabs)/messages`)
+            },
+          },
+          {
+            text: 'Plus tard',
+            style: 'secondary',
+            onPress: () => {
+              setShowSuccessModal(false)
+              router.back()
+            },
+          },
+        ]}
+      />
     </ScrollView>
   )
 }

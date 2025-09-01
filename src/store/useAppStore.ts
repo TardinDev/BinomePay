@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { nanoid } from 'nanoid/non-secure'
+import { notifyMatchAccepted, notifyNewMessage } from '@/services/notificationService'
+import ratingService, { UserRating } from '@/services/ratingService'
 
 export type KycStatus = 'unverified' | 'pending' | 'verified'
 
@@ -10,6 +12,7 @@ export type User = {
   ratingAvg: number
   avatarUrl?: string
   avatarUpdatedAt?: number
+  userRating?: UserRating
 }
 
 export type RequestItem = {
@@ -112,6 +115,9 @@ type AppState = {
   setAcceptingMatch: (loading: boolean) => void
   setSendingMessage: (loading: boolean) => void
   setCreatingIntention: (loading: boolean) => void
+  
+  // Rating system
+  loadUserRating: (userId: string) => Promise<void>
   
   // General utilities
   setLoading: (loading: boolean) => void
@@ -367,6 +373,14 @@ const useAppStore = create<AppState>((set, get) => ({
           : c
       ),
     }))
+
+    // Envoyer notification si le message ne vient pas de moi
+    if (!isFromMe) {
+      const conversation = get().conversations.find(c => c.id === conversationId)
+      if (conversation) {
+        notifyNewMessage(conversation.counterpartName, message, conversationId)
+      }
+    }
   },
 
   // Match acceptance logic
@@ -408,6 +422,14 @@ const useAppStore = create<AppState>((set, get) => ({
         notifications: s.notifications + 1,
       }))
 
+      // 3. Envoyer une notification push
+      await notifyMatchAccepted(
+        suggestion.senderName,
+        suggestion.amount,
+        suggestion.currency,
+        `${suggestion.originCountryName} → ${suggestion.destCountryName}`
+      )
+
       // 3. Supprimer la suggestion de la liste
       state.removeSuggestion(suggestionId)
 
@@ -428,6 +450,18 @@ const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({
       suggested: s.suggested.filter((item) => item.id !== suggestionId),
     }))
+  },
+
+  // Rating system
+  loadUserRating: async (userId: string) => {
+    try {
+      const userRating = await ratingService.getUserRating(userId);
+      set((s) => ({
+        user: s.user ? { ...s.user, userRating } : null,
+      }));
+    } catch (error: any) {
+      console.error('Erreur lors du chargement du rating:', error);
+    }
   },
 
   // Optimistic UI actions
