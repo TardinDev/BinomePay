@@ -56,6 +56,8 @@ export type SuggestedItem = {
   senderName: string
   note?: string
   createdAt: number
+  isAccepted?: boolean // Ajout d'un flag pour savoir si c'est accepté
+  conversationId?: string // ID de la conversation créée
 }
 
 type AppState = {
@@ -347,7 +349,7 @@ const useAppStore = create<AppState>((set, get) => ({
 
   // Conversations management
   addConversation: (conversation: Omit<Conversation, 'id'>) => {
-    const conversationId = nanoid(8)
+    const conversationId = 'conv_' + nanoid(8) // Ajouter un préfixe pour éviter les conflits
     const newConversation: Conversation = {
       id: conversationId,
       ...conversation,
@@ -422,16 +424,22 @@ const useAppStore = create<AppState>((set, get) => ({
         notifications: s.notifications + 1,
       }))
 
-      // 3. Envoyer une notification push
+      // 3. Marquer la suggestion comme acceptée au lieu de la supprimer
+      set((s) => ({
+        suggested: s.suggested.map((item) => 
+          item.id === suggestionId 
+            ? { ...item, isAccepted: true, conversationId }
+            : item
+        ),
+      }))
+
+      // 4. Envoyer une notification push
       await notifyMatchAccepted(
         suggestion.senderName,
         suggestion.amount,
         suggestion.currency,
         `${suggestion.originCountryName} → ${suggestion.destCountryName}`
       )
-
-      // 3. Supprimer la suggestion de la liste
-      state.removeSuggestion(suggestionId)
 
       // 4. Pour production: Notifier l'autre utilisateur et créer le match dans Supabase
       // await createMatch(suggestionId, myUserId)

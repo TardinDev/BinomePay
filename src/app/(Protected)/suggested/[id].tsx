@@ -25,12 +25,9 @@ export default function SuggestedDetailPage() {
   
   const item = suggested.find((s) => s.id === id)
   
-  // Check if this suggestion has been accepted (exists in matches)
-  const isAccepted = matches.some(match => 
-    match.counterpartName === item?.senderName && 
-    match.amount === item?.amount &&
-    match.currency === item?.currency
-  )
+  // Check if this suggestion has been accepted
+  const isAccepted = item?.isAccepted || false
+  const conversationId = item?.conversationId
 
   const timeAgo = React.useMemo(() => {
     if (!item) return ''
@@ -94,17 +91,22 @@ export default function SuggestedDetailPage() {
   }
 
   const handleMessage = () => {
-    // Find the conversation for this match
-    const conversation = conversations.find(conv => 
-      conv.counterpartName === item.senderName &&
-      conv.matchDetails?.amount === item.amount &&
-      conv.matchDetails?.currency === item.currency
-    )
-    
-    if (conversation) {
-      router.push(`/(Protected)/messages/${conversation.id}`)
+    if (conversationId) {
+      // Utiliser directement l'ID de conversation stocké
+      router.push(`/(Protected)/messages/${conversationId}`)
     } else {
-      showError('Conversation introuvable')
+      // Fallback: chercher la conversation par correspondance
+      const conversation = conversations.find(conv => 
+        conv.counterpartName === item?.senderName &&
+        conv.matchDetails?.amount === item?.amount &&
+        conv.matchDetails?.currency === item?.currency
+      )
+      
+      if (conversation) {
+        router.push(`/(Protected)/messages/${conversation.id}`)
+      } else {
+        showError('Conversation introuvable')
+      }
     }
   }
 
@@ -123,7 +125,14 @@ export default function SuggestedDetailPage() {
 
       <View className="border border-gray-800 rounded-2xl p-5 bg-neutral-900 mb-6">
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-yellow-400 text-lg font-bold">PROPOSITION</Text>
+          <View className="flex-row items-center">
+            <Text className={`text-lg font-bold ${isAccepted ? 'text-green-400' : 'text-yellow-400'}`}>
+              {isAccepted ? 'PROPOSITION ACCEPTÉE' : 'PROPOSITION'}
+            </Text>
+            {isAccepted && (
+              <Ionicons name="checkmark-circle" color="#10B981" size={20} style={{ marginLeft: 8 }} />
+            )}
+          </View>
           <Text className="text-gray-400 text-sm">{timeAgo}</Text>
         </View>
 
@@ -235,7 +244,11 @@ export default function SuggestedDetailPage() {
             style: 'primary',
             onPress: () => {
               setShowSuccessModal(false)
-              router.push(`/(Protected)/(tabs)/messages`)
+              if (createdConversationId) {
+                router.push(`/(Protected)/messages/${createdConversationId}`)
+              } else {
+                router.push(`/(Protected)/(tabs)/messages`)
+              }
             },
           },
           {
