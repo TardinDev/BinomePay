@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { nanoid } from 'nanoid/non-secure'
 import { notifyMatchAccepted, notifyNewMessage } from '@/services/notificationService'
 import ratingService, { UserRating } from '@/services/ratingService'
+import ApiService from '@/services/apiService'
+import { syncService } from '@/services/syncService'
 
 export type KycStatus = 'unverified' | 'pending' | 'verified'
 
@@ -211,21 +213,49 @@ const useAppStore = create<AppState>((set, get) => ({
   setUser: (user) => set({ user }),
   incrementNotifications: () => set((s) => ({ notifications: s.notifications + 1 })),
   clearNotifications: () => set({ notifications: 0 }),
-  addRequest: ({ type, amount, currency, originCountry, destCountry }) =>
+  addRequest: async ({ type, amount, currency, originCountry, destCountry }) => {
+    const state = get()
+    if (!state.user?.id) return
+    
+    // Optimistic update
+    const tempRequest: RequestItem = {
+      id: 'temp_' + nanoid(8),
+      type,
+      amount,
+      currency,
+      originCountry,
+      destCountry,
+      status: 'OPEN',
+    }
+    
     set((s) => ({
-      requests: [
-        ...s.requests,
-        {
-          id: nanoid(8),
-          type,
-          amount,
-          currency,
-          originCountry,
-          destCountry,
-          status: 'OPEN',
-        },
-      ],
-    })),
+      requests: [...s.requests, tempRequest],
+      isCreatingIntention: true
+    }))
+    
+    try {
+      const newRequest = await ApiService.createRequest(state.user.id, {
+        type, amount, currency, originCountry, destCountry
+      })
+      
+      // Remplacer l'intention temporaire par la vraie
+      set((s) => ({
+        requests: s.requests.map(r => r.id === tempRequest.id ? newRequest : r),
+        isCreatingIntention: false
+      }))
+    } catch (error: any) {
+      // En cas d'erreur, ajouter à la queue hors ligne
+      await ApiService.queueOfflineAction({
+        type: 'CREATE_REQUEST',
+        payload: { type, amount, currency, originCountry, destCountry },
+        userId: state.user.id,
+        timestamp: Date.now()
+      })
+      
+      set({ isCreatingIntention: false })
+      console.error('Erreur création intention:', error)
+    }
+  },
   addSuggested: ({ amount, currency, originCountryName, destCountryName, senderName, note, createdAt }) =>
     set((s) => ({
       suggested: [
@@ -248,84 +278,140 @@ const useAppStore = create<AppState>((set, get) => ({
       conversations: s.conversations.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c)),
     })),
 
-  // New dynamic data functions
+  // Dynamic data initialization with API integration
   initializeUserData: async (userId: string) => {
     set({ isLoading: true, error: null })
+    
+    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
+    
     try {
-      // For production: load user data from Supabase/API
-      // const userProfile = await fetchUserProfile(userId)
-      // const userData = await fetchUserData(userId)
-      
-      // For now, set mock user data
-      const mockUser: User = {
-        id: userId,
-        name: 'Utilisateur',
-        kycStatus: 'unverified',
-        ratingAvg: 0,
+      if (useMockApi) {
+        console.log('Mode mock activé - utilisation des données mock')
+        // En mode mock, utiliser directement les données du store
+        const mockUser: User = {
+          id: userId,
+          name: 'Tardin',
+          kycStatus: 'verified',
+          ratingAvg: 4.8,
+        }
+        set({ 
+          user: mockUser,
+          isLoading: false,
+          error: null
+        })
+        return // Pas besoin de charger depuis l'API
       }
       
-      set({ 
-        user: mockUser,
-        isLoading: false 
-      })
+      // Mode API réel
+      try {
+        const userProfile = await ApiService.fetchUserProfile(userId)
+        set({ user: userProfile })
+      } catch (error) {
+        console.warn('API non disponible, utilisation de données mock:', error)
+        const mockUser: User = {
+          id: userId,
+          name: 'Utilisateur',
+          kycStatus: 'unverified',
+          ratingAvg: 0,
+        }
+        set({ user: mockUser })
+      }
       
-      // Load all user-related data
+      set({ isLoading: false })
+      
+      // Charger toutes les données utilisateur
       const state = get()
-      await Promise.all([
+      await Promise.allSettled([
         state.loadRequests(userId),
         state.loadMatches(userId),
         state.loadSuggested(userId),
         state.loadConversations(userId),
+        state.loadUserRating(userId)
       ])
+      
+      // Initialiser le service de synchronisation seulement en mode API
+      await syncService.initialize()
       
     } catch (error: any) {
       set({ error: error.message, isLoading: false })
+      console.error('Erreur initialisation données utilisateur:', error)
     }
   },
 
   loadRequests: async (userId: string) => {
+    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
+    
+    if (useMockApi) {
+      console.log('Mode mock - intentions déjà chargées depuis le store')
+      set({ isLoadingRequests: false })
+      return
+    }
+    
     set({ isLoadingRequests: true })
     try {
-      // For production: fetch from Supabase
-      // const requests = await supabase.from('intents').select('*').eq('user_id', userId)
-      
-      // For now, keep empty or load mock data
-      set({ requests: [], isLoadingRequests: false })
+      const requests = await ApiService.fetchUserRequests(userId)
+      set({ requests, isLoadingRequests: false })
     } catch (error: any) {
-      set({ error: error.message, isLoadingRequests: false })
+      console.warn('Erreur chargement intentions, utilisation mock:', error)
+      set({ isLoadingRequests: false })
     }
   },
 
   loadMatches: async (userId: string) => {
+    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
+    
+    if (useMockApi) {
+      console.log('Mode mock - matches déjà chargés depuis le store')
+      set({ isLoadingMatches: false })
+      return
+    }
+    
     set({ isLoadingMatches: true })
     try {
-      // For production: fetch user matches
-      // const matches = await fetchUserMatches(userId)
-      
-      // Mock data for development
+      const matches = await ApiService.fetchUserMatches(userId)
+      set({ matches, isLoadingMatches: false })
+    } catch (error: any) {
+      console.warn('Erreur chargement matches, utilisation mock:', error)
       const mockMatches: MatchItem[] = [
         { id: 'm_1', counterpartName: 'Moussa D.', amount: 150, currency: 'EUR', corridor: 'FR → SN', status: 'PENDING' },
         { id: 'm_2', counterpartName: 'Awa S.', amount: 200, currency: 'EUR', corridor: 'FR → CI', status: 'PENDING' },
       ]
-      
       set({ matches: mockMatches, isLoadingMatches: false })
-    } catch (error: any) {
-      set({ error: error.message, isLoadingMatches: false })
     }
   },
 
   loadSuggested: async (userId: string) => {
-    // For development: keep current mock data, don't override
-    set({ isLoadingSuggested: false })
-    // For production: this function will load from Supabase
+    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
+    
+    if (useMockApi) {
+      console.log('Mode mock - suggestions déjà chargées depuis le store')
+      set({ isLoadingSuggested: false })
+      return
+    }
+    
+    set({ isLoadingSuggested: true })
+    try {
+      const suggestions = await ApiService.fetchSuggestionsForUser(userId)
+      set({ suggested: suggestions, isLoadingSuggested: false })
+    } catch (error: any) {
+      console.warn('Erreur chargement suggestions, utilisation mock:', error)
+      set({ isLoadingSuggested: false })
+    }
   },
 
   loadConversations: async (userId: string) => {
+    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
+    
+    if (useMockApi) {
+      console.log('Mode mock - conversations déjà chargées depuis le store')
+      return
+    }
+    
     try {
-      // For production: fetch user conversations
-      // const conversations = await fetchUserConversations(userId)
-      
-      // Mock data for development
+      const conversations = await ApiService.fetchUserConversations(userId)
+      set({ conversations })
+    } catch (error: any) {
+      console.warn('Erreur chargement conversations, utilisation mock:', error)
       const mockConversations: Conversation[] = [
         {
           id: 'c_1',
@@ -340,10 +426,7 @@ const useAppStore = create<AppState>((set, get) => ({
           }
         },
       ]
-      
       set({ conversations: mockConversations })
-    } catch (error: any) {
-      set({ error: error.message })
     }
   },
 
@@ -362,7 +445,8 @@ const useAppStore = create<AppState>((set, get) => ({
     return conversationId
   },
 
-  addMessageToConversation: (conversationId: string, message: string, isFromMe: boolean) => {
+  addMessageToConversation: async (conversationId: string, message: string, isFromMe: boolean) => {
+    // Mise à jour optimiste locale
     set((s) => ({
       conversations: s.conversations.map((c) =>
         c.id === conversationId
@@ -374,10 +458,32 @@ const useAppStore = create<AppState>((set, get) => ({
             }
           : c
       ),
+      isSendingMessage: isFromMe
     }))
 
-    // Envoyer notification si le message ne vient pas de moi
-    if (!isFromMe) {
+    // Si c'est mon message, l'envoyer à l'API
+    if (isFromMe) {
+      const state = get()
+      try {
+        if (state.user?.id) {
+          await ApiService.sendMessage(conversationId, message, state.user.id)
+        }
+      } catch (error) {
+        // En cas d'erreur, ajouter à la queue hors ligne
+        if (state.user?.id) {
+          await ApiService.queueOfflineAction({
+            type: 'SEND_MESSAGE',
+            payload: { conversationId, message },
+            userId: state.user.id,
+            timestamp: Date.now()
+          })
+        }
+        console.error('Erreur envoi message:', error)
+      } finally {
+        set({ isSendingMessage: false })
+      }
+    } else {
+      // Message reçu - envoyer notification
       const conversation = get().conversations.find(c => c.id === conversationId)
       if (conversation) {
         notifyNewMessage(conversation.counterpartName, message, conversationId)
@@ -385,19 +491,34 @@ const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  // Match acceptance logic
+  // Match acceptance logic with API integration
   acceptSuggestion: async (suggestionId: string, myUserId: string) => {
     const state = get()
     const suggestion = state.suggested.find((s) => s.id === suggestionId)
     
     if (!suggestion) return null
 
-    // Start optimistic loading
     set({ isAcceptingMatch: true })
 
     try {
-      // 1. Créer une nouvelle conversation
-      const conversationId = state.addConversation({
+      // Essayer d'accepter via l'API d'abord
+      let apiResult: { conversationId: string; matchId: string } | null = null
+      
+      try {
+        apiResult = await ApiService.acceptSuggestion(suggestionId, myUserId)
+      } catch (error) {
+        console.warn('API non disponible, traitement local:', error)
+        // En cas d'erreur API, ajouter à la queue hors ligne
+        await ApiService.queueOfflineAction({
+          type: 'ACCEPT_SUGGESTION',
+          payload: { suggestionId },
+          userId: myUserId,
+          timestamp: Date.now()
+        })
+      }
+
+      // Mise à jour locale (optimiste ou avec données API)
+      const conversationId = apiResult?.conversationId || state.addConversation({
         counterpartName: suggestion.senderName,
         lastMessage: 'Match créé ! Vous pouvez maintenant discuter.',
         updatedAt: Date.now(),
@@ -409,9 +530,8 @@ const useAppStore = create<AppState>((set, get) => ({
         }
       })
 
-      // 2. Ajouter le match aux matches de l'utilisateur actuel
       const newMatch: MatchItem = {
-        id: nanoid(8),
+        id: apiResult?.matchId || nanoid(8),
         counterpartName: suggestion.senderName,
         amount: suggestion.amount,
         currency: suggestion.currency,
@@ -422,10 +542,6 @@ const useAppStore = create<AppState>((set, get) => ({
       set((s) => ({
         matches: [newMatch, ...s.matches],
         notifications: s.notifications + 1,
-      }))
-
-      // 3. Marquer la suggestion comme acceptée au lieu de la supprimer
-      set((s) => ({
         suggested: s.suggested.map((item) => 
           item.id === suggestionId 
             ? { ...item, isAccepted: true, conversationId }
@@ -433,17 +549,12 @@ const useAppStore = create<AppState>((set, get) => ({
         ),
       }))
 
-      // 4. Envoyer une notification push
       await notifyMatchAccepted(
         suggestion.senderName,
         suggestion.amount,
         suggestion.currency,
         `${suggestion.originCountryName} → ${suggestion.destCountryName}`
       )
-
-      // 4. Pour production: Notifier l'autre utilisateur et créer le match dans Supabase
-      // await createMatch(suggestionId, myUserId)
-      // await notifyUser(suggestion.userId, 'match_accepted')
 
       return conversationId
     } catch (error: any) {

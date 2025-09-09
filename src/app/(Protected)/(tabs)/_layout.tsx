@@ -2,8 +2,9 @@ import React from 'react'
 import { View, Text } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Tabs } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
+import { Ionicons } from '@expo/vector-icons'
+
 
 export default function TabsLayout() {
   const unreadTotal = useAppStore((s) => 
@@ -13,8 +14,8 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#EAB308',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarShowLabel: true,
         tabBarBackground: () => (
           <LinearGradient
             colors={["#0B1220", "#0B0F1A"]}
@@ -24,7 +25,7 @@ export default function TabsLayout() {
           />
         ),
         tabBarStyle: {
-          backgroundColor: 'rgba(11,15,26,0.95)',
+          backgroundColor: '#273244',
           borderTopColor: '#273244',
           borderTopWidth: 1,
           borderTopLeftRadius: 20,
@@ -47,29 +48,32 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: '#000000' },
         headerTintColor: '#FFFFFF',
         tabBarLabelStyle: {
-          fontWeight: '700',
-          marginBottom: 4,
-          letterSpacing: 0.3,
-          fontSize: 13,
-          textTransform: 'capitalize',
+          fontWeight: '600',
+          marginBottom: 2,
+          marginTop: 2,
+          fontSize: 14,
         },
         tabBarItemStyle: {
-          marginTop: 4,
+          paddingVertical: 8,
+          height: 70,
+          justifyContent: 'center',
+        },
+        tabBarIconStyle: {
+          marginBottom: 2,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'intention',
+          title: 'Intention',
           tabBarActiveTintColor: '#EAB308',
           tabBarIcon: ({ color }) => (
-            <View style={{}}>
-              <Ionicons name="swap-horizontal-sharp" color={color} size={28} />
-            </View>
-          ),
-          tabBarLabel: ({ focused, color }) => (
-            <Text style={{ color, fontWeight: '800', fontSize: 18, opacity: focused ? 1 : 0.9 }}>Intention</Text>
+            <Ionicons
+              name='swap-horizontal'
+              color={color}
+              size={28}
+            />
           ),
         }}
       />
@@ -78,20 +82,34 @@ export default function TabsLayout() {
         options={{
           title: 'Messages',
           tabBarActiveTintColor: '#60A5FA',
-          tabBarIcon: ({ color }) => (
-            <View style={{ }}>
-              <Ionicons name="chatbubble-ellipses-sharp" color={color} size={28} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{ position: 'relative' }}>
+              <Ionicons 
+                name={focused ? "chatbubbles" : "chatbubbles-outline"} 
+                color={color} 
+                size={28} 
+              />
               {unreadTotal > 0 && (
-                <View style={{ position: 'absolute', top: 0, right: 0, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
-                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }} numberOfLines={1}>
+                <View style={{ 
+                  position: 'absolute', 
+                  top: -8, 
+                  right: -8, 
+                  minWidth: 18, 
+                  height: 18, 
+                  borderRadius: 9, 
+                  backgroundColor: '#EF4444', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  paddingHorizontal: 4,
+                  borderWidth: 2,
+                  borderColor: '#0B1220'
+                }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }} numberOfLines={1}>
                     {unreadTotal > 9 ? '9+' : unreadTotal}
                   </Text>
                 </View>
               )}
             </View>
-          ),
-          tabBarLabel: ({ focused, color }) => (
-            <Text style={{ color, fontWeight: '800', fontSize: 18, opacity: focused ? 1 : 0.9 }}>Messages</Text>
           ),
         }}
       />

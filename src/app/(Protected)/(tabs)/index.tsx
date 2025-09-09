@@ -27,43 +27,7 @@ export default function HomePage() {
     return list
   }, [storeSuggested, countryFilter])
 
-  // Pour production: chargement depuis Supabase
-  // useEffect(() => {
-  //   let channel: ReturnType<typeof supabase.channel> | null = null
-  //   ;(async () => {
-  //     const { data: authData } = await supabase.auth.getUser()
-  //     const currentUserId = authData.user?.id
-  //     if (!currentUserId) return
 
-  //     // chargement initial: propositions ouvertes opposées (exemple basique: RECEIVE)
-  //     const { data } = await supabase
-  //       .from('intents')
-  //       .select('id, amount, currency, origin_country, dest_country, user_id, created_at')
-  //       .eq('status', 'OPEN')
-  //       .eq('direction', 'RECEIVE')
-  //       .neq('user_id', currentUserId)
-  //       .order('created_at', { ascending: false })
-  //     setSuggested(data ?? [])
-
-  //     // realtime sur INSERT/UPDATE/DELETE
-  //     channel = supabase
-  //       .channel('intents-realtime')
-  //       .on('postgres_changes', { event: '*', schema: 'public', table: 'intents' }, async (_payload) => {
-  //         const { data } = await supabase
-  //           .from('intents')
-  //           .select('id, amount, currency, origin_country, dest_country, user_id, created_at')
-  //           .eq('status', 'OPEN')
-  //           .eq('direction', 'RECEIVE')
-  //           .neq('user_id', currentUserId)
-  //           .order('created_at', { ascending: false })
-  //         setSuggested(data ?? [])
-  //       })
-  //       .subscribe()
-  //   })()
-  //   return () => {
-  //     channel?.unsubscribe()
-  //   }
-  // }, [])
 
   // Créer les sections pour la FlatList
   const sections = [

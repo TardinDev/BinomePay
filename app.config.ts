@@ -23,9 +23,11 @@ const config: ExpoConfig = {
   android: {
     package: 'com.binomepay.app',
     versionCode: 1,
+    compileSdkVersion: 34,
+    targetSdkVersion: 34,
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#000000',
     },
     edgeToEdgeEnabled: true,
     permissions: [
@@ -34,17 +36,40 @@ const config: ExpoConfig = {
       'WRITE_EXTERNAL_STORAGE',
       'NOTIFICATIONS',
       'INTERNET',
-      'ACCESS_NETWORK_STATE'
+      'ACCESS_NETWORK_STATE',
+      'VIBRATE',
+      'WAKE_LOCK'
     ],
     blockedPermissions: [
-      'RECORD_AUDIO'
-    ]
+      'RECORD_AUDIO',
+      'ACCESS_FINE_LOCATION',
+      'ACCESS_COARSE_LOCATION'
+    ],
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.binomepay.app'
   },
   web: {
     favicon: './assets/favicon.png',
     bundler: 'metro',
   },
-  plugins: ['expo-router'],
+  plugins: [
+    'expo-router',
+    [
+      'expo-build-properties',
+      {
+        android: {
+          compileSdkVersion: 34,
+          targetSdkVersion: 34,
+          buildToolsVersion: '34.0.0',
+          proguardMinifyEnabled: true,
+          enableProguardInReleaseBuilds: true,
+          packagingOptions: {
+            pickFirst: ['**/libc++_shared.so', '**/libjsc.so']
+          }
+        }
+      }
+    ],
+    'expo-secure-store'
+  ],
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,

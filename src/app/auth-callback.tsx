@@ -1,27 +1,48 @@
 import React, { useEffect } from 'react'
-import { View, ActivityIndicator } from 'react-native'
+import { View, ActivityIndicator, Text } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@clerk/clerk-expo'
 
+// Ce composant gère les callbacks d'authentification OAuth (si utilisé avec Clerk)
+// Pour une authentification Clerk standard, ce fichier peut être supprimé
 export default function AuthCallback() {
-  const params = useLocalSearchParams<{ code?: string; token_hash?: string; type?: string }>()
+  const params = useLocalSearchParams<{ code?: string; state?: string; error?: string }>()
+  const { isLoaded, isSignedIn } = useAuth()
 
   useEffect(() => {
-    ;(async () => {
+    const handleCallback = async () => {
       try {
-        if (params.code) {
-          await supabase.auth.exchangeCodeForSession(String(params.code))
-        } else if (params.token_hash) {
-          await supabase.auth.verifyOtp({ token_hash: String(params.token_hash), type: (params.type as any) || 'signup' })
+        // Si on a une erreur OAuth, rediriger vers login
+        if (params.error) {
+          console.warn('Erreur OAuth:', params.error)
+          router.replace('/(auth)/login')
+          return
         }
-      } catch {}
-      router.replace('/(Protected)/(tabs)/index')
-    })()
-  }, [params])
+
+        // Si l'utilisateur est déjà connecté, rediriger vers l'app
+        if (isLoaded && isSignedIn) {
+          router.replace('/(Protected)/(tabs)')
+          return
+        }
+
+        // Sinon, rediriger vers login après un court délai
+        setTimeout(() => {
+          router.replace('/(auth)/login')
+        }, 2000)
+        
+      } catch (error) {
+        console.error('Erreur callback auth:', error)
+        router.replace('/(auth)/login')
+      }
+    }
+
+    handleCallback()
+  }, [params, isLoaded, isSignedIn])
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator color="#FDE68A" />
+    <View className="flex-1 bg-black justify-center items-center">
+      <ActivityIndicator color="#FDE68A" size="large" />
+      <Text className="text-white mt-4">Finalisation de la connexion...</Text>
     </View>
   )
 }
