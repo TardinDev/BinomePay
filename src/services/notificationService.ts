@@ -5,28 +5,97 @@
 
 import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
+import Constants from 'expo-constants'
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-})
+// Vérifier si on est dans Expo Go
+const isExpoGo = Constants.appOwnership === 'expo'
+
+// Configure notification behavior seulement si pas dans Expo Go
+if (!isExpoGo) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  })
+}
 
 export interface NotificationData {
-  type: 'match_accepted' | 'new_message' | 'match_expired' | 'kyc_update'
+  type: 'match_accepted' | 'new_message' | 'match_expired' | 'kyc_update' | 'new_suggestion'
   title: string
   body: string
   data?: Record<string, any>
 }
 
 /**
+ * Create notification channels for Android
+ */
+const createNotificationChannels = async (): Promise<void> => {
+  if (Platform.OS !== 'android') return
+
+  try {
+    // Canal par défaut
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Notifications générales',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+      sound: true,
+      enableVibrate: true,
+    })
+
+    // Canal pour les matches
+    await Notifications.setNotificationChannelAsync('match_accepted', {
+      name: 'Nouveaux matches',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 500, 250, 500],
+      lightColor: '#00FF00',
+      sound: true,
+      enableVibrate: true,
+    })
+
+    // Canal pour les messages
+    await Notifications.setNotificationChannelAsync('new_message', {
+      name: 'Nouveaux messages',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 125, 250],
+      lightColor: '#0099FF',
+      sound: true,
+      enableVibrate: true,
+    })
+
+    // Canal pour les suggestions
+    await Notifications.setNotificationChannelAsync('new_suggestion', {
+      name: 'Nouvelles propositions',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 250],
+      lightColor: '#FFAA00',
+      sound: true,
+      enableVibrate: true,
+    })
+
+    console.log('Canaux de notification Android créés')
+  } catch (error) {
+    console.error('Erreur création canaux Android:', error)
+  }
+}
+
+/**
  * Initialize notification permissions
  */
 export const initializeNotifications = async (): Promise<boolean> => {
+  if (isExpoGo) {
+    console.log('Notifications désactivées dans Expo Go')
+    return false
+  }
+  
   try {
+    // Créer les canaux de notification Android
+    if (Platform.OS === 'android') {
+      await createNotificationChannels()
+    }
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync()
     let finalStatus = existingStatus
 
@@ -42,13 +111,18 @@ export const initializeNotifications = async (): Promise<boolean> => {
 
     // Get push token for production use
     if (Platform.OS === 'ios' || Platform.OS === 'android') {
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PROJECT_ID || 'your-project-id'
-      })
-      console.log('Push token:', token.data)
-      
-      // In production, send this token to your backend
-      // await sendTokenToBackend(token.data)
+      try {
+        const token = await Notifications.getExpoPushTokenAsync({
+          projectId: process.env.EXPO_PROJECT_ID || 'your-project-id'
+        })
+        console.log('Push token:', token.data)
+        
+        // In production, send this token to your backend
+        // await sendTokenToBackend(token.data)
+      } catch (tokenError) {
+        console.warn('Impossible d\'obtenir le token push:', tokenError)
+        // Continue même sans token push pour les notifications locales
+      }
     }
 
     return true
@@ -65,15 +139,33 @@ export const scheduleLocalNotification = async (
   notificationData: NotificationData,
   delaySeconds: number = 0
 ): Promise<string | null> => {
+  if (isExpoGo) {
+    console.log('Notification ignorée dans Expo Go:', notificationData.title)
+    return null
+  }
+  
   try {
+    const notificationContent: any = {
+      title: notificationData.title,
+      body: notificationData.body,
+      data: notificationData.data || {},
+      sound: true,
+    }
+
+    // Configuration spécifique Android
+    if (Platform.OS === 'android') {
+      notificationContent.priority = Notifications.AndroidNotificationPriority.HIGH
+      // Utiliser le canal spécifique au type de notification
+      notificationContent.channelId = notificationData.type === 'match_accepted' || 
+                                     notificationData.type === 'new_message' || 
+                                     notificationData.type === 'new_suggestion' 
+                                     ? notificationData.type 
+                                     : 'default'
+      notificationContent.categoryId = notificationData.type
+    }
+
     const identifier = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: notificationData.title,
-        body: notificationData.body,
-        data: notificationData.data || {},
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-      },
+      content: notificationContent,
       trigger: delaySeconds > 0 ? { seconds: delaySeconds } : null,
     })
 
@@ -147,6 +239,21 @@ export const notifyMatchExpiring = async (
 }
 
 /**
+ * Send notification for new suggestion
+ */
+export const notifyNewSuggestion = async (count: number): Promise<void> => {
+  await scheduleLocalNotification({
+    type: 'new_suggestion',
+    title: '💡 Nouvelles propositions',
+    body: `${count} nouvelle${count > 1 ? 's' : ''} proposition${count > 1 ? 's' : ''} pour vous`,
+    data: {
+      type: 'new_suggestion',
+      count
+    }
+  })
+}
+
+/**
  * Send notification for KYC status update
  */
 export const notifyKycUpdate = async (
@@ -209,6 +316,14 @@ export const handleNotificationResponse = (
       // Navigate to profile
       navigation.navigate('(Protected)', {
         screen: 'profile'
+      })
+      break
+    
+    case 'new_suggestion':
+      // Navigate to suggestions/home screen
+      navigation.navigate('(Protected)', {
+        screen: '(tabs)',
+        params: { screen: 'index' }
       })
       break
   }

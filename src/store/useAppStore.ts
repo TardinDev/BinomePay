@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid/non-secure'
 import { notifyMatchAccepted, notifyNewMessage } from '@/services/notificationService'
 import ratingService, { UserRating } from '@/services/ratingService'
 import ApiService from '@/services/apiService'
-import { syncService } from '@/services/syncService'
 
 export type KycStatus = 'unverified' | 'pending' | 'verified'
 
@@ -330,7 +329,12 @@ const useAppStore = create<AppState>((set, get) => ({
       ])
       
       // Initialiser le service de synchronisation seulement en mode API
-      await syncService.initialize()
+      try {
+        const { syncService } = await import('@/services/syncService')
+        await syncService.initialize()
+      } catch (error) {
+        console.error('Erreur initialisation syncService:', error)
+      }
       
     } catch (error: any) {
       set({ error: error.message, isLoading: false })

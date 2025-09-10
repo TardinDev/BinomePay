@@ -10,6 +10,7 @@ type UnsafeMeta = Record<string, unknown> & { avatarUpdatedAt?: string }
 
 export default function ProfileScreen() {
   const user = useAppStore((s) => s.user)
+  const reset = useAppStore((s) => s.reset)
   const { signOut } = useAuth()
   const { user: clerkUser, isLoaded } = useUser()
 
@@ -58,7 +59,20 @@ export default function ProfileScreen() {
   return (
     <ScrollView className="flex-1 bg-black px-5 pt-6">
       <View className="flex-row items-center justify-between">
-        <Pressable onPress={() => router.back()} className="p-2 rounded-full" style={{ backgroundColor: '#111827' }}>
+        <Pressable
+          onPress={() => {
+            try {
+              // Sécuriser le retour: si aucun historique, revenir aux tabs
+              const canGoBack = (router as any)?.canGoBack?.()
+              if (canGoBack) router.back()
+              else router.replace('/(Protected)/(tabs)')
+            } catch {
+              router.replace('/(Protected)/(tabs)')
+            }
+          }}
+          className="p-2 rounded-full"
+          style={{ backgroundColor: '#111827' }}
+        >
           <Ionicons name="arrow-back" size={18} color="#E5E7EB" />
         </Pressable>
         <Text className="text-white text-lg font-extrabold">Profil</Text>
@@ -106,10 +120,21 @@ export default function ProfileScreen() {
       <View className="mt-6">
         <Pressable
           onPress={async () => {
+            console.log('🔴 Début déconnexion - Bouton cliqué')
             try {
+              console.log('🔄 Reset du store Zustand...')
+              reset()
+              console.log('✅ Store réinitialisé')
+              
+              console.log('🔄 Appel signOut()...')
               await signOut()
+              console.log('✅ signOut() réussi')
+              
+              // Ne pas rediriger manuellement, laisser les layouts s'occuper de la redirection
+              console.log('✅ Déconnexion terminée, redirection automatique')
             } catch (e: any) {
-              Alert.alert('Erreur', e?.message ?? 'Une erreur est survenue')
+              console.error('❌ Erreur lors de la déconnexion:', e)
+              Alert.alert('Erreur', e?.message ?? 'Impossible de se déconnecter')
             }
           }}
           className="rounded-xl items-center"

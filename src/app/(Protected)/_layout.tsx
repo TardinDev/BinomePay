@@ -14,17 +14,24 @@ export default function ProtectedLayout() {
   const user = useAppStore((s) => s.user)
   const isLoading = useAppStore((s) => s.isLoading)
   const initializeUserData = useAppStore((s) => s.initializeUserData)
+  const reset = useAppStore((s) => s.reset)
   
-  // Initialiser les données utilisateur dès la connexion
+  // Gérer les changements d'état de connexion
   useEffect(() => {
-    if (isLoaded && isSignedIn && clerkUser?.id && !user) {
+    if (!isLoaded) return
+    
+    if (isSignedIn && clerkUser?.id && !user) {
       console.log('Initialisation des données pour:', clerkUser.id)
       initializeUserData(clerkUser.id)
+    } else if (!isSignedIn && user) {
+      console.log('Utilisateur déconnecté, nettoyage du store')
+      reset()
     }
-  }, [isLoaded, isSignedIn, clerkUser?.id, user, initializeUserData])
+  }, [isLoaded, isSignedIn, clerkUser?.id, user, initializeUserData, reset])
   
   if (!isLoaded) return <LoadingScreen message="Vérification de l'authentification..." />
-  if (!isSignedIn) return <Redirect href='/index' />
+  // Rediriger vers la racine pour laisser index.tsx router vers la bonne page
+  if (!isSignedIn) return <Redirect href='/' />
   
   // Afficher l'écran de chargement pendant l'initialisation des données
   if (isLoading && !user) {
@@ -40,5 +47,4 @@ export default function ProtectedLayout() {
     </View>
   )
 }
-
 
