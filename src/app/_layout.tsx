@@ -6,6 +6,7 @@ import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import AnimatedSplash from '@/components/AnimatedSplash'
 import ToastProvider from '@/components/ToastProvider'
+import QueryProvider from '@/components/QueryProvider'
 import { ClerkProvider } from '@clerk/clerk-expo'
 import { clerkPublishableKey, tokenCache } from '@/lib/clerk'
 
@@ -24,11 +25,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}> 
-      <SafeAreaView className='flex-1 bg-black'>
-        <Slot />
-        <ToastProvider />
-      </SafeAreaView>
-    </ClerkProvider>
+    <QueryProvider>
+      <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}> 
+        <SafeAreaView className='flex-1 bg-black'>
+          <Slot />
+          <ToastProvider />
+        </SafeAreaView>
+      </ClerkProvider>
+    </QueryProvider>
   )
 }
