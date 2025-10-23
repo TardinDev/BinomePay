@@ -1,18 +1,74 @@
-import React from 'react'
-import { View, Text, Pressable, ScrollView, Alert, Image } from 'react-native'
+import React, { useState, useRef, useEffect } from 'react'
+import { View, Text, Pressable, ScrollView, Alert, Image, Modal } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import * as ImagePicker from 'expo-image-picker'
+import * as Linking from 'expo-linking'
 
 type UnsafeMeta = Record<string, unknown> & { avatarUpdatedAt?: string }
 
 export default function ProfileScreen() {
   const user = useAppStore((s) => s.user)
-  const reset = useAppStore((s) => s.reset)
+  const setLoggingOut = useAppStore((s) => s.setLoggingOut)
   const { signOut } = useAuth()
   const { user: clerkUser, isLoaded } = useUser()
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    if (!isMounted.current) return
+
+    // Marquer qu'on est en train de se déconnecter
+    setLoggingOut(true)
+    setShowLogoutModal(true)
+
+    try {
+      console.log('🔴 Début déconnexion - Bouton cliqué')
+
+      // Attendre un peu pour que l'utilisateur voie le message avant de déconnecter
+      setTimeout(async () => {
+        try {
+          console.log('🔄 Appel signOut()...')
+
+          // Polyfill pour window.location si nécessaire (fix pour Clerk en React Native)
+          if (typeof window !== 'undefined' && !window.location) {
+            (window as any).location = { origin: 'app://binomepay' }
+          }
+
+          // Appeler signOut() - Clerk va maintenant trouver window.location.origin
+          await signOut()
+          console.log('✅ signOut() réussi')
+          // Le reset sera fait automatiquement par le ProtectedLayout
+          // Pas besoin de fermer le modal, la navigation va changer
+        } catch (e: any) {
+          console.error('❌ Erreur lors de la déconnexion:', e)
+          const msg = e instanceof Error ? e.message : String(e ?? 'Erreur inconnue')
+          if (isMounted.current) {
+            setLoggingOut(false) // Reset le flag en cas d'erreur
+            setShowLogoutModal(false)
+            Alert.alert('Erreur', msg || 'Déconnexion impossible, réessayez')
+          }
+        }
+      }, 1500)
+
+    } catch (e: any) {
+      console.error('❌ Erreur lors de la déconnexion:', e)
+      const msg = e instanceof Error ? e.message : String(e ?? 'Erreur inconnue')
+      if (isMounted.current) {
+        setLoggingOut(false) // Reset le flag en cas d'erreur
+        setShowLogoutModal(false)
+        Alert.alert('Erreur', msg || 'Déconnexion impossible, réessayez')
+      }
+    }
+  }
 
   const handleChangePhoto = async () => {
     if (!isLoaded || !clerkUser) return
@@ -119,30 +175,36 @@ export default function ProfileScreen() {
 
       <View className="mt-6">
         <Pressable
-          onPress={async () => {
-            console.log('🔴 Début déconnexion - Bouton cliqué')
-            try {
-              console.log('🔄 Reset du store Zustand...')
-              reset()
-              console.log('✅ Store réinitialisé')
-              
-              console.log('🔄 Appel signOut()...')
-              await signOut()
-              console.log('✅ signOut() réussi')
-              
-              // Ne pas rediriger manuellement, laisser les layouts s'occuper de la redirection
-              console.log('✅ Déconnexion terminée, redirection automatique')
-            } catch (e: any) {
-              console.error('❌ Erreur lors de la déconnexion:', e)
-              Alert.alert('Erreur', e?.message ?? 'Impossible de se déconnecter')
-            }
-          }}
+          onPress={handleLogout}
           className="rounded-xl items-center"
           style={{ backgroundColor: '#EF4444', paddingVertical: 12 }}
         >
           <Text className="text-white font-extrabold">Se déconnecter</Text>
         </Pressable>
       </View>
+
+      {/* Modal de déconnexion */}
+      <Modal
+        visible={showLogoutModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View className="flex-1 justify-center items-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}>
+          <View className="bg-neutral-900 rounded-3xl p-8 mx-8 border" style={{ borderColor: '#334155' }}>
+            <View className="items-center">
+              <View className="mb-6 p-4 rounded-full" style={{ backgroundColor: '#1E293B' }}>
+                <Ionicons name="sad-outline" size={60} color="#EAB308" />
+              </View>
+              <Text className="text-white text-2xl font-extrabold mb-2 text-center">
+                Vous êtes déconnecté
+              </Text>
+              <Text className="text-gray-400 text-center">
+                À bientôt sur BinomePay !
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   )
 }
