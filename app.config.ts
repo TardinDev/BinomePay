@@ -19,15 +19,8 @@ const config: ExpoConfig = {
     backgroundColor: '#000000',
   },
 
-  // ✅ Unifier la runtimeVersion
-  runtimeVersion: '1.0.1',
-
   ios: {
     supportsTablet: true,
-  },
-
-  updates: {
-    url: 'https://u.expo.dev/7bfec935-841c-4a69-8abe-9fde7256610a',
   },
 
   android: {
@@ -68,22 +61,7 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-web-browser',
-    'expo-updates',
     'expo-secure-store',
-    // Ajoute ce plugin si tu utilises vraiment les notifications:
-    // 'expo-notifications',
-
-    // ❌ Optionnel : retire build-properties si tu n’en as pas besoin
-    // [
-    //   'expo-build-properties',
-    //   {
-    //     android: {
-    //       // Si tu forces, assure-toi d’être cohérent avec ta version d’Expo
-    //       targetSdkVersion: 35,
-    //       // Évite packagingOptions pickFirst sauf conflit prouvé
-    //     },
-    //   },
-    // ],
   ],
 
   extra: {
