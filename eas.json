@@ -27,8 +27,7 @@
         "gradleCommand": ":app:bundleRelease"
       },
       "env": {
-        "EXPO_PUBLIC_MOCK_API": "false",
-        "NODE_ENV": "production"
+        "EXPO_PUBLIC_MOCK_API": "false"
       }
     }
   },
