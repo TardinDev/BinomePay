@@ -98,7 +98,7 @@ export default function Toast({
     });
   };
 
-  if (!visible && opacity._value === 0) return null;
+  if (!visible && (opacity as any)._value === 0) return null;
 
   return (
     <Animated.View
@@ -113,7 +113,7 @@ export default function Toast({
       }}
     >
       <LinearGradient
-        colors={config.colors}
+        colors={config.colors as unknown as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{

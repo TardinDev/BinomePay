@@ -84,6 +84,9 @@ type AppState = {
   // Error states
   error: string | null
   
+  // Auth states
+  isLoggingOut: boolean
+  
   // User actions
   setUser: (user: User | null) => void
   initializeUserData: (userId: string) => Promise<void>
@@ -125,6 +128,7 @@ type AppState = {
   // General utilities
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setLoggingOut: (logging: boolean) => void
   reset: () => void
 }
 
@@ -151,6 +155,9 @@ const useAppStore = create<AppState>((set, get) => ({
   
   // Error states (for future dynamic data)
   error: null,
+  
+  // Auth states
+  isLoggingOut: false,
   
   // Mock data (current development data)
   requests: [
@@ -279,6 +286,14 @@ const useAppStore = create<AppState>((set, get) => ({
 
   // Dynamic data initialization with API integration
   initializeUserData: async (userId: string) => {
+    const state = get()
+    
+    // Ne pas initialiser si on est en train de se déconnecter
+    if (state.isLoggingOut) {
+      console.log('Initialisation annulée - déconnexion en cours')
+      return
+    }
+    
     set({ isLoading: true, error: null })
     
     const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
@@ -594,6 +609,7 @@ const useAppStore = create<AppState>((set, get) => ({
 
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   setError: (error: string | null) => set({ error }),
+  setLoggingOut: (logging: boolean) => set({ isLoggingOut: logging }),
   
   reset: () => set({
     user: null,
@@ -610,6 +626,7 @@ const useAppStore = create<AppState>((set, get) => ({
     isSendingMessage: false,
     isCreatingIntention: false,
     error: null,
+    isLoggingOut: false, // Reset du flag de déconnexion
   }),
 }))
 

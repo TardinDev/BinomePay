@@ -17,7 +17,9 @@ if (!isExpoGo) {
       shouldShowAlert: true,
       shouldPlaySound: true,
       shouldSetBadge: true,
-    }),
+      shouldShowBanner: true,
+      shouldShowList: true,
+    } as any),
   })
 }
 
@@ -41,9 +43,7 @@ const createNotificationChannels = async (): Promise<void> => {
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FF231F7C',
-      sound: true,
-      enableVibrate: true,
-    })
+    } as any)
 
     // Canal pour les matches
     await Notifications.setNotificationChannelAsync('match_accepted', {
@@ -51,9 +51,7 @@ const createNotificationChannels = async (): Promise<void> => {
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 500, 250, 500],
       lightColor: '#00FF00',
-      sound: true,
-      enableVibrate: true,
-    })
+    } as any)
 
     // Canal pour les messages
     await Notifications.setNotificationChannelAsync('new_message', {
@@ -61,9 +59,7 @@ const createNotificationChannels = async (): Promise<void> => {
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 125, 250],
       lightColor: '#0099FF',
-      sound: true,
-      enableVibrate: true,
-    })
+    } as any)
 
     // Canal pour les suggestions
     await Notifications.setNotificationChannelAsync('new_suggestion', {
@@ -71,9 +67,7 @@ const createNotificationChannels = async (): Promise<void> => {
       importance: Notifications.AndroidImportance.DEFAULT,
       vibrationPattern: [0, 250],
       lightColor: '#FFAA00',
-      sound: true,
-      enableVibrate: true,
-    })
+    } as any)
 
     console.log('Canaux de notification Android créés')
   } catch (error) {
@@ -149,7 +143,7 @@ export const scheduleLocalNotification = async (
       title: notificationData.title,
       body: notificationData.body,
       data: notificationData.data || {},
-      sound: true,
+      sound: 'default',
     }
 
     // Configuration spécifique Android
@@ -166,7 +160,7 @@ export const scheduleLocalNotification = async (
 
     const identifier = await Notifications.scheduleNotificationAsync({
       content: notificationContent,
-      trigger: delaySeconds > 0 ? { seconds: delaySeconds } : null,
+      trigger: delaySeconds > 0 ? { seconds: delaySeconds } as any : null,
     })
 
     return identifier

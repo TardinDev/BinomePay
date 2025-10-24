@@ -19,6 +19,10 @@ const config: ExpoConfig = {
     backgroundColor: '#000000',
   },
 
+  runtimeVersion: {
+    policy: 'sdkVersion',
+  },
+
   ios: {
     supportsTablet: true,
   },

@@ -116,7 +116,7 @@ export default function CustomModal({
                 style={{ opacity: button.loading ? 0.7 : 1 }}
               >
                 <LinearGradient
-                  colors={getButtonStyle(button.style)}
+                  colors={getButtonStyle(button.style) as unknown as readonly [string, string, ...string[]]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{ paddingVertical: 16, paddingHorizontal: 20 }}

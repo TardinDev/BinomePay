@@ -72,7 +72,7 @@ class StorageManager {
     if (!userData) return null
 
     // Check if data is older than 24 hours
-    const isStale = Date.now() - (userData.lastUpdated || 0) > 24 * 60 * 60 * 1000
+    const isStale = Date.now() - ((userData as any).lastUpdated || 0) > 24 * 60 * 60 * 1000
     if (isStale) {
       console.log('User data is stale, should refresh from server')
     }

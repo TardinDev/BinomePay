@@ -134,7 +134,7 @@ export class DataService {
         currency: intent.currency,
         originCountryName: intent.origin_country,
         destCountryName: intent.dest_country,
-        senderName: intent.users?.name || 'Utilisateur',
+        senderName: (intent.users as any)?.name || 'Utilisateur',
         createdAt: new Date(intent.created_at).getTime(),
       }))
     } catch (error) {

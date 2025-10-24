@@ -28,7 +28,9 @@ export const formatDate = (timestamp: number, format: 'time' | 'datetime' = 'dat
   return formatted
 }
 
-// Hook pour memoization React
+// Alias pour formatTimestamp (compatibilité)
+export const formatTimestamp = formatDate
+
 // Hook pour memoization React
 export const useFormattedDate = (timestamp: number, format: 'time' | 'datetime' = 'datetime') => {
   return useMemo(() => {

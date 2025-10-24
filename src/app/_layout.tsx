@@ -25,13 +25,13 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryProvider>
-      <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}> 
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}> 
+      <QueryProvider>
         <SafeAreaView className='flex-1 bg-black'>
           <Slot />
           <ToastProvider />
         </SafeAreaView>
-      </ClerkProvider>
-    </QueryProvider>
+      </QueryProvider>
+    </ClerkProvider>
   )
 }

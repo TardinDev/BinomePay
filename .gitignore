@@ -18,6 +18,15 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# Security & Deployment
+service-account-key.json
+.env.local
+.env.*.local
+
+# Play Store assets (générés)
+screenshots/
+store-assets/
+
 # Metro
 .metro-health-check*
 

@@ -26,7 +26,7 @@ export const useUpdateUserProfile = () => {
   return useMutation({
     mutationFn: async (userData: Partial<User>) => {
       if (!userId) throw new Error('User not authenticated')
-      return await ApiService.updateUserProfile(userId, userData)
+      return await ApiService.updateUserProfile(userId, userData as any)
     },
     onSuccess: () => {
       if (userId) {

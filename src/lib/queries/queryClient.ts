@@ -12,9 +12,10 @@ export const queryClient = new QueryClient({
         }
         return failureCount < 3
       },
-      refetchOnWindowFocus: false,
-      refetchOnMount: true,
-      refetchOnReconnect: true,
+      refetchOnWindowFocus: false, // Important pour RN
+      refetchOnMount: false, // Réduire les refetch automatiques
+      refetchOnReconnect: false, // Réduire les refetch automatiques
+      refetchInterval: false, // Pas de polling automatique
     },
     mutations: {
       retry: (failureCount, error: any) => {

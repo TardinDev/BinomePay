@@ -7,6 +7,7 @@ import NetInfo from '@react-native-community/netinfo'
 export function useDataSync() {
   const { user: clerkUser } = useUser()
   const user = useAppStore((s) => s.user)
+  const isLoggingOut = useAppStore((s) => s.isLoggingOut)
   const initializeUserData = useAppStore((s) => s.initializeUserData)
   const isLoading = useAppStore((s) => s.isLoading)
   const error = useAppStore((s) => s.error)
@@ -35,15 +36,18 @@ export function useDataSync() {
     })
 
     return unsubscribe
-  }, [user?.id, useMockApi])
+  }, [useMockApi]) // Retirer user?.id qui cause des boucles
 
   // Initialiser les données utilisateur lors de la connexion
   useEffect(() => {
+    // Ne pas initialiser si on est en train de se déconnecter
+    if (isLoggingOut) return
+    
     if (clerkUser?.id && !user) {
       console.log('Initialisation des données pour:', clerkUser.id)
       initializeUserData(clerkUser.id)
     }
-  }, [clerkUser?.id, user, initializeUserData])
+  }, [clerkUser?.id, user?.id, isLoggingOut]) // Ajouter isLoggingOut
 
   // Synchronisation manuelle
   const handleSync = useCallback(async () => {
@@ -94,7 +98,7 @@ export function useDataSync() {
       clearTimeout(initialSync)
       clearInterval(interval)
     }
-  }, [user?.id, isOnline, isSyncing, useMockApi])
+  }, [user?.id, useMockApi]) // Retirer isOnline et isSyncing qui changent souvent
 
   return {
     isInitialized: !!user,
