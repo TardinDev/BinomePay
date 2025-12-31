@@ -84,22 +84,22 @@ export default function TabsLayout() {
           tabBarActiveTintColor: '#60A5FA',
           tabBarIcon: ({ color, focused }) => (
             <View style={{ position: 'relative' }}>
-              <Ionicons 
-                name={focused ? "chatbubbles" : "chatbubbles-outline"} 
-                color={color} 
-                size={28} 
+              <Ionicons
+                name={focused ? "chatbubbles" : "chatbubbles-outline"}
+                color={color}
+                size={28}
               />
               {unreadTotal > 0 && (
-                <View style={{ 
-                  position: 'absolute', 
-                  top: -8, 
-                  right: -8, 
-                  minWidth: 18, 
-                  height: 18, 
-                  borderRadius: 9, 
-                  backgroundColor: '#EF4444', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
+                <View style={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  minWidth: 18,
+                  height: 18,
+                  borderRadius: 9,
+                  backgroundColor: '#EF4444',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   paddingHorizontal: 4,
                   borderWidth: 2,
                   borderColor: '#0B1220'
@@ -113,7 +113,20 @@ export default function TabsLayout() {
           ),
         }}
       />
-     
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profil',
+          tabBarActiveTintColor: '#10B981',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              color={color}
+              size={28}
+            />
+          ),
+        }}
+      />
     </Tabs>
   )
 }
