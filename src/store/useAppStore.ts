@@ -133,89 +133,32 @@ type AppState = {
 }
 
 const useAppStore = create<AppState>((set, get) => ({
-  // User data (mock for development)
-  user: {
-    id: 'u_1',
-    name: 'Tardin',
-    kycStatus: 'verified',
-    ratingAvg: 4.8,
-  },
-  notifications: 2,
-  
-  // Loading states (for future dynamic data)
+  // User data - initialement null
+  user: null,
+  notifications: 0,
+
+  // Loading states
   isLoading: false,
   isLoadingRequests: false,
   isLoadingMatches: false,
   isLoadingSuggested: false,
-  
+
   // Optimistic UI states
   isAcceptingMatch: false,
   isSendingMessage: false,
   isCreatingIntention: false,
-  
-  // Error states (for future dynamic data)
+
+  // Error states
   error: null,
-  
+
   // Auth states
   isLoggingOut: false,
-  
-  // Mock data (current development data)
-  requests: [
-    {
-      id: 'r_1',
-      type: 'SEND',
-      amount: 150,
-      currency: 'EUR',
-      originCountry: 'France',
-      destCountry: 'Sénégal',
-      status: 'OPEN',
-    },
-  ],
-  matches: [
-    { id: 'm_1', counterpartName: 'Moussa D.', amount: 150, currency: 'EUR', corridor: 'FR → SN', status: 'PENDING' },
-    { id: 'm_2', counterpartName: 'Awa S.', amount: 200, currency: 'EUR', corridor: 'FR → CI', status: 'PENDING' },
-    { id: 'm_3', counterpartName: 'Koffi A.', amount: 120, currency: 'EUR', corridor: 'FR → CI', status: 'ACCEPTED' },
-    { id: 'm_4', counterpartName: 'Fatou N.', amount: 90, currency: 'EUR', corridor: 'FR → SN', status: 'PENDING' },
-    { id: 'm_5', counterpartName: 'Yassine M.', amount: 300, currency: 'EUR', corridor: 'FR → MA', status: 'EXPIRED' },
-  ],
-  suggested: [
-    { id: 's_1', amount: 200, currency: 'EUR', originCountryName: 'France', destCountryName: "Côte d'Ivoire", senderName: 'Fatou N.', createdAt: Date.now() - 1000 * 60 * 5 },
-    { id: 's_2', amount: 120, currency: 'EUR', originCountryName: 'France', destCountryName: 'Sénégal', senderName: 'Jean P.', createdAt: Date.now() - 1000 * 60 * 12 },
-    { id: 's_3', amount: 90, currency: 'EUR', originCountryName: 'France', destCountryName: 'Maroc', senderName: 'Yassine M.', createdAt: Date.now() - 1000 * 60 * 25 },
-    { id: 's_4', amount: 300, currency: 'EUR', originCountryName: 'Belgique', destCountryName: 'Cameroun', senderName: 'Brice K.', createdAt: Date.now() - 1000 * 60 * 33 },
-    { id: 's_5', amount: 75, currency: 'EUR', originCountryName: 'France', destCountryName: 'République Démocratique du Congo', senderName: 'Aline T.', createdAt: Date.now() - 1000 * 60 * 44 },
-    { id: 's_6', amount: 250, currency: 'EUR', originCountryName: 'Canada', destCountryName: 'Bénin', senderName: 'Rachid O.', createdAt: Date.now() - 1000 * 60 * 58 },
-    { id: 's_7', amount: 180, currency: 'EUR', originCountryName: 'France', destCountryName: 'Togo', senderName: 'Komi A.', createdAt: Date.now() - 1000 * 60 * 61 },
-    { id: 's_8', amount: 60, currency: 'EUR', originCountryName: 'Espagne', destCountryName: 'Guinée', senderName: 'Ibrahima D.', createdAt: Date.now() - 1000 * 60 * 70 },
-    { id: 's_9', amount: 220, currency: 'EUR', originCountryName: 'France', destCountryName: 'Mali', senderName: 'Aïssata C.', createdAt: Date.now() - 1000 * 60 * 85 },
-    { id: 's_10', amount: 140, currency: 'EUR', originCountryName: 'Suisse', destCountryName: 'Burkina Faso', senderName: 'Paul K.', createdAt: Date.now() - 1000 * 60 * 100 },
-  ],
-  conversations: [
-    {
-      id: 'c_1',
-      counterpartName: 'Moussa D.',
-      lastMessage: 'On se retrouve à 18h à la station…',
-      updatedAt: Date.now() - 1000 * 60 * 20,
-      unreadCount: 2,
-      matchDetails: {
-        amount: 150,
-        currency: 'EUR',
-        corridor: 'France → Sénégal'
-      }
-    },
-    {
-      id: 'c_2',
-      counterpartName: 'Awa S.',
-      lastMessage: 'Parfait, je confirme demain matin.',
-      updatedAt: Date.now() - 1000 * 60 * 90,
-      unreadCount: 0,
-      matchDetails: {
-        amount: 200,
-        currency: 'EUR',
-        corridor: 'France → Côte d\'Ivoire'
-      }
-    },
-  ],
+
+  // Data - initialement vide
+  requests: [],
+  matches: [],
+  suggested: [],
+  conversations: [],
   setUser: (user) => set({ user }),
   incrementNotifications: () => set((s) => ({ notifications: s.notifications + 1 })),
   clearNotifications: () => set({ notifications: 0 }),
@@ -249,7 +192,7 @@ const useAppStore = create<AppState>((set, get) => ({
         requests: s.requests.map(r => r.id === tempRequest.id ? newRequest : r),
         isCreatingIntention: false
       }))
-    } catch (error: any) {
+    } catch (error) {
       // En cas d'erreur, ajouter à la queue hors ligne
       await ApiService.queueOfflineAction({
         type: 'CREATE_REQUEST',
@@ -257,9 +200,9 @@ const useAppStore = create<AppState>((set, get) => ({
         userId: state.user.id,
         timestamp: Date.now()
       })
-      
+
       set({ isCreatingIntention: false })
-      console.error('Erreur création intention:', error)
+      if (__DEV__) console.error('Erreur création intention:', error)
     }
   },
   addSuggested: ({ amount, currency, originCountryName, destCountryName, senderName, note, createdAt }) =>
@@ -286,166 +229,98 @@ const useAppStore = create<AppState>((set, get) => ({
 
   // Dynamic data initialization with API integration
   initializeUserData: async (userId: string) => {
-    const state = get()
-    
+    const currentState = get()
+
     // Ne pas initialiser si on est en train de se déconnecter
-    if (state.isLoggingOut) {
-      console.log('Initialisation annulée - déconnexion en cours')
+    if (currentState.isLoggingOut) {
+      if (__DEV__) console.log('Initialisation annulée - déconnexion en cours')
       return
     }
-    
+
     set({ isLoading: true, error: null })
-    
-    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
-    
+
     try {
-      if (useMockApi) {
-        console.log('Mode mock activé - utilisation des données mock')
-        // En mode mock, utiliser directement les données du store
-        const mockUser: User = {
-          id: userId,
-          name: 'Tardin',
-          kycStatus: 'verified',
-          ratingAvg: 4.8,
-        }
-        set({ 
-          user: mockUser,
-          isLoading: false,
-          error: null
-        })
-        return // Pas besoin de charger depuis l'API
-      }
-      
-      // Mode API réel
+      // Charger le profil utilisateur
       try {
         const userProfile = await ApiService.fetchUserProfile(userId)
         set({ user: userProfile })
       } catch (error) {
-        console.warn('API non disponible, utilisation de données mock:', error)
-        const mockUser: User = {
+        if (__DEV__) console.warn('API non disponible, création profil par défaut:', error)
+        const defaultUser: User = {
           id: userId,
           name: 'Utilisateur',
           kycStatus: 'unverified',
           ratingAvg: 0,
         }
-        set({ user: mockUser })
+        set({ user: defaultUser })
       }
-      
+
       set({ isLoading: false })
-      
-      // Charger toutes les données utilisateur
-      const state = get()
+
+      // Charger toutes les données utilisateur en parallèle
+      const storeState = get()
       await Promise.allSettled([
-        state.loadRequests(userId),
-        state.loadMatches(userId),
-        state.loadSuggested(userId),
-        state.loadConversations(userId),
-        state.loadUserRating(userId)
+        storeState.loadRequests(userId),
+        storeState.loadMatches(userId),
+        storeState.loadSuggested(userId),
+        storeState.loadConversations(userId),
+        storeState.loadUserRating(userId)
       ])
-      
-      // Initialiser le service de synchronisation seulement en mode API
+
+      // Initialiser le service de synchronisation
       try {
         const { syncService } = await import('@/services/syncService')
         await syncService.initialize()
       } catch (error) {
-        console.error('Erreur initialisation syncService:', error)
+        if (__DEV__) console.error('Erreur initialisation syncService:', error)
       }
-      
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false })
-      console.error('Erreur initialisation données utilisateur:', error)
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+      set({ error: errorMessage, isLoading: false })
+      if (__DEV__) console.error('Erreur initialisation données utilisateur:', error)
     }
   },
 
   loadRequests: async (userId: string) => {
-    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
-    
-    if (useMockApi) {
-      console.log('Mode mock - intentions déjà chargées depuis le store')
-      set({ isLoadingRequests: false })
-      return
-    }
-    
     set({ isLoadingRequests: true })
     try {
       const requests = await ApiService.fetchUserRequests(userId)
       set({ requests, isLoadingRequests: false })
-    } catch (error: any) {
-      console.warn('Erreur chargement intentions, utilisation mock:', error)
+    } catch (error) {
+      if (__DEV__) console.warn('Erreur chargement intentions:', error)
       set({ isLoadingRequests: false })
     }
   },
 
   loadMatches: async (userId: string) => {
-    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
-    
-    if (useMockApi) {
-      console.log('Mode mock - matches déjà chargés depuis le store')
-      set({ isLoadingMatches: false })
-      return
-    }
-    
     set({ isLoadingMatches: true })
     try {
       const matches = await ApiService.fetchUserMatches(userId)
       set({ matches, isLoadingMatches: false })
-    } catch (error: any) {
-      console.warn('Erreur chargement matches, utilisation mock:', error)
-      const mockMatches: MatchItem[] = [
-        { id: 'm_1', counterpartName: 'Moussa D.', amount: 150, currency: 'EUR', corridor: 'FR → SN', status: 'PENDING' },
-        { id: 'm_2', counterpartName: 'Awa S.', amount: 200, currency: 'EUR', corridor: 'FR → CI', status: 'PENDING' },
-      ]
-      set({ matches: mockMatches, isLoadingMatches: false })
+    } catch (error) {
+      if (__DEV__) console.warn('Erreur chargement matches:', error)
+      set({ isLoadingMatches: false })
     }
   },
 
   loadSuggested: async (userId: string) => {
-    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
-    
-    if (useMockApi) {
-      console.log('Mode mock - suggestions déjà chargées depuis le store')
-      set({ isLoadingSuggested: false })
-      return
-    }
-    
     set({ isLoadingSuggested: true })
     try {
       const suggestions = await ApiService.fetchSuggestionsForUser(userId)
       set({ suggested: suggestions, isLoadingSuggested: false })
-    } catch (error: any) {
-      console.warn('Erreur chargement suggestions, utilisation mock:', error)
+    } catch (error) {
+      if (__DEV__) console.warn('Erreur chargement suggestions:', error)
       set({ isLoadingSuggested: false })
     }
   },
 
   loadConversations: async (userId: string) => {
-    const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
-    
-    if (useMockApi) {
-      console.log('Mode mock - conversations déjà chargées depuis le store')
-      return
-    }
-    
     try {
       const conversations = await ApiService.fetchUserConversations(userId)
       set({ conversations })
-    } catch (error: any) {
-      console.warn('Erreur chargement conversations, utilisation mock:', error)
-      const mockConversations: Conversation[] = [
-        {
-          id: 'c_1',
-          counterpartName: 'Moussa D.',
-          lastMessage: 'On se retrouve à 18h à la station…',
-          updatedAt: Date.now() - 1000 * 60 * 20,
-          unreadCount: 2,
-          matchDetails: {
-            amount: 150,
-            currency: 'EUR',
-            corridor: 'France → Sénégal'
-          }
-        },
-      ]
-      set({ conversations: mockConversations })
+    } catch (error) {
+      if (__DEV__) console.warn('Erreur chargement conversations:', error)
     }
   },
 
@@ -497,7 +372,7 @@ const useAppStore = create<AppState>((set, get) => ({
             timestamp: Date.now()
           })
         }
-        console.error('Erreur envoi message:', error)
+        if (__DEV__) console.error('Erreur envoi message:', error)
       } finally {
         set({ isSendingMessage: false })
       }
@@ -526,7 +401,7 @@ const useAppStore = create<AppState>((set, get) => ({
       try {
         apiResult = await ApiService.acceptSuggestion(suggestionId, myUserId)
       } catch (error) {
-        console.warn('API non disponible, traitement local:', error)
+        if (__DEV__) console.warn('API non disponible, traitement local:', error)
         // En cas d'erreur API, ajouter à la queue hors ligne
         await ApiService.queueOfflineAction({
           type: 'ACCEPT_SUGGESTION',
@@ -576,8 +451,9 @@ const useAppStore = create<AppState>((set, get) => ({
       )
 
       return conversationId
-    } catch (error: any) {
-      state.setError('Erreur lors de l\'acceptation du match')
+    } catch (error) {
+      get().setError('Erreur lors de l\'acceptation du match')
+      if (__DEV__) console.error('Erreur acceptation match:', error)
       return null
     } finally {
       set({ isAcceptingMatch: false })
@@ -593,12 +469,12 @@ const useAppStore = create<AppState>((set, get) => ({
   // Rating system
   loadUserRating: async (userId: string) => {
     try {
-      const userRating = await ratingService.getUserRating(userId);
+      const userRating = await ratingService.getUserRating(userId)
       set((s) => ({
         user: s.user ? { ...s.user, userRating } : null,
-      }));
-    } catch (error: any) {
-      console.error('Erreur lors du chargement du rating:', error);
+      }))
+    } catch (error) {
+      if (__DEV__) console.error('Erreur lors du chargement du rating:', error)
     }
   },
 

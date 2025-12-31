@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/clerk-expo'
 import { View, Text } from 'react-native'
 
 export default function RootIndex() {
-  console.log('RootIndex rendering...')
+  if (__DEV__) console.log('RootIndex rendering...')
   
   const { isLoaded, isSignedIn } = useAuth()
   

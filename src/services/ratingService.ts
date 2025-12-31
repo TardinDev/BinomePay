@@ -182,8 +182,8 @@ class RatingService {
     };
 
     // En production, sauvegarder en base de données
-    console.log('Nouvelle note créée:', newRating);
-    
+    if (__DEV__) console.log('Nouvelle note créée:', newRating);
+
     return newRating;
   }
 

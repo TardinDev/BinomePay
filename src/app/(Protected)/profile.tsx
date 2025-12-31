@@ -31,25 +31,25 @@ export default function ProfileScreen() {
     setShowLogoutModal(true)
 
     try {
-      console.log('🔴 Début déconnexion - Bouton cliqué')
+      if (__DEV__) console.log('Début déconnexion - Bouton cliqué')
 
       // Attendre un peu pour que l'utilisateur voie le message avant de déconnecter
       setTimeout(async () => {
         try {
-          console.log('🔄 Appel signOut()...')
+          if (__DEV__) console.log('Appel signOut()...')
 
           // Polyfill pour window.location si nécessaire (fix pour Clerk en React Native)
           if (typeof window !== 'undefined' && !window.location) {
-            (window as any).location = { origin: 'app://binomepay' }
+            (window as unknown as { location: { origin: string } }).location = { origin: 'app://binomepay' }
           }
 
           // Appeler signOut() - Clerk va maintenant trouver window.location.origin
           await signOut()
-          console.log('✅ signOut() réussi')
+          if (__DEV__) console.log('signOut() réussi')
           // Le reset sera fait automatiquement par le ProtectedLayout
           // Pas besoin de fermer le modal, la navigation va changer
-        } catch (e: any) {
-          console.error('❌ Erreur lors de la déconnexion:', e)
+        } catch (e) {
+          if (__DEV__) console.error('Erreur lors de la déconnexion:', e)
           const msg = e instanceof Error ? e.message : String(e ?? 'Erreur inconnue')
           if (isMounted.current) {
             setLoggingOut(false) // Reset le flag en cas d'erreur
@@ -59,8 +59,8 @@ export default function ProfileScreen() {
         }
       }, 1500)
 
-    } catch (e: any) {
-      console.error('❌ Erreur lors de la déconnexion:', e)
+    } catch (e) {
+      if (__DEV__) console.error('Erreur lors de la déconnexion:', e)
       const msg = e instanceof Error ? e.message : String(e ?? 'Erreur inconnue')
       if (isMounted.current) {
         setLoggingOut(false) // Reset le flag en cas d'erreur

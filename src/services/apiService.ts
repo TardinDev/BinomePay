@@ -1,6 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { User, RequestItem, MatchItem, Conversation, SuggestedItem } from '@/store/useAppStore'
 
+// Types pour les messages
+export type Message = {
+  id: string
+  conversationId: string
+  senderId: string
+  content: string
+  createdAt: number
+}
+
+// Types pour les actions hors ligne
+export type OfflineActionType = 'CREATE_REQUEST' | 'SEND_MESSAGE' | 'ACCEPT_SUGGESTION' | 'UPDATE_PROFILE'
+
+export type OfflineAction = {
+  type: OfflineActionType
+  payload: Record<string, unknown>
+  userId: string
+  timestamp: number
+}
+
 // Configuration de l'API
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api'
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
@@ -52,8 +71,7 @@ export class ApiService {
   
   static async fetchUserProfile(userId: string): Promise<User> {
     if (this.shouldUseMockData()) {
-      // Retourner des données mock au lieu de faire un appel API
-      console.log('Mode mock: retour de données utilisateur mock')
+      if (__DEV__) console.log('Mode mock: retour de données utilisateur mock')
       return Promise.resolve({
         id: userId,
         name: 'Utilisateur Mock',
@@ -61,13 +79,13 @@ export class ApiService {
         ratingAvg: 4.8,
       })
     }
-    
+
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, { headers })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur récupération profil:', error)
+      if (__DEV__) console.error('Erreur récupération profil:', error)
       throw error
     }
   }
@@ -82,7 +100,7 @@ export class ApiService {
       })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur mise à jour profil:', error)
+      if (__DEV__) console.error('Erreur mise à jour profil:', error)
       throw error
     }
   }
@@ -91,7 +109,7 @@ export class ApiService {
     try {
       await this.updateUserProfile(userId, { kycStatus: status })
     } catch (error) {
-      console.error('Erreur mise à jour KYC:', error)
+      if (__DEV__) console.error('Erreur mise à jour KYC:', error)
       throw error
     }
   }
@@ -102,16 +120,16 @@ export class ApiService {
 
   static async fetchUserRequests(userId: string): Promise<RequestItem[]> {
     if (this.shouldUseMockData()) {
-      console.log('Mode mock: retour de données intentions mock')
+      if (__DEV__) console.log('Mode mock: retour de données intentions mock')
       return Promise.resolve([])
     }
-    
+
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/users/${userId}/requests`, { headers })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur récupération intentions:', error)
+      if (__DEV__) console.error('Erreur récupération intentions:', error)
       throw error
     }
   }
@@ -126,7 +144,7 @@ export class ApiService {
       })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur création intention:', error)
+      if (__DEV__) console.error('Erreur création intention:', error)
       throw error
     }
   }
@@ -141,7 +159,7 @@ export class ApiService {
       })
       await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur mise à jour statut intention:', error)
+      if (__DEV__) console.error('Erreur mise à jour statut intention:', error)
       throw error
     }
   }
@@ -152,16 +170,16 @@ export class ApiService {
 
   static async fetchSuggestionsForUser(userId: string): Promise<SuggestedItem[]> {
     if (this.shouldUseMockData()) {
-      console.log('Mode mock: retour de données suggestions mock')
+      if (__DEV__) console.log('Mode mock: retour de données suggestions mock')
       return Promise.resolve([])
     }
-    
+
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/users/${userId}/suggestions`, { headers })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur récupération suggestions:', error)
+      if (__DEV__) console.error('Erreur récupération suggestions:', error)
       throw error
     }
   }
@@ -176,7 +194,7 @@ export class ApiService {
       })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur acceptation suggestion:', error)
+      if (__DEV__) console.error('Erreur acceptation suggestion:', error)
       throw error
     }
   }
@@ -187,16 +205,16 @@ export class ApiService {
 
   static async fetchUserMatches(userId: string): Promise<MatchItem[]> {
     if (this.shouldUseMockData()) {
-      console.log('Mode mock: retour de données matches mock')
+      if (__DEV__) console.log('Mode mock: retour de données matches mock')
       return Promise.resolve([])
     }
-    
+
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/users/${userId}/matches`, { headers })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur récupération matches:', error)
+      if (__DEV__) console.error('Erreur récupération matches:', error)
       throw error
     }
   }
@@ -211,7 +229,7 @@ export class ApiService {
       })
       await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur mise à jour statut match:', error)
+      if (__DEV__) console.error('Erreur mise à jour statut match:', error)
       throw error
     }
   }
@@ -222,32 +240,32 @@ export class ApiService {
 
   static async fetchUserConversations(userId: string): Promise<Conversation[]> {
     if (this.shouldUseMockData()) {
-      console.log('Mode mock: retour de données conversations mock')
+      if (__DEV__) console.log('Mode mock: retour de données conversations mock')
       return Promise.resolve([])
     }
-    
+
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/users/${userId}/conversations`, { headers })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur récupération conversations:', error)
+      if (__DEV__) console.error('Erreur récupération conversations:', error)
       throw error
     }
   }
 
-  static async fetchConversationMessages(conversationId: string): Promise<any[]> {
+  static async fetchConversationMessages(conversationId: string): Promise<Message[]> {
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, { headers })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur récupération messages:', error)
+      if (__DEV__) console.error('Erreur récupération messages:', error)
       throw error
     }
   }
 
-  static async sendMessage(conversationId: string, message: string, senderId: string): Promise<any> {
+  static async sendMessage(conversationId: string, message: string, senderId: string): Promise<Message> {
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
@@ -257,7 +275,7 @@ export class ApiService {
       })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur envoi message:', error)
+      if (__DEV__) console.error('Erreur envoi message:', error)
       throw error
     }
   }
@@ -272,7 +290,7 @@ export class ApiService {
       })
       await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur marquage conversation lue:', error)
+      if (__DEV__) console.error('Erreur marquage conversation lue:', error)
       throw error
     }
   }
@@ -293,7 +311,7 @@ export class ApiService {
       const response = await fetch(`${API_BASE_URL}/users/${userId}/sync`, { headers })
       return await handleApiResponse(response)
     } catch (error) {
-      console.error('Erreur synchronisation:', error)
+      if (__DEV__) console.error('Erreur synchronisation:', error)
       throw error
     }
   }
@@ -302,19 +320,14 @@ export class ApiService {
   // GESTION HORS LIGNE
   // ================================
 
-  static async queueOfflineAction(action: {
-    type: string
-    payload: any
-    userId: string
-    timestamp: number
-  }): Promise<void> {
+  static async queueOfflineAction(action: OfflineAction): Promise<void> {
     try {
       const offlineQueue = await AsyncStorage.getItem('offline_queue')
-      const queue = offlineQueue ? JSON.parse(offlineQueue) : []
+      const queue: OfflineAction[] = offlineQueue ? JSON.parse(offlineQueue) : []
       queue.push(action)
       await AsyncStorage.setItem('offline_queue', JSON.stringify(queue))
     } catch (error) {
-      console.error('Erreur ajout queue hors ligne:', error)
+      if (__DEV__) console.error('Erreur ajout queue hors ligne:', error)
     }
   }
 
@@ -323,30 +336,30 @@ export class ApiService {
       const offlineQueue = await AsyncStorage.getItem('offline_queue')
       if (!offlineQueue) return
 
-      const queue = JSON.parse(offlineQueue)
+      const queue: OfflineAction[] = JSON.parse(offlineQueue)
       const processedActions: string[] = []
 
       for (const action of queue) {
         try {
           await this.processOfflineAction(action)
-          processedActions.push(action.id || action.timestamp.toString())
+          processedActions.push(action.timestamp.toString())
         } catch (error) {
-          console.error('Erreur traitement action hors ligne:', error)
+          if (__DEV__) console.error('Erreur traitement action hors ligne:', error)
         }
       }
 
       // Supprimer les actions traitées
-      const remainingQueue = queue.filter((action: any) => 
-        !processedActions.includes(action.id || action.timestamp.toString())
+      const remainingQueue = queue.filter((action) =>
+        !processedActions.includes(action.timestamp.toString())
       )
-      
+
       await AsyncStorage.setItem('offline_queue', JSON.stringify(remainingQueue))
     } catch (error) {
-      console.error('Erreur traitement queue hors ligne:', error)
+      if (__DEV__) console.error('Erreur traitement queue hors ligne:', error)
     }
   }
 
-  private static async processOfflineAction(action: any): Promise<void> {
+  private static async processOfflineAction(action: OfflineAction): Promise<void> {
     switch (action.type) {
       case 'CREATE_REQUEST':
         await this.createRequest(action.userId, action.payload)
@@ -361,7 +374,7 @@ export class ApiService {
         await this.updateUserProfile(action.userId, action.payload)
         break
       default:
-        console.warn('Type d\'action hors ligne non reconnu:', action.type)
+        if (__DEV__) console.warn('Type d\'action hors ligne non reconnu:', action.type)
     }
   }
 
@@ -371,18 +384,18 @@ export class ApiService {
 
   static async checkApiHealth(): Promise<boolean> {
     if (this.shouldUseMockData()) {
-      console.log('Mode mock: API considérée comme disponible')
+      if (__DEV__) console.log('Mode mock: API considérée comme disponible')
       return Promise.resolve(true)
     }
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {
         method: 'GET',
         timeout: 5000
-      } as any)
+      } as RequestInit & { timeout: number })
       return response.ok
     } catch (error) {
-      console.error('API non disponible:', error)
+      if (__DEV__) console.error('API non disponible:', error)
       return false
     }
   }
@@ -394,10 +407,10 @@ export class ApiService {
         uri: imageUri,
         type: 'image/jpeg',
         name: 'avatar.jpg'
-      } as any)
+      } as unknown as Blob)
 
       const headers = await getAuthHeaders()
-      delete (headers as any)['Content-Type'] // Laisser le navigateur définir le Content-Type
+      delete (headers as Record<string, string>)['Content-Type']
 
       const response = await fetch(`${API_BASE_URL}/users/${userId}/avatar`, {
         method: 'POST',
@@ -408,7 +421,7 @@ export class ApiService {
       const result = await handleApiResponse(response)
       return result.avatarUrl
     } catch (error) {
-      console.error('Erreur upload avatar:', error)
+      if (__DEV__) console.error('Erreur upload avatar:', error)
       throw error
     }
   }

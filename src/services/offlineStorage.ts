@@ -64,7 +64,7 @@ class OfflineStorageService {
         JSON.stringify(updatedData)
       );
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde hors-ligne:', error);
+      if (__DEV__) console.error('Erreur lors de la sauvegarde hors-ligne:', error);
     }
   }
 
@@ -76,7 +76,7 @@ class OfflineStorageService {
         return JSON.parse(data);
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération des données hors-ligne:', error);
+      if (__DEV__) console.error('Erreur lors de la récupération des données hors-ligne:', error);
     }
 
     // Données par défaut
@@ -107,7 +107,7 @@ class OfflineStorageService {
         JSON.stringify(pendingActions)
       );
     } catch (error) {
-      console.error('Erreur lors de l\'ajout d\'une action en attente:', error);
+      if (__DEV__) console.error('Erreur lors de l\'ajout d\'une action en attente:', error);
     }
   }
 
@@ -117,7 +117,7 @@ class OfflineStorageService {
       const data = await AsyncStorage.getItem(this.STORAGE_KEYS.PENDING_ACTIONS);
       return data ? JSON.parse(data) : [];
     } catch (error) {
-      console.error('Erreur lors de la récupération des actions en attente:', error);
+      if (__DEV__) console.error('Erreur lors de la récupération des actions en attente:', error);
       return [];
     }
   }
@@ -127,13 +127,13 @@ class OfflineStorageService {
     try {
       const pendingActions = await this.getPendingActions();
       const filteredActions = pendingActions.filter(action => action.id !== actionId);
-      
+
       await AsyncStorage.setItem(
         this.STORAGE_KEYS.PENDING_ACTIONS,
         JSON.stringify(filteredActions)
       );
     } catch (error) {
-      console.error('Erreur lors de la suppression d\'une action en attente:', error);
+      if (__DEV__) console.error('Erreur lors de la suppression d\'une action en attente:', error);
     }
   }
 
@@ -153,14 +153,14 @@ class OfflineStorageService {
           await this.executePendingAction(action);
           await this.removePendingAction(action.id);
         } catch (error) {
-          console.error(`Erreur lors de l'exécution de l'action ${action.id}:`, error);
-          
+          if (__DEV__) console.error(`Erreur lors de l'exécution de l'action ${action.id}:`, error);
+
           // Augmenter le compteur de tentatives
           action.retries += 1;
-          
+
           // Supprimer l'action après 3 tentatives échouées
           if (action.retries >= 3) {
-            console.warn(`Action ${action.id} supprimée après 3 tentatives`);
+            if (__DEV__) console.warn(`Action ${action.id} supprimée après 3 tentatives`);
             await this.removePendingAction(action.id);
           }
         }
@@ -176,22 +176,22 @@ class OfflineStorageService {
     switch (action.type) {
       case 'send_message':
         // await apiService.sendMessage(action.data);
-        console.log('Envoi du message en attente:', action.data);
+        if (__DEV__) console.log('Envoi du message en attente:', action.data);
         break;
-        
+
       case 'create_intention':
         // await apiService.createIntention(action.data);
-        console.log('Création de l\'intention en attente:', action.data);
+        if (__DEV__) console.log('Création de l\'intention en attente:', action.data);
         break;
-        
+
       case 'accept_suggestion':
         // await apiService.acceptSuggestion(action.data);
-        console.log('Acceptation de suggestion en attente:', action.data);
+        if (__DEV__) console.log('Acceptation de suggestion en attente:', action.data);
         break;
-        
+
       case 'create_match':
         // await apiService.createMatch(action.data);
-        console.log('Création de match en attente:', action.data);
+        if (__DEV__) console.log('Création de match en attente:', action.data);
         break;
     }
   }
@@ -211,11 +211,11 @@ class OfflineStorageService {
   // Nettoyer les anciennes données hors-ligne
   async cleanOldData(maxAge: number = 7 * 24 * 60 * 60 * 1000): Promise<void> {
     const age = await this.getOfflineDataAge();
-    
+
     if (age > maxAge) {
       await AsyncStorage.removeItem(this.STORAGE_KEYS.OFFLINE_DATA);
       await AsyncStorage.removeItem(this.STORAGE_KEYS.PENDING_ACTIONS);
-      console.log('Données hors-ligne anciennes supprimées');
+      if (__DEV__) console.log('Données hors-ligne anciennes supprimées');
     }
   }
 

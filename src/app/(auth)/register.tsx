@@ -16,6 +16,11 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
+  // Log when component mounts
+  React.useEffect(() => {
+    if (__DEV__) console.log('[Register] Component mounted, isLoaded:', isLoaded, 'signUp:', !!signUp)
+  }, [isLoaded, signUp])
+
   const isValid = () => firstName.trim().length > 0 && email.includes('@') && password.trim().length >= 6 && password === confirm && accepted
 
   const handleRegister = async () => {
@@ -23,23 +28,97 @@ export default function RegisterScreen() {
       setError('Vérifiez vos informations (prénom requis, email valide, 6 caractères minimum, mots de passe identiques).')
       return
     }
+
+    if (__DEV__) console.log('[Register] Starting registration process...')
+
     try {
       setLoading(true)
       setError(null)
-      if (!isLoaded) return
-      const res = await signUp.create({ emailAddress: email, password, firstName: firstName.trim() })
+
+      if (!isLoaded) {
+        if (__DEV__) console.log('[Register] Clerk not loaded yet')
+        setError('Authentification en cours de chargement...')
+        return
+      }
+
+      if (!signUp) {
+        if (__DEV__) console.error('[Register] signUp object is null')
+        setError('Service d\'inscription non disponible')
+        return
+      }
+
+      if (__DEV__) console.log('[Register] Creating account for:', email)
+
+      // Create the account with email and password only
+      const res = await signUp.create({
+        emailAddress: email,
+        password
+      })
+
+      // Update the user's first name after creation
+      if (res && firstName.trim()) {
+        try {
+          await signUp.update({
+            firstName: firstName.trim()
+          })
+        } catch (updateError) {
+          if (__DEV__) console.log('[Register] Could not update firstName, continuing anyway')
+        }
+      }
+
+      if (__DEV__) console.log('[Register] Sign up response:', res.status)
+
       if (res.status === 'complete') {
+        if (__DEV__) console.log('[Register] Registration complete, activating session')
         await setActive({ session: res.createdSessionId })
         router.replace('/(Protected)/(tabs)')
       } else if (res.status === 'missing_requirements') {
+        if (__DEV__) console.log('[Register] Email verification required')
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
         router.replace({ pathname: '/(auth)/verify', params: { email } })
+      } else {
+        if (__DEV__) console.log('[Register] Unexpected status:', res.status)
+        setError('Statut inattendu. Veuillez réessayer.')
       }
-    } catch (e: any) {
-      setError(e?.message ?? 'Erreur inconnue')
+    } catch (e: unknown) {
+      const error = e as { message?: string; errors?: Array<{ code?: string; message?: string }>; clerkError?: boolean; status?: number }
+      if (__DEV__) {
+        console.error('[Register] Registration error:', e)
+        console.error('[Register] Error details:', {
+          message: error?.message,
+          errors: error?.errors,
+          clerkError: error?.clerkError,
+          status: error?.status,
+        })
+      }
+
+      // Handle specific Clerk errors
+      if (error?.errors && Array.isArray(error.errors) && error.errors.length > 0) {
+        const clerkError = error.errors[0]
+        if (clerkError.code === 'form_identifier_exists') {
+          setError('Cet email est déjà utilisé')
+        } else if (clerkError.code === 'form_password_pwned') {
+          setError('Ce mot de passe est trop commun. Choisissez-en un plus sécurisé.')
+        } else if (clerkError.code === 'form_password_length_too_short') {
+          setError('Le mot de passe doit contenir au moins 8 caractères')
+        } else {
+          setError(clerkError.message || 'Erreur lors de l\'inscription')
+        }
+      } else {
+        setError(error?.message ?? 'Erreur lors de l\'inscription. Veuillez réessayer.')
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading state while Clerk is initializing
+  if (!isLoaded) {
+    return (
+      <View className="flex-1 bg-black justify-center items-center">
+        <Text className="text-white">Chargement...</Text>
+      </View>
+    )
   }
 
   return (

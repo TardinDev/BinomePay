@@ -7,7 +7,7 @@ import ConnectionStatus from '@/components/ConnectionStatus'
 import { LoadingScreen } from '@/components/LoadingSpinner'
 
 export default function ProtectedLayout() {
-  console.log('ProtectedLayout rendering...')
+  if (__DEV__) console.log('ProtectedLayout rendering...')
   const router = useRouter()
   const hasRedirected = useRef(false)
 
@@ -16,7 +16,7 @@ export default function ProtectedLayout() {
   try {
     authData = useAuth()
   } catch (error) {
-    console.error('Erreur useAuth:', error)
+    if (__DEV__) console.error('Erreur useAuth:', error)
     return <LoadingScreen message="Initialisation de l'authentification..." />
   }
 
@@ -30,7 +30,7 @@ export default function ProtectedLayout() {
 
   // Gérer les changements d'état de connexion
   useEffect(() => {
-    console.log('ProtectedLayout useEffect - isLoaded:', isLoaded, 'isSignedIn:', isSignedIn, 'user:', user?.id, 'clerkUser:', clerkUser?.id, 'isLoggingOut:', isLoggingOut)
+    if (__DEV__) console.log('ProtectedLayout useEffect - isLoaded:', isLoaded, 'isSignedIn:', isSignedIn, 'user:', user?.id, 'clerkUser:', clerkUser?.id, 'isLoggingOut:', isLoggingOut)
 
     if (!isLoaded) return
 
@@ -38,13 +38,13 @@ export default function ProtectedLayout() {
     if (!isSignedIn) {
       // Nettoyer le store si nécessaire
       if (user) {
-        console.log('Utilisateur non connecté - reset du store')
+        if (__DEV__) console.log('Utilisateur non connecté - reset du store')
         reset()
       }
 
       // Rediriger une seule fois
       if (!isLoggingOut && !hasRedirected.current) {
-        console.log('Redirection vers login')
+        if (__DEV__) console.log('Redirection vers login')
         hasRedirected.current = true
         router.replace('/(auth)/login')
       }
@@ -58,10 +58,10 @@ export default function ProtectedLayout() {
     if (isLoggingOut) return
 
     if (isSignedIn && clerkUser?.id && !user) {
-      console.log('Initialisation des données pour:', clerkUser.id)
+      if (__DEV__) console.log('Initialisation des données pour:', clerkUser.id)
       initializeUserData(clerkUser.id)
     }
-  }, [isLoaded, isSignedIn, clerkUser?.id, user?.id, isLoggingOut])
+  }, [isLoaded, isSignedIn, clerkUser?.id, isLoggingOut])
 
   if (!isLoaded) return <LoadingScreen message="Vérification de l'authentification..." />
 

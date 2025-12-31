@@ -1,6 +1,6 @@
 import NetInfo from '@react-native-community/netinfo'
 import ApiService from './apiService'
-import useAppStore from '@/store/useAppStore'
+import useAppStore, { RequestItem, MatchItem, Conversation, SuggestedItem } from '@/store/useAppStore'
 import { notifyMatchAccepted, notifyNewMessage, notifyNewSuggestion } from './notificationService'
 
 type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
@@ -19,7 +19,7 @@ class SyncService {
 
   async initialize(): Promise<void> {
     if (this.USE_MOCK_API) {
-      console.log('Mode mock actif - synchronisation désactivée')
+      if (__DEV__) console.log('Mode mock actif - synchronisation désactivée')
       return
     }
     
@@ -66,7 +66,7 @@ class SyncService {
 
   async performSync(force = false): Promise<boolean> {
     if (this.USE_MOCK_API) {
-      console.log('Mode mock - synchronisation ignorée')
+      if (__DEV__) console.log('Mode mock - synchronisation ignorée')
       return true
     }
     
@@ -89,25 +89,25 @@ class SyncService {
       const userId = store.user?.id
 
       if (!userId) {
-        console.log('Aucun utilisateur connecté pour la synchronisation')
+        if (__DEV__) console.log('Aucun utilisateur connecté pour la synchronisation')
         return false
       }
 
       // Vérifier la connectivité
       const netInfo = await NetInfo.fetch()
       if (!netInfo.isConnected) {
-        console.log('Pas de connexion réseau pour la synchronisation')
+        if (__DEV__) console.log('Pas de connexion réseau pour la synchronisation')
         return false
       }
 
       // Vérifier la santé de l'API
       const apiHealthy = await ApiService.checkApiHealth()
       if (!apiHealthy) {
-        console.log('API non disponible')
+        if (__DEV__) console.log('API non disponible')
         return false
       }
 
-      console.log('Début de la synchronisation pour l\'utilisateur:', userId)
+      if (__DEV__) console.log('Début de la synchronisation pour l\'utilisateur:', userId)
 
       // 1. Traiter d'abord les actions hors ligne en attente
       await ApiService.processOfflineQueue()
@@ -115,11 +115,11 @@ class SyncService {
       // 2. Synchroniser les données utilisateur
       await this.syncAllUserData(userId)
 
-      console.log('Synchronisation terminée avec succès')
+      if (__DEV__) console.log('Synchronisation terminée avec succès')
       return true
 
     } catch (error) {
-      console.error('Erreur lors de la synchronisation:', error)
+      if (__DEV__) console.error('Erreur lors de la synchronisation:', error)
       return false
     } finally {
       this.syncInProgress = false
@@ -147,16 +147,14 @@ class SyncService {
       this.updateSuggestionsIfChanged(syncData.suggestions)
 
     } catch (error) {
-      console.error('Erreur synchronisation données utilisateur:', error)
-      
+      if (__DEV__) console.error('Erreur synchronisation données utilisateur:', error)
+
       // En cas d'erreur, essayer la synchronisation par parties
       await this.fallbackSyncUserData(userId)
     }
   }
 
   private async fallbackSyncUserData(userId: string): Promise<void> {
-    const store = useAppStore.getState()
-
     try {
       // Synchroniser en parallèle avec gestion d'erreur individuelle
       await Promise.allSettled([
@@ -167,7 +165,7 @@ class SyncService {
         this.syncUserSuggestions(userId)
       ])
     } catch (error) {
-      console.error('Erreur synchronisation fallback:', error)
+      if (__DEV__) console.error('Erreur synchronisation fallback:', error)
     }
   }
 
@@ -177,7 +175,7 @@ class SyncService {
       const store = useAppStore.getState()
       store.setUser(userProfile)
     } catch (error) {
-      console.error('Erreur sync profil utilisateur:', error)
+      if (__DEV__) console.error('Erreur sync profil utilisateur:', error)
     }
   }
 
@@ -186,7 +184,7 @@ class SyncService {
       const requests = await ApiService.fetchUserRequests(userId)
       this.updateRequestsIfChanged(requests)
     } catch (error) {
-      console.error('Erreur sync intentions utilisateur:', error)
+      if (__DEV__) console.error('Erreur sync intentions utilisateur:', error)
     }
   }
 
@@ -195,7 +193,7 @@ class SyncService {
       const matches = await ApiService.fetchUserMatches(userId)
       this.updateMatchesIfChanged(matches)
     } catch (error) {
-      console.error('Erreur sync matches utilisateur:', error)
+      if (__DEV__) console.error('Erreur sync matches utilisateur:', error)
     }
   }
 
@@ -204,7 +202,7 @@ class SyncService {
       const conversations = await ApiService.fetchUserConversations(userId)
       this.updateConversationsIfChanged(conversations)
     } catch (error) {
-      console.error('Erreur sync conversations utilisateur:', error)
+      if (__DEV__) console.error('Erreur sync conversations utilisateur:', error)
     }
   }
 
@@ -213,7 +211,7 @@ class SyncService {
       const suggestions = await ApiService.fetchSuggestionsForUser(userId)
       this.updateSuggestionsIfChanged(suggestions)
     } catch (error) {
-      console.error('Erreur sync suggestions utilisateur:', error)
+      if (__DEV__) console.error('Erreur sync suggestions utilisateur:', error)
     }
   }
 
@@ -221,55 +219,54 @@ class SyncService {
   // MISE À JOUR INTELLIGENTE DES DONNÉES
   // ================================
 
-  private updateRequestsIfChanged(newRequests: any[]): void {
+  private updateRequestsIfChanged(newRequests: RequestItem[]): void {
     const store = useAppStore.getState()
     const currentRequests = store.requests
 
     // Comparer et mettre à jour seulement si différent
     if (this.hasDataChanged(currentRequests, newRequests)) {
-      store.requests = newRequests
-      console.log('Intentions mises à jour')
+      useAppStore.setState({ requests: newRequests })
+      if (__DEV__) console.log('Intentions mises à jour')
     }
   }
 
-  private updateMatchesIfChanged(newMatches: any[]): void {
+  private updateMatchesIfChanged(newMatches: MatchItem[]): void {
     const store = useAppStore.getState()
     const currentMatches = store.matches
 
     if (this.hasDataChanged(currentMatches, newMatches)) {
       store.setMatches(newMatches)
-      
+
       // Détecter les nouveaux matches pour les notifications
       this.checkForNewMatches(currentMatches, newMatches)
-      console.log('Matches mis à jour')
+      if (__DEV__) console.log('Matches mis à jour')
     }
   }
 
-  private updateConversationsIfChanged(newConversations: any[]): void {
+  private updateConversationsIfChanged(newConversations: Conversation[]): void {
     const store = useAppStore.getState()
     const currentConversations = store.conversations
 
     if (this.hasDataChanged(currentConversations, newConversations)) {
       // Détecter les nouveaux messages pour les notifications
       this.checkForNewMessages(currentConversations, newConversations)
-      
+
       // Mettre à jour le store
-      // Note: Le store n'a pas de setter direct pour conversations, on simule
       useAppStore.setState({ conversations: newConversations })
-      console.log('Conversations mises à jour')
+      if (__DEV__) console.log('Conversations mises à jour')
     }
   }
 
-  private updateSuggestionsIfChanged(newSuggestions: any[]): void {
+  private updateSuggestionsIfChanged(newSuggestions: SuggestedItem[]): void {
     const store = useAppStore.getState()
     const currentSuggestions = store.suggested
 
     if (this.hasDataChanged(currentSuggestions, newSuggestions)) {
       // Détecter les nouvelles suggestions pour les notifications
       this.checkForNewSuggestions(currentSuggestions, newSuggestions)
-      
+
       useAppStore.setState({ suggested: newSuggestions })
-      console.log('Suggestions mises à jour')
+      if (__DEV__) console.log('Suggestions mises à jour')
     }
   }
 
@@ -277,20 +274,23 @@ class SyncService {
   // DÉTECTION DES CHANGEMENTS
   // ================================
 
-  private hasDataChanged(current: any[], updated: any[]): boolean {
+  private hasDataChanged<T extends { id: string; updatedAt?: number; createdAt?: number }>(
+    current: T[],
+    updated: T[]
+  ): boolean {
     if (current.length !== updated.length) return true
-    
+
     // Comparaison simple basée sur les IDs et timestamps
     const currentIds = current.map(item => `${item.id}-${item.updatedAt || item.createdAt}`).sort()
     const updatedIds = updated.map(item => `${item.id}-${item.updatedAt || item.createdAt}`).sort()
-    
+
     return JSON.stringify(currentIds) !== JSON.stringify(updatedIds)
   }
 
-  private checkForNewMatches(oldMatches: any[], newMatches: any[]): void {
+  private checkForNewMatches(oldMatches: MatchItem[], newMatches: MatchItem[]): void {
     const oldIds = new Set(oldMatches.map(m => m.id))
     const newItems = newMatches.filter(m => !oldIds.has(m.id))
-    
+
     newItems.forEach(match => {
       notifyMatchAccepted(
         match.counterpartName,
@@ -301,9 +301,9 @@ class SyncService {
     })
   }
 
-  private checkForNewMessages(oldConversations: any[], newConversations: any[]): void {
+  private checkForNewMessages(oldConversations: Conversation[], newConversations: Conversation[]): void {
     const oldConvMap = new Map(oldConversations.map(c => [c.id, c]))
-    
+
     newConversations.forEach(newConv => {
       const oldConv = oldConvMap.get(newConv.id)
       if (oldConv && oldConv.updatedAt < newConv.updatedAt && newConv.unreadCount > oldConv.unreadCount) {
@@ -316,10 +316,10 @@ class SyncService {
     })
   }
 
-  private checkForNewSuggestions(oldSuggestions: any[], newSuggestions: any[]): void {
+  private checkForNewSuggestions(oldSuggestions: SuggestedItem[], newSuggestions: SuggestedItem[]): void {
     const oldIds = new Set(oldSuggestions.map(s => s.id))
     const newItems = newSuggestions.filter(s => !oldIds.has(s.id))
-    
+
     if (newItems.length > 0) {
       notifyNewSuggestion(newItems.length)
     }
@@ -331,11 +331,11 @@ class SyncService {
 
   async forceSync(): Promise<boolean> {
     if (this.USE_MOCK_API) {
-      console.log('Mode mock - synchronisation forcée ignorée')
+      if (__DEV__) console.log('Mode mock - synchronisation forcée ignorée')
       return true
     }
-    
-    console.log('Synchronisation forcée par l\'utilisateur')
+
+    if (__DEV__) console.log('Synchronisation forcée par l\'utilisateur')
     return await this.performSync(true)
   }
 

@@ -63,10 +63,10 @@ class HistoryService {
       const limitedHistory = history.slice(0, 1000);
       
       // En production, ceci serait sauvé en base de données
-      console.log('Nouvelle entrée historique:', newEntry);
-      
+      if (__DEV__) console.log('Nouvelle entrée historique:', newEntry);
+
     } catch (error) {
-      console.error('Erreur lors de l\'ajout à l\'historique:', error);
+      if (__DEV__) console.error('Erreur lors de l\'ajout à l\'historique:', error);
     }
   }
 
@@ -127,7 +127,7 @@ class HistoryService {
 
       return limit ? mockHistory.slice(0, limit) : mockHistory;
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'historique:', error);
+      if (__DEV__) console.error('Erreur lors de la récupération de l\'historique:', error);
       return [];
     }
   }

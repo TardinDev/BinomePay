@@ -69,9 +69,9 @@ const createNotificationChannels = async (): Promise<void> => {
       lightColor: '#FFAA00',
     } as any)
 
-    console.log('Canaux de notification Android créés')
+    if (__DEV__) console.log('Canaux de notification Android créés')
   } catch (error) {
-    console.error('Erreur création canaux Android:', error)
+    if (__DEV__) console.error('Erreur création canaux Android:', error)
   }
 }
 
@@ -80,10 +80,10 @@ const createNotificationChannels = async (): Promise<void> => {
  */
 export const initializeNotifications = async (): Promise<boolean> => {
   if (isExpoGo) {
-    console.log('Notifications désactivées dans Expo Go')
+    if (__DEV__) console.log('Notifications désactivées dans Expo Go')
     return false
   }
-  
+
   try {
     // Créer les canaux de notification Android
     if (Platform.OS === 'android') {
@@ -99,7 +99,7 @@ export const initializeNotifications = async (): Promise<boolean> => {
     }
 
     if (finalStatus !== 'granted') {
-      console.warn('Push notification permission not granted')
+      if (__DEV__) console.warn('Push notification permission not granted')
       return false
     }
 
@@ -109,19 +109,19 @@ export const initializeNotifications = async (): Promise<boolean> => {
         const token = await Notifications.getExpoPushTokenAsync({
           projectId: process.env.EXPO_PROJECT_ID || 'your-project-id'
         })
-        console.log('Push token:', token.data)
-        
+        if (__DEV__) console.log('Push token:', token.data)
+
         // In production, send this token to your backend
         // await sendTokenToBackend(token.data)
       } catch (tokenError) {
-        console.warn('Impossible d\'obtenir le token push:', tokenError)
+        if (__DEV__) console.warn('Impossible d\'obtenir le token push:', tokenError)
         // Continue même sans token push pour les notifications locales
       }
     }
 
     return true
   } catch (error) {
-    console.error('Failed to initialize notifications:', error)
+    if (__DEV__) console.error('Failed to initialize notifications:', error)
     return false
   }
 }
@@ -134,7 +134,7 @@ export const scheduleLocalNotification = async (
   delaySeconds: number = 0
 ): Promise<string | null> => {
   if (isExpoGo) {
-    console.log('Notification ignorée dans Expo Go:', notificationData.title)
+    if (__DEV__) console.log('Notification ignorée dans Expo Go:', notificationData.title)
     return null
   }
   
@@ -165,7 +165,7 @@ export const scheduleLocalNotification = async (
 
     return identifier
   } catch (error) {
-    console.error('Failed to schedule notification:', error)
+    if (__DEV__) console.error('Failed to schedule notification:', error)
     return null
   }
 }
@@ -330,7 +330,7 @@ export const clearAllNotifications = async (): Promise<void> => {
   try {
     await Notifications.dismissAllNotificationsAsync()
   } catch (error) {
-    console.error('Failed to clear notifications:', error)
+    if (__DEV__) console.error('Failed to clear notifications:', error)
   }
 }
 
@@ -341,7 +341,7 @@ export const getBadgeCount = async (): Promise<number> => {
   try {
     return await Notifications.getBadgeCountAsync()
   } catch (error) {
-    console.error('Failed to get badge count:', error)
+    if (__DEV__) console.error('Failed to get badge count:', error)
     return 0
   }
 }
@@ -353,6 +353,6 @@ export const setBadgeCount = async (count: number): Promise<void> => {
   try {
     await Notifications.setBadgeCountAsync(count)
   } catch (error) {
-    console.error('Failed to set badge count:', error)
+    if (__DEV__) console.error('Failed to set badge count:', error)
   }
 }

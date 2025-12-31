@@ -320,9 +320,11 @@ export const logSecurityEvent = (
   }
   
   // In production, send to security monitoring service
-  if (riskLevel === 'high') {
-    console.warn('HIGH RISK SECURITY EVENT:', logData)
-  } else {
-    console.log('Security event:', logData)
+  if (__DEV__) {
+    if (riskLevel === 'high') {
+      console.warn('HIGH RISK SECURITY EVENT:', logData)
+    } else {
+      console.log('Security event:', logData)
+    }
   }
 }

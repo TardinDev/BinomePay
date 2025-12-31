@@ -44,17 +44,17 @@ export function useDataSync() {
     if (isLoggingOut) return
     
     if (clerkUser?.id && !user) {
-      console.log('Initialisation des données pour:', clerkUser.id)
+      if (__DEV__) console.log('Initialisation des données pour:', clerkUser.id)
       initializeUserData(clerkUser.id)
     }
-  }, [clerkUser?.id, user?.id, isLoggingOut]) // Ajouter isLoggingOut
+  }, [clerkUser?.id, isLoggingOut, initializeUserData])
 
   // Synchronisation manuelle
   const handleSync = useCallback(async () => {
     if (!user?.id || isSyncing) return false
     
     if (useMockApi) {
-      console.log('Mode mock - synchronisation simulée')
+      if (__DEV__) console.log('Mode mock - synchronisation simulée')
       setLastSyncTime(new Date())
       setError(null)
       return true

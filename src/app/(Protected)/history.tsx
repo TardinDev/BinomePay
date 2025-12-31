@@ -129,7 +129,7 @@ export default function HistoryPage() {
       setHistory(historyData);
       setSummary(summaryData);
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'historique:', error);
+      if (__DEV__) console.error('Erreur lors du chargement de l\'historique:', error);
     } finally {
       setLoading(false);
     }
@@ -161,8 +161,7 @@ export default function HistoryPage() {
           
           <Pressable
             onPress={() => {
-              // Implémenter l'export
-              console.log('Export historique');
+              // TODO: Implémenter l'export
             }}
             className="p-2"
           >

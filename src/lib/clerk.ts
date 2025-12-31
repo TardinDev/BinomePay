@@ -14,7 +14,9 @@ export const tokenCache = {
   async saveToken(key: string, value: string) {
     try {
       await SecureStore.setItemAsync(key, value)
-    } catch {}
+    } catch (error) {
+      if (__DEV__) console.error('Erreur sauvegarde token Clerk:', error)
+    }
   },
 }
 

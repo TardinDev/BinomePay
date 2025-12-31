@@ -69,7 +69,7 @@ export class DataService {
         }
       }
     } catch (error) {
-      console.error('Error syncing user with Supabase:', error)
+      if (__DEV__) console.error('Error syncing user with Supabase:', error)
       // Fallback: retourner des données basiques
       return {
         id: clerkUser.id,
@@ -105,7 +105,7 @@ export class DataService {
         status: intent.status,
       }))
     } catch (error) {
-      console.error('Error fetching user requests:', error)
+      if (__DEV__) console.error('Error fetching user requests:', error)
       return [] // Fallback vers données vides
     }
   }
@@ -138,28 +138,8 @@ export class DataService {
         createdAt: new Date(intent.created_at).getTime(),
       }))
     } catch (error) {
-      console.error('Error fetching suggestions:', error)
-      // Fallback vers mock data
-      return [
-        {
-          id: 's_1',
-          amount: 200,
-          currency: 'EUR',
-          originCountryName: 'France',
-          destCountryName: "Côte d'Ivoire",
-          senderName: 'Fatou N.',
-          createdAt: Date.now() - 1000 * 60 * 5,
-        },
-        {
-          id: 's_2',
-          amount: 120,
-          currency: 'EUR',
-          originCountryName: 'France',
-          destCountryName: 'Sénégal',
-          senderName: 'Jean P.',
-          createdAt: Date.now() - 1000 * 60 * 12,
-        },
-      ]
+      if (__DEV__) console.error('Error fetching suggestions:', error)
+      return []
     }
   }
 
@@ -196,7 +176,7 @@ export class DataService {
       if (error) throw error
       return data.id
     } catch (error) {
-      console.error('Error creating intention:', error)
+      if (__DEV__) console.error('Error creating intention:', error)
       throw error
     }
   }

@@ -34,7 +34,7 @@ class StorageManager {
       await AsyncStorage.setItem(key, jsonData)
       return true
     } catch (error) {
-      console.error(`Failed to store ${key}:`, error)
+      if (__DEV__) console.error(`Failed to store ${key}:`, error)
       return false
     }
   }
@@ -44,7 +44,7 @@ class StorageManager {
       const jsonData = await AsyncStorage.getItem(key)
       return jsonData ? JSON.parse(jsonData) : defaultValue
     } catch (error) {
-      console.error(`Failed to retrieve ${key}:`, error)
+      if (__DEV__) console.error(`Failed to retrieve ${key}:`, error)
       return defaultValue
     }
   }
@@ -54,7 +54,7 @@ class StorageManager {
       await AsyncStorage.removeItem(key)
       return true
     } catch (error) {
-      console.error(`Failed to remove ${key}:`, error)
+      if (__DEV__) console.error(`Failed to remove ${key}:`, error)
       return false
     }
   }
@@ -72,8 +72,8 @@ class StorageManager {
     if (!userData) return null
 
     // Check if data is older than 24 hours
-    const isStale = Date.now() - ((userData as any).lastUpdated || 0) > 24 * 60 * 60 * 1000
-    if (isStale) {
+    const isStale = Date.now() - ((userData as { lastUpdated?: number }).lastUpdated || 0) > 24 * 60 * 60 * 1000
+    if (isStale && __DEV__) {
       console.log('User data is stale, should refresh from server')
     }
 
@@ -207,7 +207,7 @@ class StorageManager {
       await AsyncStorage.clear()
       return true
     } catch (error) {
-      console.error('Failed to clear all storage:', error)
+      if (__DEV__) console.error('Failed to clear all storage:', error)
       return false
     }
   }
@@ -217,7 +217,7 @@ class StorageManager {
     try {
       const keys = await AsyncStorage.getAllKeys()
       const binomeKeys = keys.filter(key => key.startsWith('@binomepay:'))
-      
+
       let totalSize = 0
       for (const key of binomeKeys) {
         const data = await AsyncStorage.getItem(key)
@@ -231,7 +231,7 @@ class StorageManager {
         totalSize
       }
     } catch (error) {
-      console.error('Failed to get storage info:', error)
+      if (__DEV__) console.error('Failed to get storage info:', error)
       return { keys: [], totalSize: 0 }
     }
   }
@@ -283,7 +283,7 @@ export const loadAppData = async () => {
       isStale: await storageService.isDataStale()
     }
   } catch (error) {
-    console.error('Failed to load app data:', error)
+    if (__DEV__) console.error('Failed to load app data:', error)
     return null
   }
 }

@@ -14,7 +14,7 @@ export default function AuthCallback() {
       try {
         // Si on a une erreur OAuth, rediriger vers login
         if (params.error) {
-          console.warn('Erreur OAuth:', params.error)
+          if (__DEV__) console.warn('Erreur OAuth:', params.error)
           router.replace('/(auth)/login')
           return
         }
@@ -29,9 +29,9 @@ export default function AuthCallback() {
         setTimeout(() => {
           router.replace('/(auth)/login')
         }, 2000)
-        
+
       } catch (error) {
-        console.error('Erreur callback auth:', error)
+        if (__DEV__) console.error('Erreur callback auth:', error)
         router.replace('/(auth)/login')
       }
     }
