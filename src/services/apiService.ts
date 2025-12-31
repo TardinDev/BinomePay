@@ -10,15 +10,36 @@ export type Message = {
   createdAt: number
 }
 
-// Types pour les actions hors ligne
-export type OfflineActionType = 'CREATE_REQUEST' | 'SEND_MESSAGE' | 'ACCEPT_SUGGESTION' | 'UPDATE_PROFILE'
-
-export type OfflineAction = {
-  type: OfflineActionType
-  payload: Record<string, unknown>
+// Types pour les actions hors ligne - discriminated union
+export type CreateRequestAction = {
+  type: 'CREATE_REQUEST'
+  payload: Omit<RequestItem, 'id' | 'status'>
   userId: string
   timestamp: number
 }
+
+export type SendMessageAction = {
+  type: 'SEND_MESSAGE'
+  payload: { conversationId: string; message: string }
+  userId: string
+  timestamp: number
+}
+
+export type AcceptSuggestionAction = {
+  type: 'ACCEPT_SUGGESTION'
+  payload: { suggestionId: string }
+  userId: string
+  timestamp: number
+}
+
+export type UpdateProfileAction = {
+  type: 'UPDATE_PROFILE'
+  payload: Partial<User>
+  userId: string
+  timestamp: number
+}
+
+export type OfflineAction = CreateRequestAction | SendMessageAction | AcceptSuggestionAction | UpdateProfileAction
 
 // Configuration de l'API
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api'
@@ -373,8 +394,6 @@ export class ApiService {
       case 'UPDATE_PROFILE':
         await this.updateUserProfile(action.userId, action.payload)
         break
-      default:
-        if (__DEV__) console.warn('Type d\'action hors ligne non reconnu:', action.type)
     }
   }
 
