@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import * as ImagePicker from 'expo-image-picker'
-import * as Linking from 'expo-linking'
 
 type UnsafeMeta = Record<string, unknown> & { avatarUpdatedAt?: string }
 
@@ -40,7 +39,9 @@ export default function ProfileScreen() {
 
           // Polyfill pour window.location si nécessaire (fix pour Clerk en React Native)
           if (typeof window !== 'undefined' && !window.location) {
-            (window as unknown as { location: { origin: string } }).location = { origin: 'app://binomepay' }
+            ;(window as unknown as { location: { origin: string } }).location = {
+              origin: 'app://binomepay',
+            }
           }
 
           // Appeler signOut() - Clerk va maintenant trouver window.location.origin
@@ -58,7 +59,6 @@ export default function ProfileScreen() {
           }
         }
       }, 1500)
-
     } catch (e) {
       if (__DEV__) console.error('Erreur lors de la déconnexion:', e)
       const msg = e instanceof Error ? e.message : String(e ?? 'Erreur inconnue')
@@ -81,14 +81,20 @@ export default function ProfileScreen() {
       const remain = threeMonthsMs - (now - lastTs)
       if (remain > 0) {
         const nextDate = new Date(lastTs + threeMonthsMs)
-        Alert.alert('Non autorisé', `Vous pourrez changer la photo après le ${nextDate.toLocaleDateString()}.`)
+        Alert.alert(
+          'Non autorisé',
+          `Vous pourrez changer la photo après le ${nextDate.toLocaleDateString()}.`
+        )
         return
       }
     }
 
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!perm.granted) {
-      Alert.alert('Permission requise', "Activez l'accès aux photos pour changer votre image de profil.")
+      Alert.alert(
+        'Permission requise',
+        "Activez l'accès aux photos pour changer votre image de profil."
+      )
       return
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -126,48 +132,68 @@ export default function ProfileScreen() {
               router.replace('/(Protected)/(tabs)')
             }
           }}
-          className="p-2 rounded-full"
+          className="rounded-full p-2"
           style={{ backgroundColor: '#111827' }}
         >
           <Ionicons name="arrow-back" size={18} color="#E5E7EB" />
         </Pressable>
-        <Text className="text-white text-lg font-extrabold">Profil</Text>
+        <Text className="text-lg font-extrabold text-white">Profil</Text>
         <View style={{ width: 32 }} />
       </View>
 
-      <View className="mt-6 bg-neutral-900 rounded-2xl p-5 border" style={{ borderColor: '#334155' }}>
+      <View
+        className="mt-6 rounded-2xl border bg-neutral-900 p-5"
+        style={{ borderColor: '#334155' }}
+      >
         <View className="flex-row items-center">
           <Pressable onPress={handleChangePhoto} accessibilityLabel="Changer la photo de profil">
             {clerkUser?.imageUrl ? (
               <Image
                 source={{ uri: clerkUser.imageUrl }}
-                style={{ width: 56, height: 56, borderRadius: 9999, borderWidth: 1, borderColor: '#1F2937', backgroundColor: '#0B1220' }}
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 9999,
+                  borderWidth: 1,
+                  borderColor: '#1F2937',
+                  backgroundColor: '#0B1220',
+                }}
               />
             ) : (
-              <View style={{ backgroundColor: '#0B1220', padding: 14, borderRadius: 9999, borderWidth: 1, borderColor: '#1F2937' }}>
+              <View
+                style={{
+                  backgroundColor: '#0B1220',
+                  padding: 14,
+                  borderRadius: 9999,
+                  borderWidth: 1,
+                  borderColor: '#1F2937',
+                }}
+              >
                 <Ionicons name="person" color="#EAB308" size={24} />
               </View>
             )}
           </Pressable>
           <View className="ml-3">
-            <Text className="text-white text-xl font-extrabold">{clerkUser?.firstName || user?.name || 'Utilisateur'}</Text>
+            <Text className="text-xl font-extrabold text-white">
+              {clerkUser?.firstName || user?.name || 'Utilisateur'}
+            </Text>
             <Text className="text-gray-400">KYC: {user?.kycStatus ?? 'inconnu'}</Text>
           </View>
         </View>
 
-        <View className="h-[1px] bg-gray-800 my-4" />
+        <View className="my-4 h-[1px] bg-gray-800" />
         <View className="flex-row justify-between">
           <View>
-            <Text className="text-gray-400 text-xs">Note moyenne</Text>
-            <Text className="text-white text-lg font-bold">{user?.ratingAvg ?? '—'}</Text>
+            <Text className="text-xs text-gray-400">Note moyenne</Text>
+            <Text className="text-lg font-bold text-white">{user?.ratingAvg ?? '—'}</Text>
           </View>
           <View>
-            <Text className="text-gray-400 text-xs">Transactions</Text>
-            <Text className="text-white text-lg font-bold">—</Text>
+            <Text className="text-xs text-gray-400">Transactions</Text>
+            <Text className="text-lg font-bold text-white">—</Text>
           </View>
           <View>
-            <Text className="text-gray-400 text-xs">Membre depuis</Text>
-            <Text className="text-white text-lg font-bold">—</Text>
+            <Text className="text-xs text-gray-400">Membre depuis</Text>
+            <Text className="text-lg font-bold text-white">—</Text>
           </View>
         </View>
         {/* Bouton supprimé: changement via tap sur la photo */}
@@ -176,31 +202,31 @@ export default function ProfileScreen() {
       <View className="mt-6">
         <Pressable
           onPress={handleLogout}
-          className="rounded-xl items-center"
+          className="items-center rounded-xl"
           style={{ backgroundColor: '#EF4444', paddingVertical: 12 }}
         >
-          <Text className="text-white font-extrabold">Se déconnecter</Text>
+          <Text className="font-extrabold text-white">Se déconnecter</Text>
         </Pressable>
       </View>
 
       {/* Modal de déconnexion */}
-      <Modal
-        visible={showLogoutModal}
-        transparent={true}
-        animationType="fade"
-      >
-        <View className="flex-1 justify-center items-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}>
-          <View className="bg-neutral-900 rounded-3xl p-8 mx-8 border" style={{ borderColor: '#334155' }}>
+      <Modal visible={showLogoutModal} transparent={true} animationType="fade">
+        <View
+          className="flex-1 items-center justify-center"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+        >
+          <View
+            className="mx-8 rounded-3xl border bg-neutral-900 p-8"
+            style={{ borderColor: '#334155' }}
+          >
             <View className="items-center">
-              <View className="mb-6 p-4 rounded-full" style={{ backgroundColor: '#1E293B' }}>
+              <View className="mb-6 rounded-full p-4" style={{ backgroundColor: '#1E293B' }}>
                 <Ionicons name="sad-outline" size={60} color="#EAB308" />
               </View>
-              <Text className="text-white text-2xl font-extrabold mb-2 text-center">
+              <Text className="mb-2 text-center text-2xl font-extrabold text-white">
                 Vous êtes déconnecté
               </Text>
-              <Text className="text-gray-400 text-center">
-                À bientôt sur BinomePay !
-              </Text>
+              <Text className="text-center text-gray-400">À bientôt sur BinomePay !</Text>
             </View>
           </View>
         </View>

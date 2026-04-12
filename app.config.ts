@@ -7,7 +7,7 @@ const config: ExpoConfig = {
   scheme: 'binomepay',
   description: 'BinomePay - Application de change de devises entre particuliers',
 
-  version: '1.0.1',                 // ↗︎ bump version
+  version: '1.0.1', // ↗︎ bump version
   orientation: 'portrait',
   userInterfaceStyle: 'light',
   newArchEnabled: true,
@@ -25,11 +25,12 @@ const config: ExpoConfig = {
 
   ios: {
     supportsTablet: true,
+    bundleIdentifier: 'com.binomepay.app',
   },
 
   android: {
     package: 'com.binomepay.app',
-    versionCode: 2,                 // ↗︎ incrémente à chaque release
+    versionCode: 2, // ↗︎ incrémente à chaque release
     // Laisse Expo/EAS définir compile/target automatiquement.
     // Si tu veux forcer, tu peux ajouter:
     // targetSdkVersion: 35,
@@ -43,7 +44,7 @@ const config: ExpoConfig = {
     // 🔒 Permissions minimales.
     permissions: [
       'CAMERA', // la caméra sera utilisé dans les prochaine mise à jour
-      'POST_NOTIFICATIONS', 
+      'POST_NOTIFICATIONS',
       'VIBRATE',
       'WAKE_LOCK',
     ],
@@ -62,17 +63,14 @@ const config: ExpoConfig = {
     bundler: 'metro',
   },
 
-  plugins: [
-    'expo-router',
-    'expo-web-browser',
-    'expo-secure-store',
-  ],
+  plugins: ['expo-router', 'expo-web-browser', 'expo-secure-store'],
 
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
 
-    CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    CLERK_PUBLISHABLE_KEY:
+      process.env.CLERK_PUBLISHABLE_KEY || process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
     EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
 
     router: { origin: false },

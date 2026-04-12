@@ -1,0 +1,235 @@
+import React, { useState } from 'react'
+import { View, Text, TextInput, Pressable, ScrollView } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
+import { useSignIn } from '@clerk/clerk-expo'
+
+export default function ForgotPasswordScreen() {
+  const { signIn, setActive, isLoaded } = useSignIn()
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [step, setStep] = useState<'email' | 'code'>('email')
+
+  const handleSendCode = async () => {
+    if (!email.includes('@')) {
+      setError('Veuillez entrer un email valide.')
+      return
+    }
+    try {
+      setLoading(true)
+      setError(null)
+      if (!isLoaded) return
+
+      await signIn.create({
+        strategy: 'reset_password_email_code',
+        identifier: email,
+      })
+
+      setStep('code')
+    } catch (e: unknown) {
+      const err = e as { errors?: Array<{ message?: string }> }
+      setError(err?.errors?.[0]?.message ?? "Erreur lors de l'envoi du code.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!code.trim()) {
+      setError('Veuillez entrer le code reçu par email.')
+      return
+    }
+    if (newPassword.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.')
+      return
+    }
+    try {
+      setLoading(true)
+      setError(null)
+      if (!isLoaded) return
+
+      const result = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code,
+        password: newPassword,
+      })
+
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        router.replace('/(Protected)/(tabs)')
+      } else {
+        setError('Réinitialisation incomplète. Veuillez réessayer.')
+      }
+    } catch (e: unknown) {
+      const err = e as { errors?: Array<{ message?: string; code?: string }> }
+      const clerkError = err?.errors?.[0]
+      if (clerkError?.code === 'form_code_incorrect') {
+        setError('Code invalide ou expiré.')
+      } else if (clerkError?.code === 'form_password_pwned') {
+        setError('Ce mot de passe est trop commun. Choisissez-en un plus sécurisé.')
+      } else {
+        setError(clerkError?.message ?? 'Erreur lors de la réinitialisation.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <ScrollView
+      className="flex-1 bg-black px-5 pt-10"
+      contentContainerStyle={{ paddingBottom: 36 }}
+    >
+      <View className="mb-6 flex-row items-center">
+        <Pressable
+          onPress={() => router.back()}
+          className="mr-3 rounded-full p-2"
+          style={{ backgroundColor: '#111827' }}
+        >
+          <Ionicons name="arrow-back" color="#E5E7EB" size={20} />
+        </Pressable>
+        <Text className="text-2xl font-extrabold text-white">Mot de passe oublié</Text>
+      </View>
+
+      {step === 'email' ? (
+        <View className="rounded-2xl border bg-neutral-900 p-5" style={{ borderColor: '#334155' }}>
+          <Text className="mb-4 text-gray-300">
+            Entrez votre adresse email. Nous vous enverrons un code pour réinitialiser votre mot de
+            passe.
+          </Text>
+
+          <Text className="mb-2 text-gray-300">Email</Text>
+          <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
+            <Ionicons name="mail-outline" color="#9CA3AF" size={18} />
+            <TextInput
+              placeholder="vous@exemple.com"
+              placeholderTextColor="#6B7280"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              keyboardType="email-address"
+              className="ml-3 flex-1 text-white"
+            />
+          </View>
+
+          {error && (
+            <Text className="mt-3 text-rose-400" accessibilityLiveRegion="polite">
+              {error}
+            </Text>
+          )}
+
+          <Pressable
+            onPress={handleSendCode}
+            disabled={loading || !email.includes('@')}
+            className="mt-6 items-center rounded-xl"
+            style={{
+              backgroundColor: email.includes('@') && !loading ? '#FDE68A' : '#6B7280',
+              paddingVertical: 14,
+            }}
+          >
+            <Text className="text-base font-extrabold text-black">
+              {loading ? 'Envoi...' : 'Envoyer le code'}
+            </Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View className="rounded-2xl border bg-neutral-900 p-5" style={{ borderColor: '#334155' }}>
+          <Text className="mb-4 text-gray-300">
+            Un code a été envoyé à {email}. Entrez-le ci-dessous avec votre nouveau mot de passe.
+          </Text>
+
+          <Text className="mb-2 text-gray-300">Code de vérification</Text>
+          <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
+            <Ionicons name="key-outline" color="#9CA3AF" size={18} />
+            <TextInput
+              placeholder="123456"
+              placeholderTextColor="#6B7280"
+              value={code}
+              onChangeText={setCode}
+              keyboardType="number-pad"
+              className="ml-3 flex-1 text-white"
+            />
+          </View>
+
+          <Text className="mb-2 mt-4 text-gray-300">Nouveau mot de passe</Text>
+          <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
+            <Ionicons name="lock-closed-outline" color="#9CA3AF" size={18} />
+            <TextInput
+              placeholder="Min. 6 caractères"
+              placeholderTextColor="#6B7280"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              className="ml-3 flex-1 text-white"
+            />
+            <Pressable onPress={() => setShowPassword((v) => !v)}>
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} color="#9CA3AF" size={18} />
+            </Pressable>
+          </View>
+
+          <Text className="mb-2 mt-4 text-gray-300">Confirmer le mot de passe</Text>
+          <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
+            <Ionicons name="lock-closed-outline" color="#9CA3AF" size={18} />
+            <TextInput
+              placeholder="Confirmez votre mot de passe"
+              placeholderTextColor="#6B7280"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              className="ml-3 flex-1 text-white"
+            />
+          </View>
+
+          {error && (
+            <Text className="mt-3 text-rose-400" accessibilityLiveRegion="polite">
+              {error}
+            </Text>
+          )}
+
+          <Pressable
+            onPress={handleResetPassword}
+            disabled={loading || !code || newPassword.length < 6 || newPassword !== confirmPassword}
+            className="mt-6 items-center rounded-xl"
+            style={{
+              backgroundColor:
+                code && newPassword.length >= 6 && newPassword === confirmPassword && !loading
+                  ? '#FDE68A'
+                  : '#6B7280',
+              paddingVertical: 14,
+            }}
+          >
+            <Text className="text-base font-extrabold text-black">
+              {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              setStep('email')
+              setError(null)
+              setCode('')
+            }}
+            className="mt-4 items-center"
+          >
+            <Text className="text-gray-300 underline">Renvoyer le code</Text>
+          </Pressable>
+        </View>
+      )}
+    </ScrollView>
+  )
+}

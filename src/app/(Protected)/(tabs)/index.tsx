@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from "react";
-import { Text, View, ScrollView, FlatList } from "react-native";
-import useAppStore from "@/store/useAppStore";
-import HomeHeader from "@/components/home/HomeHeader";
-import KycBadge from "@/components/home/KycBadge";
-import CreateIntentionButton from "@/components/home/CreateIntentionButton";
-import RecentMatchesList from "@/components/home/RecentMatchesList";
-import SuggestedCard from "@/components/home/SuggestedCard";
-import CountryFilter from "@/components/home/CountryFilter";
+import React, { useMemo, useState } from 'react'
+import { Text, View, ScrollView, FlatList } from 'react-native'
+import useAppStore from '@/store/useAppStore'
+import HomeHeader from '@/components/home/HomeHeader'
+import KycBadge from '@/components/home/KycBadge'
+import CreateIntentionButton from '@/components/home/CreateIntentionButton'
+import RecentMatchesList from '@/components/home/RecentMatchesList'
+import SuggestedCard from '@/components/home/SuggestedCard'
+import CountryFilter from '@/components/home/CountryFilter'
 
 export default function HomePage() {
   const user = useAppStore((s) => s.user)
@@ -14,12 +14,12 @@ export default function HomePage() {
   const storeSuggested = useAppStore((s) => s.suggested)
   const requests = useAppStore((s) => s.requests)
   const [countryFilter, setCountryFilter] = useState<string | null>(null)
-  
+
   const countries = useMemo(() => {
     const names = storeSuggested.map((s) => s.destCountryName)
     return Array.from(new Set(names))
   }, [storeSuggested])
-  
+
   const filteredSuggested = useMemo(() => {
     const list = countryFilter
       ? storeSuggested.filter((s) => s.destCountryName === countryFilter)
@@ -27,14 +27,12 @@ export default function HomePage() {
     return list
   }, [storeSuggested, countryFilter])
 
-
-
   // Créer les sections pour la FlatList
   const sections = [
     { type: 'matches', data: matches },
     ...(requests.length > 0 ? [{ type: 'intentions', data: requests }] : []),
     { type: 'suggestions-header', data: [] },
-    ...filteredSuggested.map(item => ({ type: 'suggestion', data: item }))
+    ...filteredSuggested.map((item) => ({ type: 'suggestion', data: item })),
   ]
 
   const renderSectionItem = ({ item }: { item: any }) => {
@@ -45,35 +43,37 @@ export default function HomePage() {
             <RecentMatchesList data={item.data} />
           </View>
         )
-      
+
       case 'intentions':
         return (
           <View className="px-5">
-            <View className="mt-3 mb-2">
-              <Text className="text-white text-lg font-bold">Mes intentions</Text>
+            <View className="mb-2 mt-3">
+              <Text className="text-lg font-bold text-white">Mes intentions</Text>
             </View>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               className="mb-4"
               contentContainerStyle={{ paddingHorizontal: 0 }}
             >
               {item.data.map((req: any, index: number) => (
-                <View 
-                  key={req.id} 
-                  className="border border-gray-800 rounded-lg p-2 bg-neutral-900"
-                  style={{ 
+                <View
+                  key={req.id}
+                  className="rounded-lg border border-gray-800 bg-neutral-900 p-2"
+                  style={{
                     width: 140,
                     height: 80,
-                    marginRight: index === item.data.length - 1 ? 0 : 10
+                    marginRight: index === item.data.length - 1 ? 0 : 10,
                   }}
                 >
-                  <View className="items-center justify-center h-full">
-                    <Text className="text-yellow-400 font-bold text-xs">
+                  <View className="h-full items-center justify-center">
+                    <Text className="text-xs font-bold text-yellow-400">
                       {req.type === 'SEND' ? 'ENVOYER' : 'RECEVOIR'}
                     </Text>
-                    <Text className="text-white text-base font-bold">{req.amount} {req.currency}</Text>
-                    <Text className="text-gray-400 text-xs text-center" numberOfLines={1}>
+                    <Text className="text-base font-bold text-white">
+                      {req.amount} {req.currency}
+                    </Text>
+                    <Text className="text-center text-xs text-gray-400" numberOfLines={1}>
                       {req.originCountry} → {req.destCountry}
                     </Text>
                   </View>
@@ -85,10 +85,14 @@ export default function HomePage() {
 
       case 'suggestions-header':
         return (
-          <View className="bg-black px-5 py-3 sticky top-0">
+          <View className="sticky top-0 bg-black px-5 py-3">
             <View className="flex-row items-center justify-between">
-              <Text className="text-white text-lg font-bold">Propositions pour vous</Text>
-              <CountryFilter countries={countries} selectedCountry={countryFilter} onChange={setCountryFilter} />
+              <Text className="text-lg font-bold text-white">Propositions pour vous</Text>
+              <CountryFilter
+                countries={countries}
+                selectedCountry={countryFilter}
+                onChange={setCountryFilter}
+              />
             </View>
           </View>
         )
@@ -99,7 +103,7 @@ export default function HomePage() {
             <SuggestedCard item={item.data} />
           </View>
         )
-        
+
       default:
         return null
     }
@@ -108,9 +112,9 @@ export default function HomePage() {
   return (
     <View className="flex-1 bg-black">
       {/* Section fixe en haut */}
-      <View className="px-5 pt-6 bg-black">
-        <View className="w-full items-center mb-4">
-          <Text className="text-white text-5xl font-extrabold">Binome Pay</Text>
+      <View className="bg-black px-5 pt-6">
+        <View className="mb-4 w-full items-center">
+          <Text className="text-5xl font-extrabold text-white">Binome Pay</Text>
         </View>
         <HomeHeader user={user} />
         <KycBadge status={user?.kycStatus} />
@@ -123,7 +127,11 @@ export default function HomePage() {
         keyExtractor={(item, index) => `${item.type}-${index}`}
         renderItem={renderSectionItem}
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={sections.findIndex(s => s.type === 'suggestions-header') >= 0 ? [sections.findIndex(s => s.type === 'suggestions-header')] : []}
+        stickyHeaderIndices={
+          sections.findIndex((s) => s.type === 'suggestions-header') >= 0
+            ? [sections.findIndex((s) => s.type === 'suggestions-header')]
+            : []
+        }
         contentContainerStyle={{ paddingBottom: 100 }}
         ListEmptyComponent={() => (
           <View className="px-5">
@@ -134,4 +142,3 @@ export default function HomePage() {
     </View>
   )
 }
-

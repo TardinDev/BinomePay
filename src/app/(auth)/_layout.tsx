@@ -11,18 +11,20 @@ function AuthSwitcher() {
   const isLogin = pathname?.endsWith('/login')
 
   return (
-    <View className="flex-row items-center bg-neutral-900 border border-gray-800 rounded-full overflow-hidden">
-      <Pressable
-        onPress={onLogin}
-        className={`px-4 py-1.5 ${isLogin ? 'bg-yellow-400' : ''}`}
-      >
-        <Text className={`${isLogin ? 'text-black font-extrabold' : 'text-zinc-200 font-semibold'}`}>Connexion</Text>
+    <View className="flex-row items-center overflow-hidden rounded-full border border-gray-800 bg-neutral-900">
+      <Pressable onPress={onLogin} className={`px-4 py-1.5 ${isLogin ? 'bg-yellow-400' : ''}`}>
+        <Text
+          className={`${isLogin ? 'font-extrabold text-black' : 'font-semibold text-zinc-200'}`}
+        >
+          Connexion
+        </Text>
       </Pressable>
-      <Pressable
-        onPress={onRegister}
-        className={`px-4 py-1.5 ${!isLogin ? 'bg-yellow-400' : ''}`}
-      >
-        <Text className={`${!isLogin ? 'text-black font-extrabold' : 'text-zinc-200 font-semibold'}`}>Créer un compte</Text>
+      <Pressable onPress={onRegister} className={`px-4 py-1.5 ${!isLogin ? 'bg-yellow-400' : ''}`}>
+        <Text
+          className={`${!isLogin ? 'font-extrabold text-black' : 'font-semibold text-zinc-200'}`}
+        >
+          Créer un compte
+        </Text>
       </Pressable>
     </View>
   )
@@ -30,13 +32,13 @@ function AuthSwitcher() {
 
 export default function AuthLayout() {
   const { isLoaded, isSignedIn } = useAuth()
-  
+
   useEffect(() => {
     if (isLoaded && isSignedIn) {
       router.replace('/(Protected)/(tabs)')
     }
   }, [isLoaded, isSignedIn])
-  
+
   if (!isLoaded) return null
   if (isSignedIn) return null
   return (
@@ -51,8 +53,12 @@ export default function AuthLayout() {
     >
       <Stack.Screen name="login" options={{ headerTitle: () => <AuthSwitcher /> }} />
       <Stack.Screen name="register" options={{ headerTitle: () => <AuthSwitcher /> }} />
+      <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+      <Stack.Screen name="terms" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="verify"
+        options={{ headerTitle: () => <Text className="font-bold text-white">Vérification</Text> }}
+      />
     </Stack>
   )
 }
-
-

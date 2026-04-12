@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { User, RequestItem, MatchItem, Conversation, SuggestedItem } from '@/store/useAppStore'
+import { supabase } from '@/lib/supabase'
 
 // Types pour les messages
 export type Message = {
@@ -39,12 +40,14 @@ export type UpdateProfileAction = {
   timestamp: number
 }
 
-export type OfflineAction = CreateRequestAction | SendMessageAction | AcceptSuggestionAction | UpdateProfileAction
+export type OfflineAction =
+  | CreateRequestAction
+  | SendMessageAction
+  | AcceptSuggestionAction
+  | UpdateProfileAction
 
 // Configuration de l'API
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api'
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
 const USE_MOCK_API = process.env.EXPO_PUBLIC_MOCK_API === 'true'
 
 // Headers de base pour les requêtes API
@@ -52,14 +55,14 @@ const getAuthHeaders = async (): Promise<HeadersInit> => {
   const token = await AsyncStorage.getItem('auth_token')
   return {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
+    Authorization: token ? `Bearer ${token}` : '',
   }
 }
 
 // Gestion des erreurs API
 class ApiError extends Error {
   status: number
-  
+
   constructor(message: string, status: number) {
     super(message)
     this.status = status
@@ -75,13 +78,7 @@ const handleApiResponse = async (response: Response) => {
   return response.json()
 }
 
-// Mock data pour le mode développement
-const createMockError = (message: string) => {
-  throw new ApiError(`Mode mock activé: ${message}`, 503)
-}
-
 export class ApiService {
-  
   // Vérification du mode mock
   private static shouldUseMockData(): boolean {
     return USE_MOCK_API
@@ -89,7 +86,7 @@ export class ApiService {
   // ================================
   // GESTION UTILISATEUR
   // ================================
-  
+
   static async fetchUserProfile(userId: string): Promise<User> {
     if (this.shouldUseMockData()) {
       if (__DEV__) console.log('Mode mock: retour de données utilisateur mock')
@@ -117,7 +114,7 @@ export class ApiService {
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify(updates)
+        body: JSON.stringify(updates),
       })
       return await handleApiResponse(response)
     } catch (error) {
@@ -140,28 +137,40 @@ export class ApiService {
   // ================================
 
   static async fetchUserRequests(userId: string): Promise<RequestItem[]> {
-    if (this.shouldUseMockData()) {
-      if (__DEV__) console.log('Mode mock: retour de données intentions mock')
-      return Promise.resolve([])
-    }
-
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/requests`, { headers })
-      return await handleApiResponse(response)
+      const { data, error } = await supabase
+        .from('intents')
+        .select('id, direction, amount, currency, origin_country, dest_country, status')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return (data ?? []).map((row: any) => ({
+        id: row.id,
+        type: row.direction as 'SEND' | 'RECEIVE',
+        amount: row.amount,
+        currency: row.currency,
+        originCountry: row.origin_country,
+        destCountry: row.dest_country,
+        status: row.status as 'OPEN' | 'MATCHED' | 'CLOSED',
+      }))
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération intentions:', error)
-      throw error
+      return []
     }
   }
 
-  static async createRequest(userId: string, request: Omit<RequestItem, 'id' | 'status'>): Promise<RequestItem> {
+  static async createRequest(
+    userId: string,
+    request: Omit<RequestItem, 'id' | 'status'>
+  ): Promise<RequestItem> {
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/users/${userId}/requests`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(request)
+        body: JSON.stringify(request),
       })
       return await handleApiResponse(response)
     } catch (error) {
@@ -170,13 +179,16 @@ export class ApiService {
     }
   }
 
-  static async updateRequestStatus(requestId: string, status: RequestItem['status']): Promise<void> {
+  static async updateRequestStatus(
+    requestId: string,
+    status: RequestItem['status']
+  ): Promise<void> {
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/requests/${requestId}/status`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status }),
       })
       await handleApiResponse(response)
     } catch (error) {
@@ -190,28 +202,42 @@ export class ApiService {
   // ================================
 
   static async fetchSuggestionsForUser(userId: string): Promise<SuggestedItem[]> {
-    if (this.shouldUseMockData()) {
-      if (__DEV__) console.log('Mode mock: retour de données suggestions mock')
-      return Promise.resolve([])
-    }
-
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/suggestions`, { headers })
-      return await handleApiResponse(response)
+      const { data, error } = await supabase
+        .from('intents')
+        .select('id, amount, currency, origin_country, dest_country, user_name, note, created_at')
+        .neq('user_id', userId)
+        .eq('status', 'OPEN')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return (data ?? []).map((row: any) => ({
+        id: row.id,
+        amount: row.amount,
+        currency: row.currency,
+        originCountryName: row.origin_country,
+        destCountryName: row.dest_country,
+        senderName: row.user_name ?? 'Utilisateur',
+        note: row.note ?? undefined,
+        createdAt: new Date(row.created_at).getTime(),
+      }))
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération suggestions:', error)
-      throw error
+      return []
     }
   }
 
-  static async acceptSuggestion(suggestionId: string, userId: string): Promise<{ conversationId: string; matchId: string }> {
+  static async acceptSuggestion(
+    suggestionId: string,
+    userId: string
+  ): Promise<{ conversationId: string; matchId: string }> {
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/suggestions/${suggestionId}/accept`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ userId })
+        body: JSON.stringify({ userId }),
       })
       return await handleApiResponse(response)
     } catch (error) {
@@ -246,7 +272,7 @@ export class ApiService {
       const response = await fetch(`${API_BASE_URL}/matches/${matchId}/status`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status }),
       })
       await handleApiResponse(response)
     } catch (error) {
@@ -278,7 +304,9 @@ export class ApiService {
   static async fetchConversationMessages(conversationId: string): Promise<Message[]> {
     try {
       const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, { headers })
+      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
+        headers,
+      })
       return await handleApiResponse(response)
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération messages:', error)
@@ -286,13 +314,17 @@ export class ApiService {
     }
   }
 
-  static async sendMessage(conversationId: string, message: string, senderId: string): Promise<Message> {
+  static async sendMessage(
+    conversationId: string,
+    message: string,
+    senderId: string
+  ): Promise<Message> {
     try {
       const headers = await getAuthHeaders()
       const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ message, senderId })
+        body: JSON.stringify({ message, senderId }),
       })
       return await handleApiResponse(response)
     } catch (error) {
@@ -307,7 +339,7 @@ export class ApiService {
       const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/read`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ userId })
+        body: JSON.stringify({ userId }),
       })
       await handleApiResponse(response)
     } catch (error) {
@@ -370,8 +402,8 @@ export class ApiService {
       }
 
       // Supprimer les actions traitées
-      const remainingQueue = queue.filter((action) =>
-        !processedActions.includes(action.timestamp.toString())
+      const remainingQueue = queue.filter(
+        (action) => !processedActions.includes(action.timestamp.toString())
       )
 
       await AsyncStorage.setItem('offline_queue', JSON.stringify(remainingQueue))
@@ -410,7 +442,7 @@ export class ApiService {
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {
         method: 'GET',
-        timeout: 5000
+        timeout: 5000,
       } as RequestInit & { timeout: number })
       return response.ok
     } catch (error) {
@@ -425,7 +457,7 @@ export class ApiService {
       formData.append('avatar', {
         uri: imageUri,
         type: 'image/jpeg',
-        name: 'avatar.jpg'
+        name: 'avatar.jpg',
       } as unknown as Blob)
 
       const headers = await getAuthHeaders()
@@ -434,7 +466,7 @@ export class ApiService {
       const response = await fetch(`${API_BASE_URL}/users/${userId}/avatar`, {
         method: 'POST',
         headers,
-        body: formData
+        body: formData,
       })
 
       const result = await handleApiResponse(response)
