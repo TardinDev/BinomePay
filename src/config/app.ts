@@ -4,19 +4,19 @@
  */
 
 export const AppConfig = {
-  // Mode de données
-  USE_MOCK_DATA: true, // false pour utiliser Supabase en production
-  
-  // Configuration Supabase
-  SUPABASE_ENABLED: false, // true pour activer Supabase
-  
+  // Mode de données - basé sur l'environnement
+  USE_MOCK_DATA: process.env.EXPO_PUBLIC_MOCK_API === 'true',
+
+  // Configuration Supabase - activé sauf si mock
+  SUPABASE_ENABLED: process.env.EXPO_PUBLIC_MOCK_API !== 'true',
+
   // Real-time
-  ENABLE_REALTIME: false, // true pour activer les subscriptions en temps réel
-  
+  ENABLE_REALTIME: !__DEV__,
+
   // Debugging
-  DEBUG_MODE: __DEV__, // true en développement
+  DEBUG_MODE: __DEV__,
   LOG_API_CALLS: __DEV__,
-  
+
   // Features flags
   FEATURES: {
     KYC_VERIFICATION: true,
@@ -24,11 +24,11 @@ export const AppConfig = {
     CHAT_SYSTEM: false,
     ADVANCED_MATCHING: false,
   },
-  
+
   // Timing
   DATA_REFRESH_INTERVAL: 30000, // 30 secondes
   CACHE_EXPIRY: 300000, // 5 minutes
-  
+
   // UI
   PAGINATION_SIZE: 20,
   MAX_SUGGESTIONS: 50,

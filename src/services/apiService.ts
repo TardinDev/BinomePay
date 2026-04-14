@@ -47,7 +47,12 @@ export type OfflineAction =
   | UpdateProfileAction
 
 // Configuration de l'API
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api'
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ??
+  (() => {
+    if (!__DEV__) throw new Error('EXPO_PUBLIC_API_URL must be set in production')
+    return 'http://localhost:3000/api'
+  })()
 const USE_MOCK_API = process.env.EXPO_PUBLIC_MOCK_API === 'true'
 
 // Headers de base pour les requêtes API

@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { Stack, useRouter } from 'expo-router'
-import { useAuth, useUser } from '@clerk/clerk-expo'
+import { useAuth, useUser, useSession } from '@clerk/clerk-expo'
 import { View } from 'react-native'
 import useAppStore from '@/store/useAppStore'
 import ConnectionStatus from '@/components/ConnectionStatus'
 import { LoadingScreen } from '@/components/LoadingSpinner'
+import { setClerkTokenGetter } from '@/lib/supabase'
 
 export default function ProtectedLayout() {
   const router = useRouter()
@@ -12,11 +13,22 @@ export default function ProtectedLayout() {
 
   const { isLoaded, isSignedIn } = useAuth()
   const { user: clerkUser } = useUser()
+  const { session } = useSession()
   const user = useAppStore((s) => s.user)
   const isLoading = useAppStore((s) => s.isLoading)
   const isLoggingOut = useAppStore((s) => s.isLoggingOut)
   const initializeUserData = useAppStore((s) => s.initializeUserData)
   const reset = useAppStore((s) => s.reset)
+
+  // Connecter le token Clerk à Supabase pour l'auth third-party
+  useEffect(() => {
+    if (session) {
+      setClerkTokenGetter(() => session.getToken())
+    } else {
+      setClerkTokenGetter(null)
+    }
+    return () => setClerkTokenGetter(null)
+  }, [session])
 
   useEffect(() => {
     if (!isLoaded) return
