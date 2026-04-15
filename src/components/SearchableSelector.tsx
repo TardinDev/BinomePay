@@ -23,8 +23,8 @@ interface SearchableSelectorProps {
   value?: string
   placeholder?: string
   label?: string
-  onChange: (value: string) => void
-  renderOption?: (option: SelectorOption, isSelected: boolean) => React.ReactNode
+  onChange: (_value: string) => void
+  renderOption?: (_option: SelectorOption, _isSelected: boolean) => React.ReactNode
 }
 
 export default function SearchableSelector({
@@ -38,10 +38,7 @@ export default function SearchableSelector({
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const selectedOption = useMemo(
-    () => options.find((opt) => opt.value === value),
-    [options, value]
-  )
+  const selectedOption = useMemo(() => options.find((opt) => opt.value === value), [options, value])
 
   const filteredOptions = useMemo(() => {
     if (!searchQuery.trim()) return options
@@ -77,13 +74,9 @@ export default function SearchableSelector({
   }, [])
 
   const defaultRenderOption = (option: SelectorOption, isSelected: boolean) => (
-    <View className="flex-row items-center flex-1">
-      {option.icon && (
-        <Text className="text-2xl mr-3">{option.icon}</Text>
-      )}
-      <Text
-        className={`text-base ${isSelected ? 'text-yellow-400 font-bold' : 'text-white'}`}
-      >
+    <View className="flex-1 flex-row items-center">
+      {option.icon && <Text className="mr-3 text-2xl">{option.icon}</Text>}
+      <Text className={`text-base ${isSelected ? 'font-bold text-yellow-400' : 'text-white'}`}>
         {option.label}
       </Text>
       {isSelected && (
@@ -94,18 +87,14 @@ export default function SearchableSelector({
 
   return (
     <>
-      {label && (
-        <Text className="text-gray-400 text-sm mb-2">{label}</Text>
-      )}
+      {label && <Text className="mb-2 text-sm text-gray-400">{label}</Text>}
       <Pressable
         onPress={handleOpen}
         className="flex-row items-center justify-between rounded-xl px-4 py-4"
         style={{ backgroundColor: '#1F2937', borderWidth: 1, borderColor: '#374151' }}
       >
-        <View className="flex-row items-center flex-1">
-          {selectedOption?.icon && (
-            <Text className="text-xl mr-2">{selectedOption.icon}</Text>
-          )}
+        <View className="flex-1 flex-row items-center">
+          {selectedOption?.icon && <Text className="mr-2 text-xl">{selectedOption.icon}</Text>}
           <Text className={selectedOption ? 'text-white' : 'text-gray-500'}>
             {selectedOption?.label || placeholder}
           </Text>
@@ -124,11 +113,11 @@ export default function SearchableSelector({
           className="flex-1 bg-black"
         >
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
+          <View className="flex-row items-center justify-between px-4 pb-2 pt-4">
             <Pressable onPress={handleClose} className="p-2">
               <Ionicons name="close" color="#9CA3AF" size={24} />
             </Pressable>
-            <Text className="text-white text-lg font-bold">{label || 'Selectionner'}</Text>
+            <Text className="text-lg font-bold text-white">{label || 'Selectionner'}</Text>
             <View style={{ width: 40 }} />
           </View>
 
@@ -140,7 +129,7 @@ export default function SearchableSelector({
             >
               <Ionicons name="search" color="#6B7280" size={20} />
               <TextInput
-                className="flex-1 text-white py-3 px-3"
+                className="flex-1 px-3 py-3 text-white"
                 placeholder="Rechercher..."
                 placeholderTextColor="#6B7280"
                 value={searchQuery}
@@ -165,7 +154,7 @@ export default function SearchableSelector({
             ListEmptyComponent={() => (
               <View className="items-center py-8">
                 <Ionicons name="search-outline" color="#6B7280" size={48} />
-                <Text className="text-gray-500 mt-4">Aucun resultat</Text>
+                <Text className="mt-4 text-gray-500">Aucun resultat</Text>
               </View>
             )}
             renderItem={({ item }) => {
@@ -173,7 +162,7 @@ export default function SearchableSelector({
               return (
                 <Pressable
                   onPress={() => handleSelect(item.value)}
-                  className="flex-row items-center px-4 py-4 border-b"
+                  className="flex-row items-center border-b px-4 py-4"
                   style={{
                     borderColor: '#1F2937',
                     backgroundColor: isSelected ? '#1F293720' : 'transparent',
@@ -196,32 +185,107 @@ export default function SearchableSelector({
 export const COUNTRY_OPTIONS: SelectorOption[] = [
   { value: 'FR', label: 'France', icon: '🇫🇷', searchTerms: ['france', 'fr', 'french'] },
   { value: 'SN', label: 'Senegal', icon: '🇸🇳', searchTerms: ['senegal', 'sn', 'dakar'] },
-  { value: 'CI', label: "Cote d'Ivoire", icon: '🇨🇮', searchTerms: ['cote ivoire', 'ivory', 'ci', 'abidjan'] },
+  {
+    value: 'CI',
+    label: "Cote d'Ivoire",
+    icon: '🇨🇮',
+    searchTerms: ['cote ivoire', 'ivory', 'ci', 'abidjan'],
+  },
   { value: 'ML', label: 'Mali', icon: '🇲🇱', searchTerms: ['mali', 'ml', 'bamako'] },
-  { value: 'CM', label: 'Cameroun', icon: '🇨🇲', searchTerms: ['cameroun', 'cameroon', 'cm', 'yaounde'] },
-  { value: 'MA', label: 'Maroc', icon: '🇲🇦', searchTerms: ['maroc', 'morocco', 'ma', 'rabat', 'casablanca'] },
+  {
+    value: 'CM',
+    label: 'Cameroun',
+    icon: '🇨🇲',
+    searchTerms: ['cameroun', 'cameroon', 'cm', 'yaounde'],
+  },
+  {
+    value: 'MA',
+    label: 'Maroc',
+    icon: '🇲🇦',
+    searchTerms: ['maroc', 'morocco', 'ma', 'rabat', 'casablanca'],
+  },
   { value: 'TN', label: 'Tunisie', icon: '🇹🇳', searchTerms: ['tunisie', 'tunisia', 'tn', 'tunis'] },
   { value: 'DZ', label: 'Algerie', icon: '🇩🇿', searchTerms: ['algerie', 'algeria', 'dz', 'alger'] },
-  { value: 'BE', label: 'Belgique', icon: '🇧🇪', searchTerms: ['belgique', 'belgium', 'be', 'bruxelles'] },
-  { value: 'CH', label: 'Suisse', icon: '🇨🇭', searchTerms: ['suisse', 'switzerland', 'ch', 'geneva', 'zurich'] },
-  { value: 'DE', label: 'Allemagne', icon: '🇩🇪', searchTerms: ['allemagne', 'germany', 'de', 'berlin'] },
+  {
+    value: 'BE',
+    label: 'Belgique',
+    icon: '🇧🇪',
+    searchTerms: ['belgique', 'belgium', 'be', 'bruxelles'],
+  },
+  {
+    value: 'CH',
+    label: 'Suisse',
+    icon: '🇨🇭',
+    searchTerms: ['suisse', 'switzerland', 'ch', 'geneva', 'zurich'],
+  },
+  {
+    value: 'DE',
+    label: 'Allemagne',
+    icon: '🇩🇪',
+    searchTerms: ['allemagne', 'germany', 'de', 'berlin'],
+  },
   { value: 'ES', label: 'Espagne', icon: '🇪🇸', searchTerms: ['espagne', 'spain', 'es', 'madrid'] },
   { value: 'IT', label: 'Italie', icon: '🇮🇹', searchTerms: ['italie', 'italy', 'it', 'rome'] },
-  { value: 'GB', label: 'Royaume-Uni', icon: '🇬🇧', searchTerms: ['royaume uni', 'uk', 'england', 'london'] },
-  { value: 'US', label: 'Etats-Unis', icon: '🇺🇸', searchTerms: ['etats unis', 'usa', 'us', 'america'] },
-  { value: 'CA', label: 'Canada', icon: '🇨🇦', searchTerms: ['canada', 'ca', 'montreal', 'toronto'] },
+  {
+    value: 'GB',
+    label: 'Royaume-Uni',
+    icon: '🇬🇧',
+    searchTerms: ['royaume uni', 'uk', 'england', 'london'],
+  },
+  {
+    value: 'US',
+    label: 'Etats-Unis',
+    icon: '🇺🇸',
+    searchTerms: ['etats unis', 'usa', 'us', 'america'],
+  },
+  {
+    value: 'CA',
+    label: 'Canada',
+    icon: '🇨🇦',
+    searchTerms: ['canada', 'ca', 'montreal', 'toronto'],
+  },
 ]
 
 // Predefined currency options
 export const CURRENCY_OPTIONS: SelectorOption[] = [
   { value: 'EUR', label: 'Euro (EUR)', icon: '💶', searchTerms: ['euro', 'eur'] },
   { value: 'XOF', label: 'Franc CFA (XOF)', icon: '💵', searchTerms: ['cfa', 'xof', 'fcfa'] },
-  { value: 'XAF', label: 'Franc CFA Central (XAF)', icon: '💵', searchTerms: ['cfa', 'xaf', 'fcfa'] },
+  {
+    value: 'XAF',
+    label: 'Franc CFA Central (XAF)',
+    icon: '💵',
+    searchTerms: ['cfa', 'xaf', 'fcfa'],
+  },
   { value: 'MAD', label: 'Dirham (MAD)', icon: '💵', searchTerms: ['dirham', 'mad', 'maroc'] },
-  { value: 'TND', label: 'Dinar tunisien (TND)', icon: '💵', searchTerms: ['dinar', 'tnd', 'tunisie'] },
-  { value: 'DZD', label: 'Dinar algerien (DZD)', icon: '💵', searchTerms: ['dinar', 'dzd', 'algerie'] },
+  {
+    value: 'TND',
+    label: 'Dinar tunisien (TND)',
+    icon: '💵',
+    searchTerms: ['dinar', 'tnd', 'tunisie'],
+  },
+  {
+    value: 'DZD',
+    label: 'Dinar algerien (DZD)',
+    icon: '💵',
+    searchTerms: ['dinar', 'dzd', 'algerie'],
+  },
   { value: 'USD', label: 'Dollar US (USD)', icon: '💵', searchTerms: ['dollar', 'usd', 'us'] },
-  { value: 'GBP', label: 'Livre Sterling (GBP)', icon: '💷', searchTerms: ['livre', 'gbp', 'pound', 'sterling'] },
-  { value: 'CHF', label: 'Franc suisse (CHF)', icon: '💵', searchTerms: ['franc', 'chf', 'suisse'] },
-  { value: 'CAD', label: 'Dollar canadien (CAD)', icon: '💵', searchTerms: ['dollar', 'cad', 'canada'] },
+  {
+    value: 'GBP',
+    label: 'Livre Sterling (GBP)',
+    icon: '💷',
+    searchTerms: ['livre', 'gbp', 'pound', 'sterling'],
+  },
+  {
+    value: 'CHF',
+    label: 'Franc suisse (CHF)',
+    icon: '💵',
+    searchTerms: ['franc', 'chf', 'suisse'],
+  },
+  {
+    value: 'CAD',
+    label: 'Dollar canadien (CAD)',
+    icon: '💵',
+    searchTerms: ['dollar', 'cad', 'canada'],
+  },
 ]

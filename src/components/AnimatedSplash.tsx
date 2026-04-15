@@ -1,6 +1,11 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect } from 'react'
 import { View, Text, Dimensions, StyleSheet } from 'react-native'
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated'
 
 type AnimatedSplashProps = {
   ready: boolean
@@ -70,5 +75,3 @@ export default function AnimatedSplash({ ready }: AnimatedSplashProps) {
     </Animated.View>
   )
 }
-
-

@@ -1,17 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef } from 'react'
+import { Text, Animated } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 
 interface ToastProps {
-  visible: boolean;
-  message: string;
-  type?: 'success' | 'error' | 'warning' | 'info';
-  duration?: number;
-  onHide?: () => void;
+  visible: boolean
+  message: string
+  type?: 'success' | 'error' | 'warning' | 'info'
+  duration?: number
+  onHide?: () => void
 }
-
-const { width: screenWidth } = Dimensions.get('window');
 
 export default function Toast({
   visible,
@@ -20,8 +18,8 @@ export default function Toast({
   duration = 3000,
   onHide,
 }: ToastProps) {
-  const translateY = useRef(new Animated.Value(-100)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(-100)).current
+  const opacity = useRef(new Animated.Value(0)).current
 
   const getToastConfig = (toastType: string) => {
     switch (toastType) {
@@ -30,29 +28,29 @@ export default function Toast({
           colors: ['#10B981', '#059669'],
           icon: 'checkmark-circle',
           iconColor: '#FFFFFF',
-        };
+        }
       case 'error':
         return {
           colors: ['#EF4444', '#DC2626'],
           icon: 'close-circle',
           iconColor: '#FFFFFF',
-        };
+        }
       case 'warning':
         return {
           colors: ['#F59E0B', '#D97706'],
           icon: 'warning',
           iconColor: '#FFFFFF',
-        };
+        }
       default:
         return {
           colors: ['#3B82F6', '#1D4ED8'],
           icon: 'information-circle',
           iconColor: '#FFFFFF',
-        };
+        }
     }
-  };
+  }
 
-  const config = getToastConfig(type);
+  const config = getToastConfig(type)
 
   useEffect(() => {
     if (visible) {
@@ -68,18 +66,18 @@ export default function Toast({
           duration: 300,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start()
 
       // Auto-hide après la durée spécifiée
       const timer = setTimeout(() => {
-        hideToast();
-      }, duration);
+        hideToast()
+      }, duration)
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer)
     } else {
-      hideToast();
+      hideToast()
     }
-  }, [visible]);
+  }, [visible])
 
   const hideToast = () => {
     Animated.parallel([
@@ -94,11 +92,11 @@ export default function Toast({
         useNativeDriver: true,
       }),
     ]).start(() => {
-      if (onHide) onHide();
-    });
-  };
+      if (onHide) onHide()
+    })
+  }
 
-  if (!visible && (opacity as any)._value === 0) return null;
+  if (!visible && (opacity as any)._value === 0) return null
 
   return (
     <Animated.View
@@ -148,5 +146,5 @@ export default function Toast({
         </Text>
       </LinearGradient>
     </Animated.View>
-  );
+  )
 }

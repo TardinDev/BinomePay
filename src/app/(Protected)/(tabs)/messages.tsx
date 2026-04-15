@@ -5,36 +5,44 @@ import { Ionicons } from '@expo/vector-icons'
 import { useFormattedDate } from '@/utils/dateUtils'
 import { router } from 'expo-router'
 
-const ConversationItem = ({ item, onPress }: { item: Conversation; onPress: (id: string) => void }) => {
-  const formattedDate = useFormattedDate(item.updatedAt, 'datetime')
-  
+const ConversationItem = ({
+  item,
+  onPress,
+}: {
+  item: Conversation
+  onPress: (id: string) => void
+}) => {
+  const formattedDate = useFormattedDate(item.updatedAt)
+
   return (
     <Pressable
       onPress={() => onPress(item.id)}
-      className="border border-gray-800 rounded-xl p-4 mb-3 bg-neutral-900"
+      className="mb-3 rounded-xl border border-gray-800 bg-neutral-900 p-4"
     >
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-white font-semibold">{item.counterpartName}</Text>
+      <View className="mb-2 flex-row items-center justify-between">
+        <Text className="font-semibold text-white">{item.counterpartName}</Text>
         {item.unreadCount > 0 && (
-          <View className="bg-yellow-400 rounded-full px-2 py-0.5">
-            <Text className="text-black text-xs font-extrabold">{item.unreadCount}</Text>
+          <View className="rounded-full bg-yellow-400 px-2 py-0.5">
+            <Text className="text-xs font-extrabold text-black">{item.unreadCount}</Text>
           </View>
         )}
       </View>
-      
+
       {item.matchDetails && (
         <View className="mb-2">
-          <Text className="text-yellow-400 text-sm font-semibold">
+          <Text className="text-sm font-semibold text-yellow-400">
             {item.matchDetails.amount} {item.matchDetails.currency} • {item.matchDetails.corridor}
           </Text>
         </View>
       )}
-      
-      <View className="flex-row items-center mt-1">
+
+      <View className="mt-1 flex-row items-center">
         <Ionicons name="chatbubble" color="#9CA3AF" size={14} />
-        <Text className="text-gray-400 ml-1" numberOfLines={1}>{item.lastMessage}</Text>
+        <Text className="ml-1 text-gray-400" numberOfLines={1}>
+          {item.lastMessage}
+        </Text>
       </View>
-      <Text className="text-gray-500 text-xs mt-1">{formattedDate}</Text>
+      <Text className="mt-1 text-xs text-gray-500">{formattedDate}</Text>
     </Pressable>
   )
 }
@@ -45,14 +53,12 @@ export default function MessagesPage() {
 
   return (
     <View className="flex-1 bg-black px-5 pt-6">
-      <Text className="text-white text-xl font-extrabold">Messages</Text>
+      <Text className="text-xl font-extrabold text-white">Messages</Text>
       <FlatList
         className="mt-5"
         data={conversations}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={() => (
-          <Text className="text-gray-400">Aucune conversation.</Text>
-        )}
+        ListEmptyComponent={() => <Text className="text-gray-400">Aucune conversation.</Text>}
         removeClippedSubviews={true}
         maxToRenderPerBatch={6}
         windowSize={12}
@@ -75,5 +81,3 @@ export default function MessagesPage() {
     </View>
   )
 }
-
-

@@ -12,11 +12,11 @@ export function useDataSync() {
   const isLoading = useAppStore((s) => s.isLoading)
   const error = useAppStore((s) => s.error)
   const setError = useAppStore((s) => s.setError)
-  
+
   const [isOnline, setIsOnline] = useState(true)
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
-  
+
   const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
 
   // Surveiller la connectivité réseau (seulement en mode API réel)
@@ -25,10 +25,10 @@ export function useDataSync() {
       setIsOnline(true) // Toujours "en ligne" en mode mock
       return
     }
-    
-    const unsubscribe = NetInfo.addEventListener(state => {
+
+    const unsubscribe = NetInfo.addEventListener((state) => {
       setIsOnline(!!state.isConnected)
-      
+
       // Déclencher une synchronisation quand on revient en ligne
       if (state.isConnected && user?.id) {
         handleSync()
@@ -42,7 +42,7 @@ export function useDataSync() {
   useEffect(() => {
     // Ne pas initialiser si on est en train de se déconnecter
     if (isLoggingOut) return
-    
+
     if (clerkUser?.id && !user) {
       if (__DEV__) console.log('Initialisation des données pour:', clerkUser.id)
       initializeUserData(clerkUser.id)
@@ -52,7 +52,7 @@ export function useDataSync() {
   // Synchronisation manuelle
   const handleSync = useCallback(async () => {
     if (!user?.id || isSyncing) return false
-    
+
     if (useMockApi) {
       if (__DEV__) console.log('Mode mock - synchronisation simulée')
       setLastSyncTime(new Date())
@@ -68,7 +68,7 @@ export function useDataSync() {
         setError(null)
       }
       return success
-    } catch (error: any) {
+    } catch (_error: any) {
       setError('Erreur de synchronisation')
       return false
     } finally {
@@ -108,7 +108,7 @@ export function useDataSync() {
     isSyncing,
     lastSyncTime,
     sync: handleSync,
-    clearError: () => setError(null)
+    clearError: () => setError(null),
   }
 }
 

@@ -147,6 +147,7 @@ export class ApiService {
         .from('intents')
         .select('id, direction, amount, currency, origin_country, dest_country, status')
         .eq('user_id', userId)
+        .in('status', ['OPEN', 'MATCHED'])
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -382,6 +383,20 @@ export class ApiService {
     try {
       const offlineQueue = await AsyncStorage.getItem('offline_queue')
       const queue: OfflineAction[] = offlineQueue ? JSON.parse(offlineQueue) : []
+
+      // Déduplication : vérifier si une action identique existe déjà
+      const isDuplicate = queue.some(
+        (existing) =>
+          existing.type === action.type &&
+          existing.userId === action.userId &&
+          JSON.stringify(existing.payload) === JSON.stringify(action.payload)
+      )
+
+      if (isDuplicate) {
+        if (__DEV__) console.log('Action hors ligne dupliquée ignorée:', action.type)
+        return
+      }
+
       queue.push(action)
       await AsyncStorage.setItem('offline_queue', JSON.stringify(queue))
     } catch (error) {

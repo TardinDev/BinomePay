@@ -3,13 +3,13 @@ import { useAuth } from '@clerk/clerk-expo'
 import ApiService from '@/services/apiService'
 import { queryKeys } from '../keys'
 import { RequestItemSchema, MatchItemSchema, SuggestedItemSchema } from '@/lib/schemas'
-import type { RequestItem, MatchItem, SuggestedItem } from '@/lib/schemas'
+import type { RequestItem } from '@/lib/schemas'
 import { z } from 'zod'
 
 // Requests/Intentions hooks
 export const useRequests = () => {
   const { userId } = useAuth()
-  
+
   return useQuery({
     queryKey: queryKeys.requests(userId || ''),
     queryFn: async () => {
@@ -41,7 +41,7 @@ export const useCreateRequest = () => {
 // Matches hooks
 export const useMatches = () => {
   const { userId } = useAuth()
-  
+
   return useQuery({
     queryKey: queryKeys.matches(userId || ''),
     queryFn: async () => {
@@ -56,7 +56,7 @@ export const useMatches = () => {
 // Suggestions hooks
 export const useSuggestions = () => {
   const { userId } = useAuth()
-  
+
   return useQuery({
     queryKey: queryKeys.suggestions(userId || ''),
     queryFn: async () => {

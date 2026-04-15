@@ -39,7 +39,7 @@ class ErrorReportingService {
    * Initialize the error reporting service
    * Call this once when the app starts
    */
-  async initialize(dsn?: string): Promise<void> {
+  async initialize(_dsn?: string): Promise<void> {
     if (this.isInitialized) return
 
     try {
@@ -67,7 +67,7 @@ class ErrorReportingService {
   /**
    * Set the current user for error context
    */
-  setUser(userId: string | null, userData?: { name?: string; email?: string }): void {
+  setUser(userId: string | null, _userData?: { name?: string; email?: string }): void {
     this.userId = userId
 
     // Uncomment to enable Sentry user tracking:
@@ -100,11 +100,7 @@ class ErrorReportingService {
   /**
    * Capture a message (non-error)
    */
-  captureMessage(
-    message: string,
-    context?: ErrorContext,
-    severity: ErrorSeverity = 'info'
-  ): void {
+  captureMessage(message: string, context?: ErrorContext, severity: ErrorSeverity = 'info'): void {
     const report = this.createReport(message, severity, undefined, context)
 
     if (!this.isInitialized) {
@@ -122,7 +118,7 @@ class ErrorReportingService {
     category: string,
     message: string,
     data?: Record<string, unknown>,
-    level: ErrorSeverity = 'info'
+    _level: ErrorSeverity = 'info'
   ): void {
     if (__DEV__) {
       console.log(`[${category}] ${message}`, data)
@@ -140,10 +136,7 @@ class ErrorReportingService {
   /**
    * Wrap an async function with error reporting
    */
-  wrapAsync<T>(
-    fn: () => Promise<T>,
-    context?: ErrorContext
-  ): Promise<T> {
+  wrapAsync<T>(fn: () => Promise<T>, context?: ErrorContext): Promise<T> {
     return fn().catch((error) => {
       this.captureError(error, context)
       throw error
@@ -155,10 +148,14 @@ class ErrorReportingService {
    */
   createErrorBoundaryHandler(componentName: string) {
     return (error: Error, componentStack: string) => {
-      this.captureError(error, {
-        screen: componentName,
-        extra: { componentStack },
-      }, 'fatal')
+      this.captureError(
+        error,
+        {
+          screen: componentName,
+          extra: { componentStack },
+        },
+        'fatal'
+      )
     }
   }
 
@@ -185,11 +182,12 @@ class ErrorReportingService {
   private sendReport(report: ErrorReport): void {
     // Log in development
     if (__DEV__) {
-      const logMethod = report.severity === 'error' || report.severity === 'fatal'
-        ? console.error
-        : report.severity === 'warning'
-        ? console.warn
-        : console.log
+      const logMethod =
+        report.severity === 'error' || report.severity === 'fatal'
+          ? console.error
+          : report.severity === 'warning'
+            ? console.warn
+            : console.log
 
       logMethod(`[${report.severity.toUpperCase()}] ${report.message}`, {
         error: report.error,

@@ -332,7 +332,7 @@ export const logSecurityEvent = (
     if (riskLevel === 'high') {
       console.warn('HIGH RISK SECURITY EVENT:', logData)
     } else {
-      console.log('Security event:', logData)
+      console.warn('Security event:', logData)
     }
   }
 }

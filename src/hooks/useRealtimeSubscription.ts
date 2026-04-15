@@ -20,7 +20,7 @@ interface PostgresPayload<T> {
 
 export function useRealtimeSubscription<T extends Record<string, unknown>>(
   config: SubscriptionConfig,
-  onPayload: (payload: PostgresPayload<T>) => void,
+  onPayload: (_payload: PostgresPayload<T>) => void,
   enabled: boolean = true
 ) {
   const channelRef = useRef<RealtimeChannel | null>(null)
@@ -80,7 +80,15 @@ export function useConversationsSubscription(userId: string | undefined) {
   const addMessageToConversation = useAppStore((s) => s.addMessageToConversation)
 
   const handlePayload = useCallback(
-    (payload: PostgresPayload<{ id: string; conversation_id: string; content: string; sender_id: string; created_at: string }>) => {
+    (
+      payload: PostgresPayload<{
+        id: string
+        conversation_id: string
+        content: string
+        sender_id: string
+        created_at: string
+      }>
+    ) => {
       if (payload.eventType === 'INSERT' && payload.new) {
         const message = payload.new
         // Don't add our own messages (they're added optimistically)
@@ -160,8 +168,6 @@ export function useSuggestionsSubscription(userId: string | undefined) {
 
 export function useNotificationsSubscription(userId: string | undefined) {
   const incrementNotifications = useAppStore((s) => s.incrementNotifications)
-  const clearNotifications = useAppStore((s) => s.clearNotifications)
-
   const handlePayload = useCallback(
     (payload: PostgresPayload<{ id: string; read: boolean }>) => {
       if (payload.eventType === 'INSERT') {

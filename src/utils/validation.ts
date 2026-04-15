@@ -11,11 +11,26 @@ export interface ValidationResult {
 
 // Supported countries for money transfers
 export const SUPPORTED_COUNTRIES = [
-  'France', 'Belgique', 'Suisse', 'Canada', 'Espagne',
-  'Sénégal', 'Côte d\'Ivoire', 'Mali', 'Burkina Faso', 'Niger',
-  'Guinée', 'Mauritanie', 'Maroc', 'Tunisie', 'Algérie',
-  'Cameroun', 'Gabon', 'République Démocratique du Congo',
-  'Bénin', 'Togo'
+  'France',
+  'Belgique',
+  'Suisse',
+  'Canada',
+  'Espagne',
+  'Sénégal',
+  "Côte d'Ivoire",
+  'Mali',
+  'Burkina Faso',
+  'Niger',
+  'Guinée',
+  'Mauritanie',
+  'Maroc',
+  'Tunisie',
+  'Algérie',
+  'Cameroun',
+  'Gabon',
+  'République Démocratique du Congo',
+  'Bénin',
+  'Togo',
 ]
 
 // Supported currencies with their limits
@@ -23,14 +38,14 @@ export const CURRENCY_LIMITS = {
   EUR: { min: 10, max: 10000 },
   USD: { min: 10, max: 12000 },
   GBP: { min: 10, max: 8500 },
-  CAD: { min: 15, max: 15000 }
+  CAD: { min: 15, max: 15000 },
 }
 
 // High-risk corridors that require additional verification
 export const HIGH_RISK_CORRIDORS = [
   'France→Mali',
   'Belgique→République Démocratique du Congo',
-  'Canada→Mauritanie'
+  'Canada→Mauritanie',
 ]
 
 /**
@@ -40,8 +55,7 @@ export const validateIntention = (
   amount: number,
   currency: string,
   originCountry: string,
-  destCountry: string,
-  type: 'SEND' | 'RECEIVE'
+  destCountry: string
 ): ValidationResult => {
   const errors: string[] = []
   const warnings: string[] = []
@@ -72,13 +86,13 @@ export const validateIntention = (
     errors.push(`Pays de destination non supporté: ${destCountry}`)
   }
   if (originCountry === destCountry) {
-    errors.push('Les pays d\'origine et de destination doivent être différents')
+    errors.push("Les pays d'origine et de destination doivent être différents")
   }
 
   // High-risk corridor check
   const corridor = `${originCountry}→${destCountry}`
   if (HIGH_RISK_CORRIDORS.includes(corridor)) {
-    warnings.push('Ce corridor nécessite une vérification d\'identité renforcée')
+    warnings.push("Ce corridor nécessite une vérification d'identité renforcée")
   }
 
   // Large amount warning
@@ -90,7 +104,7 @@ export const validateIntention = (
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   }
 }
 
@@ -116,7 +130,7 @@ export const validateMessage = (message: string): ValidationResult => {
     /\b(\d{4}\s*\d{4}\s*\d{4}\s*\d{4})\b/, // Card number pattern
   ]
 
-  suspiciousPatterns.forEach(pattern => {
+  suspiciousPatterns.forEach((pattern) => {
     if (pattern.test(message)) {
       warnings.push('Attention: évitez de partager des informations sensibles')
     }
@@ -131,7 +145,7 @@ export const validateMessage = (message: string): ValidationResult => {
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
   }
 }
 
@@ -168,13 +182,13 @@ export const validateUserProfile = (
   if (email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      errors.push('Format d\'email invalide')
+      errors.push("Format d'email invalide")
     }
   }
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   }
 }
 
@@ -184,7 +198,7 @@ export const validateUserProfile = (
 export const sanitizeInput = (input: string): string => {
   return input
     .trim()
-    .replace(/[<>\"']/g, '') // Remove dangerous HTML characters
+    .replace(/[<>"']/g, '') // Remove dangerous HTML characters
     .replace(/\s+/g, ' ') // Normalize whitespace
     .slice(0, 500) // Limit length
 }
@@ -202,11 +216,11 @@ export const isAmountReasonable = (amount: number, currency: string): boolean =>
  */
 export const formatValidationErrors = (result: ValidationResult): string => {
   if (result.isValid) return ''
-  
+
   let message = result.errors.join('\n')
   if (result.warnings && result.warnings.length > 0) {
     message += '\n\nAvertissements:\n' + result.warnings.join('\n')
   }
-  
+
   return message
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, Pressable, ScrollView, Alert } from 'react-native'
+import { View, Text, TextInput, Pressable, ScrollView } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useSignUp } from '@clerk/clerk-expo'
@@ -18,14 +18,22 @@ export default function RegisterScreen() {
 
   // Log when component mounts
   React.useEffect(() => {
-    if (__DEV__) console.log('[Register] Component mounted, isLoaded:', isLoaded, 'signUp:', !!signUp)
+    if (__DEV__)
+      console.log('[Register] Component mounted, isLoaded:', isLoaded, 'signUp:', !!signUp)
   }, [isLoaded, signUp])
 
-  const isValid = () => firstName.trim().length > 0 && email.includes('@') && password.trim().length >= 6 && password === confirm && accepted
+  const isValid = () =>
+    firstName.trim().length > 0 &&
+    email.includes('@') &&
+    password.trim().length >= 6 &&
+    password === confirm &&
+    accepted
 
   const handleRegister = async () => {
     if (!isValid()) {
-      setError('Vérifiez vos informations (prénom requis, email valide, 6 caractères minimum, mots de passe identiques).')
+      setError(
+        'Vérifiez vos informations (prénom requis, email valide, 6 caractères minimum, mots de passe identiques).'
+      )
       return
     }
 
@@ -43,7 +51,7 @@ export default function RegisterScreen() {
 
       if (!signUp) {
         if (__DEV__) console.error('[Register] signUp object is null')
-        setError('Service d\'inscription non disponible')
+        setError("Service d'inscription non disponible")
         return
       }
 
@@ -52,16 +60,16 @@ export default function RegisterScreen() {
       // Create the account with email and password only
       const res = await signUp.create({
         emailAddress: email,
-        password
+        password,
       })
 
       // Update the user's first name after creation
       if (res && firstName.trim()) {
         try {
           await signUp.update({
-            firstName: firstName.trim()
+            firstName: firstName.trim(),
           })
-        } catch (updateError) {
+        } catch {
           if (__DEV__) console.log('[Register] Could not update firstName, continuing anyway')
         }
       }
@@ -81,7 +89,12 @@ export default function RegisterScreen() {
         setError('Statut inattendu. Veuillez réessayer.')
       }
     } catch (e: unknown) {
-      const error = e as { message?: string; errors?: Array<{ code?: string; message?: string }>; clerkError?: boolean; status?: number }
+      const error = e as {
+        message?: string
+        errors?: Array<{ code?: string; message?: string }>
+        clerkError?: boolean
+        status?: number
+      }
       if (__DEV__) {
         console.error('[Register] Registration error:', e)
         console.error('[Register] Error details:', {
@@ -102,10 +115,10 @@ export default function RegisterScreen() {
         } else if (clerkError.code === 'form_password_length_too_short') {
           setError('Le mot de passe doit contenir au moins 8 caractères')
         } else {
-          setError(clerkError.message || 'Erreur lors de l\'inscription')
+          setError(clerkError.message || "Erreur lors de l'inscription")
         }
       } else {
-        setError(error?.message ?? 'Erreur lors de l\'inscription. Veuillez réessayer.')
+        setError(error?.message ?? "Erreur lors de l'inscription. Veuillez réessayer.")
       }
     } finally {
       setLoading(false)
@@ -115,22 +128,25 @@ export default function RegisterScreen() {
   // Show loading state while Clerk is initializing
   if (!isLoaded) {
     return (
-      <View className="flex-1 bg-black justify-center items-center">
+      <View className="flex-1 items-center justify-center bg-black">
         <Text className="text-white">Chargement...</Text>
       </View>
     )
   }
 
   return (
-    <ScrollView className="flex-1 bg-black px-5 pt-10" contentContainerStyle={{ paddingBottom: 36 }}>
-      <View className="items-center mb-6">
-        <Text className="text-white text-5xl font-extrabold">Binome Pay</Text>
-        <Text className="text-gray-400 mt-1">Créer un compte</Text>
+    <ScrollView
+      className="flex-1 bg-black px-5 pt-10"
+      contentContainerStyle={{ paddingBottom: 36 }}
+    >
+      <View className="mb-6 items-center">
+        <Text className="text-5xl font-extrabold text-white">Binome Pay</Text>
+        <Text className="mt-1 text-gray-400">Créer un compte</Text>
       </View>
 
-      <View className="bg-neutral-900 rounded-2xl p-5 border" style={{ borderColor: '#334155' }}>
-        <Text className="text-gray-300 mb-2">Prénom</Text>
-        <View className="flex-row items-center bg-black/30 rounded-xl border border-gray-700 px-4 py-3">
+      <View className="rounded-2xl border bg-neutral-900 p-5" style={{ borderColor: '#334155' }}>
+        <Text className="mb-2 text-gray-300">Prénom</Text>
+        <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
           <Ionicons name="person-outline" color="#9CA3AF" size={18} />
           <TextInput
             placeholder="Ex: Jean"
@@ -138,12 +154,12 @@ export default function RegisterScreen() {
             value={firstName}
             onChangeText={setFirstName}
             autoCapitalize="words"
-            className="text-white ml-3 flex-1"
+            className="ml-3 flex-1 text-white"
           />
         </View>
 
-        <Text className="text-gray-300 mb-2 mt-4">Email</Text>
-        <View className="flex-row items-center bg-black/30 rounded-xl border border-gray-700 px-4 py-3">
+        <Text className="mb-2 mt-4 text-gray-300">Email</Text>
+        <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
           <Ionicons name="mail-outline" color="#9CA3AF" size={18} />
           <TextInput
             placeholder="vous@exemple.com"
@@ -154,12 +170,12 @@ export default function RegisterScreen() {
             autoCorrect={false}
             autoComplete="email"
             keyboardType="email-address"
-            className="text-white ml-3 flex-1"
+            className="ml-3 flex-1 text-white"
           />
         </View>
 
-        <Text className="text-gray-300 mb-2 mt-4">Mot de passe</Text>
-        <View className="flex-row items-center bg-black/30 rounded-xl border border-gray-700 px-4 py-3">
+        <Text className="mb-2 mt-4 text-gray-300">Mot de passe</Text>
+        <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
           <Ionicons name="lock-closed-outline" color="#9CA3AF" size={18} />
           <TextInput
             placeholder="••••••••"
@@ -171,15 +187,18 @@ export default function RegisterScreen() {
             autoCorrect={false}
             autoComplete="new-password"
             textContentType="newPassword"
-            className="text-white ml-3 flex-1"
+            className="ml-3 flex-1 text-white"
           />
-          <Pressable onPress={() => setShowPassword((v) => !v)} accessibilityLabel="Afficher/masquer le mot de passe">
+          <Pressable
+            onPress={() => setShowPassword((v) => !v)}
+            accessibilityLabel="Afficher/masquer le mot de passe"
+          >
             <Ionicons name={showPassword ? 'eye-off' : 'eye'} color="#9CA3AF" size={18} />
           </Pressable>
         </View>
 
-        <Text className="text-gray-300 mb-2 mt-4">Confirmer le mot de passe</Text>
-        <View className="flex-row items-center bg-black/30 rounded-xl border border-gray-700 px-4 py-3">
+        <Text className="mb-2 mt-4 text-gray-300">Confirmer le mot de passe</Text>
+        <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
           <Ionicons name="lock-closed-outline" color="#9CA3AF" size={18} />
           <TextInput
             placeholder="••••••••"
@@ -193,45 +212,64 @@ export default function RegisterScreen() {
             textContentType="password"
             returnKeyType="done"
             onSubmitEditing={() => {}}
-            className="text-white ml-3 flex-1"
+            className="ml-3 flex-1 text-white"
           />
-          <Pressable onPress={() => setShowConfirm((v) => !v)} accessibilityLabel="Afficher/masquer la confirmation">
+          <Pressable
+            onPress={() => setShowConfirm((v) => !v)}
+            accessibilityLabel="Afficher/masquer la confirmation"
+          >
             <Ionicons name={showConfirm ? 'eye-off' : 'eye'} color="#9CA3AF" size={18} />
           </Pressable>
         </View>
 
         {error && (
-          <Text className="text-rose-400 mt-3" accessibilityLiveRegion="polite">{error}</Text>
+          <Text className="mt-3 text-rose-400" accessibilityLiveRegion="polite">
+            {error}
+          </Text>
         )}
 
-        <View className="flex-row items-start mt-4">
+        <View className="mt-4 flex-row items-start">
           <Pressable onPress={() => setAccepted((v) => !v)} className="mr-2 mt-0.5">
-            <Ionicons name={accepted ? 'checkbox' : 'square-outline'} size={20} color={accepted ? '#EAB308' : '#9CA3AF'} />
+            <Ionicons
+              name={accepted ? 'checkbox' : 'square-outline'}
+              size={20}
+              color={accepted ? '#EAB308' : '#9CA3AF'}
+            />
           </Pressable>
-          <Text className="text-gray-300 flex-1">
-            J’accepte les <Text onPress={() => router.push('/(auth)/terms')} className="text-yellow-400 underline">conditions d’utilisation</Text> et la politique de confidentialité.
+          <Text className="flex-1 text-gray-300">
+            J’accepte les{' '}
+            <Text
+              onPress={() => router.push('/(auth)/terms')}
+              className="text-yellow-400 underline"
+            >
+              conditions d’utilisation
+            </Text>{' '}
+            et la politique de confidentialité.
           </Text>
         </View>
 
         <Pressable
           onPress={handleRegister}
           disabled={loading || !isValid()}
-          className="rounded-xl mt-6 items-center"
-          style={{ backgroundColor: isValid() && !loading ? '#FDE68A' : '#6B7280', paddingVertical: 14 }}
+          className="mt-6 items-center rounded-xl"
+          style={{
+            backgroundColor: isValid() && !loading ? '#FDE68A' : '#6B7280',
+            paddingVertical: 14,
+          }}
         >
-          <Text className="text-black font-extrabold text-base">{loading ? 'Création…' : 'Créer le compte'}</Text>
+          <Text className="text-base font-extrabold text-black">
+            {loading ? 'Création…' : 'Créer le compte'}
+          </Text>
         </Pressable>
       </View>
 
-      <View className="items-center mt-5">
+      <View className="mt-5 items-center">
         <Pressable onPress={() => router.replace('/(auth)/login')}>
           <Text className="text-gray-300">
-            Déjà inscrit ? <Text className="text-yellow-400 font-bold">Se connecter</Text>
+            Déjà inscrit ? <Text className="font-bold text-yellow-400">Se connecter</Text>
           </Text>
         </Pressable>
       </View>
     </ScrollView>
   )
 }
-
-

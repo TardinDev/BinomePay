@@ -60,8 +60,11 @@ export default [
       'react/prop-types': 'off',
       'react/display-name': 'off',
 
+      // Désactiver la règle de base au profit de @typescript-eslint
+      'no-unused-vars': 'off',
+
       // TypeScript
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
@@ -87,6 +90,7 @@ export default [
       'ios/',
       'dist/',
       'build/',
+      'scripts/',
       '*.config.js',
       'babel.config.js',
       'metro.config.js',

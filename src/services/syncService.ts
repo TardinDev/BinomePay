@@ -1,14 +1,18 @@
 import NetInfo from '@react-native-community/netinfo'
 import ApiService from './apiService'
-import useAppStore, { RequestItem, MatchItem, Conversation, SuggestedItem } from '@/store/useAppStore'
+import useAppStore, {
+  RequestItem,
+  MatchItem,
+  Conversation,
+  SuggestedItem,
+} from '@/store/useAppStore'
 import { notifyMatchAccepted, notifyNewMessage, notifyNewSuggestion } from './notificationService'
-
-type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
 
 class SyncService {
   private syncInProgress = false
   private lastSyncTimestamp = 0
   private syncInterval: NodeJS.Timeout | null = null
+  private netInfoUnsubscribe: (() => void) | null = null
   private readonly SYNC_INTERVAL = 30000 // 30 secondes
   private readonly MIN_SYNC_INTERVAL = 5000 // 5 secondes minimum entre syncs
   private readonly USE_MOCK_API = process.env.EXPO_PUBLIC_MOCK_API === 'true'
@@ -22,9 +26,12 @@ class SyncService {
       if (__DEV__) console.log('Mode mock actif - synchronisation désactivée')
       return
     }
-    
-    // Écouter les changements de connectivité
-    NetInfo.addEventListener(state => {
+
+    // Écouter les changements de connectivité (stocker le unsubscribe)
+    if (this.netInfoUnsubscribe) {
+      this.netInfoUnsubscribe()
+    }
+    this.netInfoUnsubscribe = NetInfo.addEventListener((state) => {
       if (state.isConnected && !this.syncInProgress) {
         this.performSync()
       }
@@ -69,11 +76,11 @@ class SyncService {
       if (__DEV__) console.log('Mode mock - synchronisation ignorée')
       return true
     }
-    
+
     const now = Date.now()
-    
+
     // Éviter la synchronisation trop fréquente
-    if (!force && (now - this.lastSyncTimestamp) < this.MIN_SYNC_INTERVAL) {
+    if (!force && now - this.lastSyncTimestamp < this.MIN_SYNC_INTERVAL) {
       return false
     }
 
@@ -107,7 +114,7 @@ class SyncService {
         return false
       }
 
-      if (__DEV__) console.log('Début de la synchronisation pour l\'utilisateur:', userId)
+      if (__DEV__) console.log("Début de la synchronisation pour l'utilisateur:", userId)
 
       // 1. Traiter d'abord les actions hors ligne en attente
       await ApiService.processOfflineQueue()
@@ -117,7 +124,6 @@ class SyncService {
 
       if (__DEV__) console.log('Synchronisation terminée avec succès')
       return true
-
     } catch (error) {
       if (__DEV__) console.error('Erreur lors de la synchronisation:', error)
       return false
@@ -134,18 +140,17 @@ class SyncService {
     try {
       // Synchronisation complète en une requête pour optimiser
       const syncData = await ApiService.syncUserData(userId)
-      
+
       const store = useAppStore.getState()
-      
+
       // Mettre à jour le store avec les nouvelles données
       store.setUser(syncData.user)
       store.setMatches(syncData.matches)
-      
+
       // Pour les autres données, utiliser les fonctions de mise à jour spécifiques
       this.updateRequestsIfChanged(syncData.requests)
       this.updateConversationsIfChanged(syncData.conversations)
       this.updateSuggestionsIfChanged(syncData.suggestions)
-
     } catch (error) {
       if (__DEV__) console.error('Erreur synchronisation données utilisateur:', error)
 
@@ -162,7 +167,7 @@ class SyncService {
         this.syncUserRequests(userId),
         this.syncUserMatches(userId),
         this.syncUserConversations(userId),
-        this.syncUserSuggestions(userId)
+        this.syncUserSuggestions(userId),
       ])
     } catch (error) {
       if (__DEV__) console.error('Erreur synchronisation fallback:', error)
@@ -281,44 +286,49 @@ class SyncService {
     if (current.length !== updated.length) return true
 
     // Comparaison simple basée sur les IDs et timestamps
-    const currentIds = current.map(item => `${item.id}-${item.updatedAt || item.createdAt}`).sort()
-    const updatedIds = updated.map(item => `${item.id}-${item.updatedAt || item.createdAt}`).sort()
+    const currentIds = current
+      .map((item) => `${item.id}-${item.updatedAt || item.createdAt}`)
+      .sort()
+    const updatedIds = updated
+      .map((item) => `${item.id}-${item.updatedAt || item.createdAt}`)
+      .sort()
 
     return JSON.stringify(currentIds) !== JSON.stringify(updatedIds)
   }
 
   private checkForNewMatches(oldMatches: MatchItem[], newMatches: MatchItem[]): void {
-    const oldIds = new Set(oldMatches.map(m => m.id))
-    const newItems = newMatches.filter(m => !oldIds.has(m.id))
+    const oldIds = new Set(oldMatches.map((m) => m.id))
+    const newItems = newMatches.filter((m) => !oldIds.has(m.id))
 
-    newItems.forEach(match => {
-      notifyMatchAccepted(
-        match.counterpartName,
-        match.amount,
-        match.currency,
-        match.corridor
-      )
+    newItems.forEach((match) => {
+      notifyMatchAccepted(match.counterpartName, match.amount, match.currency, match.corridor)
     })
   }
 
-  private checkForNewMessages(oldConversations: Conversation[], newConversations: Conversation[]): void {
-    const oldConvMap = new Map(oldConversations.map(c => [c.id, c]))
+  private checkForNewMessages(
+    oldConversations: Conversation[],
+    newConversations: Conversation[]
+  ): void {
+    const oldConvMap = new Map(oldConversations.map((c) => [c.id, c]))
 
-    newConversations.forEach(newConv => {
+    newConversations.forEach((newConv) => {
       const oldConv = oldConvMap.get(newConv.id)
-      if (oldConv && oldConv.updatedAt < newConv.updatedAt && newConv.unreadCount > oldConv.unreadCount) {
-        notifyNewMessage(
-          newConv.counterpartName,
-          newConv.lastMessage,
-          newConv.id
-        )
+      if (
+        oldConv &&
+        oldConv.updatedAt < newConv.updatedAt &&
+        newConv.unreadCount > oldConv.unreadCount
+      ) {
+        notifyNewMessage(newConv.counterpartName, newConv.lastMessage, newConv.id)
       }
     })
   }
 
-  private checkForNewSuggestions(oldSuggestions: SuggestedItem[], newSuggestions: SuggestedItem[]): void {
-    const oldIds = new Set(oldSuggestions.map(s => s.id))
-    const newItems = newSuggestions.filter(s => !oldIds.has(s.id))
+  private checkForNewSuggestions(
+    oldSuggestions: SuggestedItem[],
+    newSuggestions: SuggestedItem[]
+  ): void {
+    const oldIds = new Set(oldSuggestions.map((s) => s.id))
+    const newItems = newSuggestions.filter((s) => !oldIds.has(s.id))
 
     if (newItems.length > 0) {
       notifyNewSuggestion(newItems.length)
@@ -335,7 +345,7 @@ class SyncService {
       return true
     }
 
-    if (__DEV__) console.log('Synchronisation forcée par l\'utilisateur')
+    if (__DEV__) console.log("Synchronisation forcée par l'utilisateur")
     return await this.performSync(true)
   }
 
@@ -345,6 +355,10 @@ class SyncService {
 
   destroy(): void {
     this.stopPeriodicSync()
+    if (this.netInfoUnsubscribe) {
+      this.netInfoUnsubscribe()
+      this.netInfoUnsubscribe = null
+    }
     this.syncInProgress = false
   }
 

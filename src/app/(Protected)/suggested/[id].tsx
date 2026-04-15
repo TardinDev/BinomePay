@@ -12,19 +12,18 @@ export default function SuggestedDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user } = useUser()
   const suggested = useAppStore((s) => s.suggested)
-  const matches = useAppStore((s) => s.matches)
   const acceptSuggestion = useAppStore((s) => s.acceptSuggestion)
   const conversations = useAppStore((s) => s.conversations)
-  
+
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [createdConversationId, setCreatedConversationId] = useState<string | null>(null)
-  
+
   const { showError } = useToast()
-  
+
   const item = suggested.find((s) => s.id === id)
-  
+
   // Check if this suggestion has been accepted
   const isAccepted = item?.isAccepted || false
   const conversationId = item?.conversationId
@@ -36,24 +35,30 @@ export default function SuggestedDetailPage() {
     const minutes = Math.floor(diff / (1000 * 60))
     const hours = Math.floor(minutes / 60)
     const days = Math.floor(hours / 24)
-    
+
     if (days > 0) return `il y a ${days}j`
     if (hours > 0) return `il y a ${hours}h`
     return `il y a ${minutes}min`
   }, [item])
-  
+
   if (!item) {
     return (
       <View className="flex-1 bg-black px-5 pt-6">
-        <View className="flex-row items-center mb-6">
-          <Pressable 
-            onPress={() => router.back()} 
+        <View className="mb-6 flex-row items-center">
+          <Pressable
+            onPress={() => router.back()}
             className="mr-3"
-            style={{ padding: 10, borderRadius: 9999, backgroundColor: '#111827', borderWidth: 1, borderColor: '#1F2937' }}
+            style={{
+              padding: 10,
+              borderRadius: 9999,
+              backgroundColor: '#111827',
+              borderWidth: 1,
+              borderColor: '#1F2937',
+            }}
           >
             <Ionicons name="arrow-back" color="#E5E7EB" size={20} />
           </Pressable>
-          <Text className="text-white text-xl font-bold">Proposition introuvable</Text>
+          <Text className="text-xl font-bold text-white">Proposition introuvable</Text>
         </View>
         <Text className="text-gray-400">Cette proposition n'existe plus ou a été supprimée.</Text>
       </View>
@@ -73,18 +78,18 @@ export default function SuggestedDetailPage() {
     setIsProcessing(true)
     try {
       const conversationId = await acceptSuggestion(item!.id, user!.id)
-      
+
       if (conversationId) {
         setCreatedConversationId(conversationId)
         setShowConfirmModal(false)
         setShowSuccessModal(true)
       } else {
         setShowConfirmModal(false)
-        showError('Impossible d\'accepter cette proposition. Veuillez réessayer.')
+        showError("Impossible d'accepter cette proposition. Veuillez réessayer.")
       }
-    } catch (error) {
+    } catch {
       setShowConfirmModal(false)
-      showError('Une erreur s\'est produite lors de l\'acceptation.')
+      showError("Une erreur s'est produite lors de l'acceptation.")
     } finally {
       setIsProcessing(false)
     }
@@ -96,12 +101,13 @@ export default function SuggestedDetailPage() {
       router.push(`/(Protected)/messages/${conversationId}`)
     } else {
       // Fallback: chercher la conversation par correspondance
-      const conversation = conversations.find(conv => 
-        conv.counterpartName === item?.senderName &&
-        conv.matchDetails?.amount === item?.amount &&
-        conv.matchDetails?.currency === item?.currency
+      const conversation = conversations.find(
+        (conv) =>
+          conv.counterpartName === item?.senderName &&
+          conv.matchDetails?.amount === item?.amount &&
+          conv.matchDetails?.currency === item?.currency
       )
-      
+
       if (conversation) {
         router.push(`/(Protected)/messages/${conversation.id}`)
       } else {
@@ -112,66 +118,84 @@ export default function SuggestedDetailPage() {
 
   return (
     <ScrollView className="flex-1 bg-black px-5 pt-6" contentContainerStyle={{ paddingBottom: 36 }}>
-      <View className="flex-row items-center mb-6">
-        <Pressable 
-          onPress={() => router.back()} 
+      <View className="mb-6 flex-row items-center">
+        <Pressable
+          onPress={() => router.back()}
           className="mr-3"
-          style={{ padding: 10, borderRadius: 9999, backgroundColor: '#111827', borderWidth: 1, borderColor: '#1F2937' }}
+          style={{
+            padding: 10,
+            borderRadius: 9999,
+            backgroundColor: '#111827',
+            borderWidth: 1,
+            borderColor: '#1F2937',
+          }}
         >
           <Ionicons name="arrow-back" color="#E5E7EB" size={20} />
         </Pressable>
-        <Text className="text-white text-xl font-bold">Détails de la proposition</Text>
+        <Text className="text-xl font-bold text-white">Détails de la proposition</Text>
       </View>
 
-      <View className="border border-gray-800 rounded-2xl p-5 bg-neutral-900 mb-6">
-        <View className="flex-row items-center justify-between mb-4">
+      <View className="mb-6 rounded-2xl border border-gray-800 bg-neutral-900 p-5">
+        <View className="mb-4 flex-row items-center justify-between">
           <View className="flex-row items-center">
-            <Text className={`text-lg font-bold ${isAccepted ? 'text-green-400' : 'text-yellow-400'}`}>
+            <Text
+              className={`text-lg font-bold ${isAccepted ? 'text-green-400' : 'text-yellow-400'}`}
+            >
               {isAccepted ? 'PROPOSITION ACCEPTÉE' : 'PROPOSITION'}
             </Text>
             {isAccepted && (
-              <Ionicons name="checkmark-circle" color="#10B981" size={20} style={{ marginLeft: 8 }} />
+              <Ionicons
+                name="checkmark-circle"
+                color="#10B981"
+                size={20}
+                style={{ marginLeft: 8 }}
+              />
             )}
           </View>
-          <Text className="text-gray-400 text-sm">{timeAgo}</Text>
+          <Text className="text-sm text-gray-400">{timeAgo}</Text>
         </View>
 
         <View className="mb-4">
-          <Text className="text-white text-3xl font-extrabold">{item.amount} {item.currency}</Text>
-          <View className="flex-row items-center mt-2">
+          <Text className="text-3xl font-extrabold text-white">
+            {item.amount} {item.currency}
+          </Text>
+          <View className="mt-2 flex-row items-center">
             <Ionicons name="airplane" color="#9CA3AF" size={16} />
-            <Text className="text-gray-400 ml-1">{item.originCountryName} → {item.destCountryName}</Text>
+            <Text className="ml-1 text-gray-400">
+              {item.originCountryName} → {item.destCountryName}
+            </Text>
           </View>
         </View>
 
         <View className="border-t border-gray-700 pt-4">
-          <View className="flex-row items-center mb-2">
+          <View className="mb-2 flex-row items-center">
             <Ionicons name="person-circle" color="#9CA3AF" size={20} />
-            <Text className="text-white ml-2 font-semibold">Expéditeur: {item.senderName}</Text>
+            <Text className="ml-2 font-semibold text-white">Expéditeur: {item.senderName}</Text>
           </View>
-          
+
           {item.note && (
-            <View className="flex-row items-start mt-2">
+            <View className="mt-2 flex-row items-start">
               <Ionicons name="document-text" color="#9CA3AF" size={20} />
-              <Text className="text-gray-300 ml-2 flex-1">{item.note}</Text>
+              <Text className="ml-2 flex-1 text-gray-300">{item.note}</Text>
             </View>
           )}
         </View>
       </View>
 
-      <View className="border border-blue-800 rounded-2xl p-5 bg-blue-950/30 mb-6">
-        <View className="flex-row items-center mb-3">
+      <View className="mb-6 rounded-2xl border border-blue-800 bg-blue-950/30 p-5">
+        <View className="mb-3 flex-row items-center">
           <Ionicons name="information-circle" color="#60A5FA" size={24} />
-          <Text className="text-blue-400 text-lg font-bold ml-2">Informations</Text>
+          <Text className="ml-2 text-lg font-bold text-blue-400">Informations</Text>
         </View>
-        <Text className="text-blue-200 text-sm leading-5">
-          En acceptant cette proposition, vous vous engagez à effectuer un échange local avec {item.senderName}. 
-          Assurez-vous de vérifier l'identité de votre partenaire avant tout échange.
+        <Text className="text-sm leading-5 text-blue-200">
+          En acceptant cette proposition, vous vous engagez à effectuer un échange local avec{' '}
+          {item.senderName}. Assurez-vous de vérifier l'identité de votre partenaire avant tout
+          échange.
         </Text>
       </View>
 
       {isAccepted ? (
-        <Pressable onPress={handleMessage} className="rounded-xl overflow-hidden mb-4">
+        <Pressable onPress={handleMessage} className="mb-4 overflow-hidden rounded-xl">
           <LinearGradient
             colors={['#3B82F6', '#1D4ED8']}
             start={{ x: 0, y: 0 }}
@@ -180,12 +204,12 @@ export default function SuggestedDetailPage() {
           >
             <View className="flex-row items-center justify-center">
               <Ionicons name="chatbubble-ellipses" color="#FFFFFF" size={24} />
-              <Text className="ml-2 text-white font-extrabold text-lg">Messagerie</Text>
+              <Text className="ml-2 text-lg font-extrabold text-white">Messagerie</Text>
             </View>
           </LinearGradient>
         </Pressable>
       ) : (
-        <Pressable onPress={handleAccept} className="rounded-xl overflow-hidden mb-4">
+        <Pressable onPress={handleAccept} className="mb-4 overflow-hidden rounded-xl">
           <LinearGradient
             colors={['#10B981', '#059669']}
             start={{ x: 0, y: 0 }}
@@ -194,17 +218,16 @@ export default function SuggestedDetailPage() {
           >
             <View className="flex-row items-center justify-center">
               <Ionicons name="checkmark-circle" color="#FFFFFF" size={24} />
-              <Text className="ml-2 text-white font-extrabold text-lg">Accepter la proposition</Text>
+              <Text className="ml-2 text-lg font-extrabold text-white">
+                Accepter la proposition
+              </Text>
             </View>
           </LinearGradient>
         </Pressable>
       )}
 
-      <Pressable 
-        onPress={() => router.back()} 
-        className="rounded-xl bg-gray-800 py-4 px-5"
-      >
-        <Text className="text-center text-gray-300 font-semibold">Retour</Text>
+      <Pressable onPress={() => router.back()} className="rounded-xl bg-gray-800 px-5 py-4">
+        <Text className="text-center font-semibold text-gray-300">Retour</Text>
       </Pressable>
 
       {/* Modal de confirmation */}

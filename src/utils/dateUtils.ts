@@ -5,17 +5,15 @@ const formatCache = new Map<string, string>()
 
 export const formatDate = (timestamp: number, format: 'time' | 'datetime' = 'datetime'): string => {
   const cacheKey = `${timestamp}-${format}`
-  
+
   const cached = formatCache.get(cacheKey)
   if (cached) {
     return cached
   }
-  
+
   const date = new Date(timestamp)
-  const formatted = format === 'time' 
-    ? date.toLocaleTimeString()
-    : date.toLocaleString()
-  
+  const formatted = format === 'time' ? date.toLocaleTimeString() : date.toLocaleString()
+
   // Limiter le cache à 100 entrées pour éviter les fuites mémoire
   if (formatCache.size >= 100) {
     const firstKey = formatCache.keys().next().value
@@ -23,7 +21,7 @@ export const formatDate = (timestamp: number, format: 'time' | 'datetime' = 'dat
       formatCache.delete(firstKey)
     }
   }
-  
+
   formatCache.set(cacheKey, formatted)
   return formatted
 }
@@ -32,7 +30,7 @@ export const formatDate = (timestamp: number, format: 'time' | 'datetime' = 'dat
 export const formatTimestamp = formatDate
 
 // Hook pour memoization React
-export const useFormattedDate = (timestamp: number, format: 'time' | 'datetime' = 'datetime') => {
+export const useFormattedDate = (timestamp: number) => {
   return useMemo(() => {
     const date = new Date(timestamp)
     const now = new Date()
@@ -47,19 +45,19 @@ export const useFormattedDate = (timestamp: number, format: 'time' | 'datetime' 
         minute: '2-digit',
       }).format(date)
     }
-    
+
     // Si c'est hier
     if (diffDays === 1) {
       return 'Hier'
     }
-    
+
     // Si c'est cette semaine (moins de 7 jours)
     if (diffDays < 7) {
       return new Intl.DateTimeFormat('fr-FR', {
         weekday: 'short',
       }).format(date)
     }
-    
+
     // Si c'est cette année
     if (date.getFullYear() === now.getFullYear()) {
       return new Intl.DateTimeFormat('fr-FR', {
@@ -67,12 +65,12 @@ export const useFormattedDate = (timestamp: number, format: 'time' | 'datetime' 
         month: 'short',
       }).format(date)
     }
-    
+
     // Date complète pour les années précédentes
     return new Intl.DateTimeFormat('fr-FR', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     }).format(date)
-  }, [timestamp, format])
+  }, [timestamp])
 }

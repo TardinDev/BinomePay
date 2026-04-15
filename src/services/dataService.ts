@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { RequestItem, MatchItem, SuggestedItem, Conversation, User } from '@/store/useAppStore'
+import { RequestItem, SuggestedItem, User } from '@/store/useAppStore'
 
 /**
  * Service pour gérer les opérations de données avec Supabase
@@ -7,7 +7,6 @@ import { RequestItem, MatchItem, SuggestedItem, Conversation, User } from '@/sto
  */
 
 export class DataService {
-  
   /**
    * Synchronise un utilisateur Clerk avec Supabase
    */
@@ -95,7 +94,7 @@ export class DataService {
 
       if (error) throw error
 
-      return (data || []).map(intent => ({
+      return (data || []).map((intent) => ({
         id: intent.id,
         type: intent.direction,
         amount: intent.amount,
@@ -117,10 +116,12 @@ export class DataService {
     try {
       const { data, error } = await supabase
         .from('intents')
-        .select(`
+        .select(
+          `
           id, amount, currency, origin_country, dest_country, created_at,
           users!intents_user_id_fkey (name)
-        `)
+        `
+        )
         .eq('status', 'OPEN')
         .neq('user_id', currentUserId)
         .order('created_at', { ascending: false })
@@ -128,7 +129,7 @@ export class DataService {
 
       if (error) throw error
 
-      return (data || []).map(intent => ({
+      return (data || []).map((intent) => ({
         id: intent.id,
         amount: intent.amount,
         currency: intent.currency,
@@ -184,10 +185,7 @@ export class DataService {
   /**
    * Configure les Real-time subscriptions
    */
-  static subscribeToIntentions(
-    userId: string,
-    onUpdate: (suggestions: SuggestedItem[]) => void
-  ) {
+  static subscribeToIntentions(userId: string, onUpdate: (_suggestions: SuggestedItem[]) => void) {
     return supabase
       .channel('public:intents')
       .on(
