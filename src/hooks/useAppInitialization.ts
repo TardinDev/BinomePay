@@ -26,7 +26,7 @@ export function useAppInitialization() {
         ratingAvg: 0, // À charger depuis la base de données
         avatarUrl: user.imageUrl,
       }
-      
+
       setUser(userData)
       initializeUserData(user.id)
     } else {
@@ -39,6 +39,6 @@ export function useAppInitialization() {
     isLoading,
     error,
     user,
-    isReady: isLoaded && !isLoading && user
+    isReady: isLoaded && !isLoading && user,
   }
 }

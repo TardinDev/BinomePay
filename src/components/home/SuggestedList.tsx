@@ -30,9 +30,7 @@ export default function SuggestedList({ data, isLoading = false }: Props) {
         className="flex-1"
         data={data}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={() => (
-          <NoSuggestionsEmpty onCreateIntention={handleCreateIntention} />
-        )}
+        ListEmptyComponent={() => <NoSuggestionsEmpty onCreateIntention={handleCreateIntention} />}
         ListFooterComponent={() => <View className="h-24" />}
         renderItem={({ item }) => <SuggestedCard item={item} />}
         removeClippedSubviews={true}
@@ -49,5 +47,3 @@ export default function SuggestedList({ data, isLoading = false }: Props) {
     </View>
   )
 }
-
-

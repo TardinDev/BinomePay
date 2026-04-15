@@ -26,7 +26,22 @@
     "deploy:preview": "./scripts/deploy.sh preview",
     "deploy:production": "./scripts/deploy.sh production",
     "deploy:manual:preview": "eas build --platform android --profile preview && eas submit --platform android --latest",
-    "deploy:manual:production": "eas build --platform android --profile production && eas submit --platform android --latest"
+    "deploy:manual:production": "eas build --platform android --profile production && eas submit --platform android --latest",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFiles": [
+      "./jest.setup.js"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|nanoid)"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.14.20",
@@ -69,6 +84,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.0.10",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.51.0",
@@ -79,6 +95,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "expo-local-authentication": "^17.0.8",
     "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "jest-expo": "~53.0.14",
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.5.11",

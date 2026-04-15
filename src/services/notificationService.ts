@@ -13,13 +13,14 @@ const isExpoGo = Constants.appOwnership === 'expo'
 // Configure notification behavior seulement si pas dans Expo Go
 if (!isExpoGo) {
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    } as any),
+    handleNotification: async () =>
+      ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }) as any,
   })
 }
 
@@ -107,14 +108,14 @@ export const initializeNotifications = async (): Promise<boolean> => {
     if (Platform.OS === 'ios' || Platform.OS === 'android') {
       try {
         const token = await Notifications.getExpoPushTokenAsync({
-          projectId: process.env.EXPO_PROJECT_ID || 'your-project-id'
+          projectId: process.env.EXPO_PROJECT_ID || 'your-project-id',
         })
         if (__DEV__) console.log('Push token:', token.data)
 
         // In production, send this token to your backend
         // await sendTokenToBackend(token.data)
       } catch (tokenError) {
-        if (__DEV__) console.warn('Impossible d\'obtenir le token push:', tokenError)
+        if (__DEV__) console.warn("Impossible d'obtenir le token push:", tokenError)
         // Continue même sans token push pour les notifications locales
       }
     }
@@ -137,7 +138,7 @@ export const scheduleLocalNotification = async (
     if (__DEV__) console.log('Notification ignorée dans Expo Go:', notificationData.title)
     return null
   }
-  
+
   try {
     const notificationContent: any = {
       title: notificationData.title,
@@ -150,17 +151,18 @@ export const scheduleLocalNotification = async (
     if (Platform.OS === 'android') {
       notificationContent.priority = Notifications.AndroidNotificationPriority.HIGH
       // Utiliser le canal spécifique au type de notification
-      notificationContent.channelId = notificationData.type === 'match_accepted' || 
-                                     notificationData.type === 'new_message' || 
-                                     notificationData.type === 'new_suggestion' 
-                                     ? notificationData.type 
-                                     : 'default'
+      notificationContent.channelId =
+        notificationData.type === 'match_accepted' ||
+        notificationData.type === 'new_message' ||
+        notificationData.type === 'new_suggestion'
+          ? notificationData.type
+          : 'default'
       notificationContent.categoryId = notificationData.type
     }
 
     const identifier = await Notifications.scheduleNotificationAsync({
       content: notificationContent,
-      trigger: delaySeconds > 0 ? { seconds: delaySeconds } as any : null,
+      trigger: delaySeconds > 0 ? ({ seconds: delaySeconds } as any) : null,
     })
 
     return identifier
@@ -188,8 +190,8 @@ export const notifyMatchAccepted = async (
       counterpartName,
       amount,
       currency,
-      corridor
-    }
+      corridor,
+    },
   })
 }
 
@@ -208,8 +210,8 @@ export const notifyNewMessage = async (
     data: {
       type: 'new_message',
       conversationId,
-      senderName
-    }
+      senderName,
+    },
   })
 }
 
@@ -227,8 +229,8 @@ export const notifyMatchExpiring = async (
     data: {
       type: 'match_expired',
       counterpartName,
-      hoursRemaining
-    }
+      hoursRemaining,
+    },
   })
 }
 
@@ -242,8 +244,8 @@ export const notifyNewSuggestion = async (count: number): Promise<void> => {
     body: `${count} nouvelle${count > 1 ? 's' : ''} proposition${count > 1 ? 's' : ''} pour vous`,
     data: {
       type: 'new_suggestion',
-      count
-    }
+      count,
+    },
   })
 }
 
@@ -255,18 +257,18 @@ export const notifyKycUpdate = async (
   reason?: string
 ): Promise<void> => {
   const isVerified = status === 'verified'
-  
+
   await scheduleLocalNotification({
     type: 'kyc_update',
     title: isVerified ? '✅ Vérification réussie' : '❌ Vérification échouée',
-    body: isVerified 
-      ? 'Votre identité a été vérifiée avec succès !' 
+    body: isVerified
+      ? 'Votre identité a été vérifiée avec succès !'
       : `Vérification échouée: ${reason || 'Raison non spécifiée'}`,
     data: {
       type: 'kyc_update',
       status,
-      reason
-    }
+      reason,
+    },
   })
 }
 
@@ -284,40 +286,40 @@ export const handleNotificationResponse = (
       // Navigate to matches or conversations
       navigation.navigate('(Protected)', {
         screen: '(tabs)',
-        params: { screen: 'messages' }
+        params: { screen: 'messages' },
       })
       break
-    
+
     case 'new_message':
       // Navigate directly to conversation
       if (data.conversationId) {
         navigation.navigate('(Protected)', {
           screen: 'messages',
-          params: { screen: data.conversationId }
+          params: { screen: data.conversationId },
         })
       }
       break
-    
+
     case 'match_expired':
       // Navigate to matches screen
       navigation.navigate('(Protected)', {
         screen: '(tabs)',
-        params: { screen: 'index' }
+        params: { screen: 'index' },
       })
       break
-    
+
     case 'kyc_update':
       // Navigate to profile
       navigation.navigate('(Protected)', {
-        screen: 'profile'
+        screen: 'profile',
       })
       break
-    
+
     case 'new_suggestion':
       // Navigate to suggestions/home screen
       navigation.navigate('(Protected)', {
         screen: '(tabs)',
-        params: { screen: 'index' }
+        params: { screen: 'index' },
       })
       break
   }

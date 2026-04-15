@@ -59,17 +59,17 @@ export function SkeletonLoader({
 export function SuggestionCardSkeleton() {
   return (
     <View
-      className="rounded-2xl p-4 mb-3"
+      className="mb-3 rounded-2xl p-4"
       style={{ backgroundColor: '#111827', borderWidth: 1, borderColor: '#1F2937' }}
     >
-      <View className="flex-row items-center mb-3">
+      <View className="mb-3 flex-row items-center">
         <SkeletonLoader width={48} height={48} borderRadius={24} />
         <View className="ml-3 flex-1">
           <SkeletonLoader width="60%" height={18} style={{ marginBottom: 8 }} />
           <SkeletonLoader width="40%" height={14} />
         </View>
       </View>
-      <View className="flex-row justify-between items-center mb-3">
+      <View className="mb-3 flex-row items-center justify-between">
         <SkeletonLoader width="30%" height={24} />
         <SkeletonLoader width="35%" height={16} />
       </View>
@@ -80,10 +80,7 @@ export function SuggestionCardSkeleton() {
 
 export function ConversationSkeleton() {
   return (
-    <View
-      className="flex-row items-center p-4 border-b"
-      style={{ borderColor: '#1F2937' }}
-    >
+    <View className="flex-row items-center border-b p-4" style={{ borderColor: '#1F2937' }}>
       <SkeletonLoader width={50} height={50} borderRadius={25} />
       <View className="ml-3 flex-1">
         <SkeletonLoader width="50%" height={16} style={{ marginBottom: 8 }} />
@@ -97,14 +94,14 @@ export function ConversationSkeleton() {
 export function ProfileSkeleton() {
   return (
     <View className="p-5">
-      <View className="flex-row items-center mb-4">
+      <View className="mb-4 flex-row items-center">
         <SkeletonLoader width={64} height={64} borderRadius={32} />
         <View className="ml-4 flex-1">
           <SkeletonLoader width="60%" height={20} style={{ marginBottom: 8 }} />
           <SkeletonLoader width="30%" height={16} />
         </View>
       </View>
-      <View className="flex-row justify-between mt-4">
+      <View className="mt-4 flex-row justify-between">
         <SkeletonLoader width="28%" height={50} borderRadius={12} />
         <SkeletonLoader width="28%" height={50} borderRadius={12} />
         <SkeletonLoader width="28%" height={50} borderRadius={12} />

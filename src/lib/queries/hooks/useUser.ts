@@ -7,7 +7,7 @@ import type { User } from '@/lib/schemas'
 
 export const useUserProfile = () => {
   const { userId } = useAuth()
-  
+
   return useQuery({
     queryKey: queryKeys.userProfile(userId || ''),
     queryFn: async () => {
@@ -38,7 +38,7 @@ export const useUpdateUserProfile = () => {
 
 export const useUserRating = () => {
   const { userId } = useAuth()
-  
+
   return useQuery({
     queryKey: queryKeys.userRating(userId || ''),
     queryFn: async () => {

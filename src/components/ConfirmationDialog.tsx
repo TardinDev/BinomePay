@@ -1,18 +1,18 @@
-import React from 'react';
-import CustomModal from './CustomModal';
+import React from 'react'
+import CustomModal from './CustomModal'
 
 interface ConfirmationDialogProps {
-  visible: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  confirmStyle?: 'primary' | 'danger';
-  icon?: string;
-  iconColor?: string;
-  loading?: boolean;
+  visible: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  confirmStyle?: 'primary' | 'danger'
+  icon?: string
+  iconColor?: string
+  loading?: boolean
 }
 
 export default function ConfirmationDialog({
@@ -50,5 +50,5 @@ export default function ConfirmationDialog({
         },
       ]}
     />
-  );
+  )
 }

@@ -8,8 +8,8 @@ type Props = { data: MatchItem[] }
 export default function RecentMatchesList({ data }: Props) {
   return (
     <>
-      <Text className="text-white text-xl font-extrabold mt-8 mb-3">Matches récents</Text>
-      <View className="pr-3 pb-2">
+      <Text className="mb-3 mt-8 text-xl font-extrabold text-white">Matches récents</Text>
+      <View className="pb-2 pr-3">
         <FlatList
           data={data}
           keyExtractor={(item) => item.id}
@@ -35,5 +35,3 @@ export default function RecentMatchesList({ data }: Props) {
     </>
   )
 }
-
-

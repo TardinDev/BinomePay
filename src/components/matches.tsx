@@ -7,27 +7,40 @@ export default function MatchesPage() {
 
   return (
     <View className="flex-1 bg-black px-5 pt-6">
-      <Text className="text-white text-2xl font-extrabold">Mes matches</Text>
+      <Text className="text-2xl font-extrabold text-white">Mes matches</Text>
       <FlatList
         className="mt-5"
         data={matches}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 16 }}
-        ListEmptyComponent={() => (
-          <Text className="text-gray-400">Aucun match actif.</Text>
-        )}
+        ListEmptyComponent={() => <Text className="text-gray-400">Aucun match actif.</Text>}
         renderItem={({ item }) => {
           const status = String(item.status ?? '').toLowerCase()
           const statusStyles =
             status.includes('confirm') || status.includes('valid')
-              ? { bg: 'rgba(34,197,94,0.18)', text: '#22C55E', border: '#14532D', label: 'Confirmé' }
+              ? {
+                  bg: 'rgba(34,197,94,0.18)',
+                  text: '#22C55E',
+                  border: '#14532D',
+                  label: 'Confirmé',
+                }
               : status.includes('annul') || status.includes('cancel')
-              ? { bg: 'rgba(248,113,113,0.18)', text: '#F87171', border: '#7F1D1D', label: 'Annulé' }
-              : { bg: 'rgba(234,179,8,0.18)', text: '#EAB308', border: '#854D0E', label: 'En attente' }
+                ? {
+                    bg: 'rgba(248,113,113,0.18)',
+                    text: '#F87171',
+                    border: '#7F1D1D',
+                    label: 'Annulé',
+                  }
+                : {
+                    bg: 'rgba(234,179,8,0.18)',
+                    text: '#EAB308',
+                    border: '#854D0E',
+                    label: 'En attente',
+                  }
 
           return (
             <View
-              className="rounded-2xl p-4 mb-3"
+              className="mb-3 rounded-2xl p-4"
               style={{
                 backgroundColor: '#0B0F1A',
                 borderWidth: 1,
@@ -40,7 +53,7 @@ export default function MatchesPage() {
               }}
             >
               <View className="flex-row items-center justify-between">
-                <Text className="text-white font-semibold text-base">{item.counterpartName}</Text>
+                <Text className="text-base font-semibold text-white">{item.counterpartName}</Text>
                 <View
                   style={{
                     backgroundColor: 'rgba(234,179,8,0.16)',
@@ -51,12 +64,12 @@ export default function MatchesPage() {
                     paddingHorizontal: 10,
                   }}
                 >
-                  <Text className="text-black font-extrabold text-xs" style={{ color: '#FDE68A' }}>
+                  <Text className="text-xs font-extrabold text-black" style={{ color: '#FDE68A' }}>
                     {item.amount} {item.currency}
                   </Text>
                 </View>
               </View>
-              <Text className="text-gray-300 mt-1">{item.corridor}</Text>
+              <Text className="mt-1 text-gray-300">{item.corridor}</Text>
               <View className="mt-2 flex-row justify-end">
                 <View
                   style={{
@@ -80,5 +93,3 @@ export default function MatchesPage() {
     </View>
   )
 }
-
-

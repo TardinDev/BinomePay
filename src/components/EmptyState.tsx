@@ -22,24 +22,20 @@ export default function EmptyState({
   return (
     <View className="flex-1 items-center justify-center px-8 py-12">
       <View
-        className="w-24 h-24 rounded-full items-center justify-center mb-6"
+        className="mb-6 h-24 w-24 items-center justify-center rounded-full"
         style={{ backgroundColor: `${iconColor}15` }}
       >
         <Ionicons name={icon} size={48} color={iconColor} />
       </View>
-      <Text className="text-white text-xl font-bold text-center mb-2">
-        {title}
-      </Text>
-      <Text className="text-gray-400 text-center leading-6 mb-6">
-        {description}
-      </Text>
+      <Text className="mb-2 text-center text-xl font-bold text-white">{title}</Text>
+      <Text className="mb-6 text-center leading-6 text-gray-400">{description}</Text>
       {actionLabel && onAction && (
         <Pressable
           onPress={onAction}
           className="rounded-xl px-6 py-3"
           style={{ backgroundColor: '#EAB308' }}
         >
-          <Text className="text-black font-bold">{actionLabel}</Text>
+          <Text className="font-bold text-black">{actionLabel}</Text>
         </Pressable>
       )}
     </View>

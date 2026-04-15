@@ -14,25 +14,60 @@ export default function RequestsPage() {
 
   return (
     <View className="flex-1 bg-black px-5 pt-6">
-      <Text className="text-white text-xl font-extrabold">Mes demandes</Text>
+      <Text className="text-xl font-extrabold text-white">Mes demandes</Text>
 
-      <View className="mt-5 bg-neutral-900 rounded-xl p-4 border border-gray-800">
-        <Text className="text-white font-semibold mb-2">Créer une demande</Text>
-        <View className="flex-row mb-3">
-          <Pressable onPress={() => setType('SEND')} className={`px-3 py-2 rounded-l-lg ${type === 'SEND' ? 'bg-yellow-400' : 'bg-neutral-800'}`}>
-            <Text className={`${type === 'SEND' ? 'text-black font-bold' : 'text-white'}`}>Envoyer</Text>
+      <View className="mt-5 rounded-xl border border-gray-800 bg-neutral-900 p-4">
+        <Text className="mb-2 font-semibold text-white">Créer une demande</Text>
+        <View className="mb-3 flex-row">
+          <Pressable
+            onPress={() => setType('SEND')}
+            className={`rounded-l-lg px-3 py-2 ${type === 'SEND' ? 'bg-yellow-400' : 'bg-neutral-800'}`}
+          >
+            <Text className={`${type === 'SEND' ? 'font-bold text-black' : 'text-white'}`}>
+              Envoyer
+            </Text>
           </Pressable>
-          <Pressable onPress={() => setType('RECEIVE')} className={`px-3 py-2 rounded-r-lg ${type === 'RECEIVE' ? 'bg-yellow-400' : 'bg-neutral-800'}`}>
-            <Text className={`${type === 'RECEIVE' ? 'text-black font-bold' : 'text-white'}`}>Recevoir</Text>
+          <Pressable
+            onPress={() => setType('RECEIVE')}
+            className={`rounded-r-lg px-3 py-2 ${type === 'RECEIVE' ? 'bg-yellow-400' : 'bg-neutral-800'}`}
+          >
+            <Text className={`${type === 'RECEIVE' ? 'font-bold text-black' : 'text-white'}`}>
+              Recevoir
+            </Text>
           </Pressable>
         </View>
         <View className="flex-row gap-3">
-          <TextInput value={amount} onChangeText={setAmount} keyboardType="numeric" placeholder="Montant" placeholderTextColor="#9CA3AF" className="flex-1 bg-neutral-800 text-white rounded-lg px-3 py-2" />
-          <TextInput value={currency} onChangeText={setCurrency} placeholder="Devise" placeholderTextColor="#9CA3AF" className="w-24 bg-neutral-800 text-white rounded-lg px-3 py-2" />
+          <TextInput
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+            placeholder="Montant"
+            placeholderTextColor="#9CA3AF"
+            className="flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-white"
+          />
+          <TextInput
+            value={currency}
+            onChangeText={setCurrency}
+            placeholder="Devise"
+            placeholderTextColor="#9CA3AF"
+            className="w-24 rounded-lg bg-neutral-800 px-3 py-2 text-white"
+          />
         </View>
-        <View className="flex-row gap-3 mt-3">
-          <TextInput value={originCountry} onChangeText={setOriginCountry} placeholder="Pays d'origine" placeholderTextColor="#9CA3AF" className="flex-1 bg-neutral-800 text-white rounded-lg px-3 py-2" />
-          <TextInput value={destCountry} onChangeText={setDestCountry} placeholder="Pays de destination" placeholderTextColor="#9CA3AF" className="flex-1 bg-neutral-800 text-white rounded-lg px-3 py-2" />
+        <View className="mt-3 flex-row gap-3">
+          <TextInput
+            value={originCountry}
+            onChangeText={setOriginCountry}
+            placeholder="Pays d'origine"
+            placeholderTextColor="#9CA3AF"
+            className="flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-white"
+          />
+          <TextInput
+            value={destCountry}
+            onChangeText={setDestCountry}
+            placeholder="Pays de destination"
+            placeholderTextColor="#9CA3AF"
+            className="flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-white"
+          />
         </View>
         <Pressable
           onPress={() => {
@@ -40,9 +75,9 @@ export default function RequestsPage() {
             if (amt <= 0) return
             addRequest({ type, amount: amt, currency, originCountry, destCountry })
           }}
-          className="mt-4 bg-yellow-400 rounded-xl px-5 py-3 items-center"
+          className="mt-4 items-center rounded-xl bg-yellow-400 px-5 py-3"
         >
-          <Text className="text-black font-extrabold">Ajouter</Text>
+          <Text className="font-extrabold text-black">Ajouter</Text>
         </Pressable>
       </View>
 
@@ -52,18 +87,22 @@ export default function RequestsPage() {
         keyExtractor={(item) => item.id}
         ListEmptyComponent={() => <Text className="text-gray-400">Aucune demande.</Text>}
         renderItem={({ item }) => (
-          <View className="border border-gray-800 rounded-xl p-4 mb-3 bg-neutral-900">
+          <View className="mb-3 rounded-xl border border-gray-800 bg-neutral-900 p-4">
             <View className="flex-row items-center justify-between">
-              <Text className="text-white font-semibold">{item.type === 'SEND' ? 'Envoyer' : 'Recevoir'}</Text>
-              <Text className="text-yellow-400 font-bold">{item.amount} {item.currency}</Text>
+              <Text className="font-semibold text-white">
+                {item.type === 'SEND' ? 'Envoyer' : 'Recevoir'}
+              </Text>
+              <Text className="font-bold text-yellow-400">
+                {item.amount} {item.currency}
+              </Text>
             </View>
-            <Text className="text-gray-400 mt-1">{item.originCountry} → {item.destCountry}</Text>
-            <Text className="text-gray-500 text-xs mt-1">Statut: {item.status}</Text>
+            <Text className="mt-1 text-gray-400">
+              {item.originCountry} → {item.destCountry}
+            </Text>
+            <Text className="mt-1 text-xs text-gray-500">Statut: {item.status}</Text>
           </View>
         )}
       />
     </View>
   )
 }
-
-

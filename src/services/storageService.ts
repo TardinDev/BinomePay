@@ -15,7 +15,7 @@ const STORAGE_KEYS = {
   SUGGESTED: '@binomepay:suggested',
   APP_STATE: '@binomepay:app_state',
   LAST_SYNC: '@binomepay:last_sync',
-  NOTIFICATION_TOKEN: '@binomepay:notification_token'
+  NOTIFICATION_TOKEN: '@binomepay:notification_token',
 } as const
 
 interface AppStateStorage {
@@ -63,7 +63,7 @@ class StorageManager {
   async storeUserData(user: User): Promise<boolean> {
     return this.safeStore(STORAGE_KEYS.USER_DATA, {
       ...user,
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     })
   }
 
@@ -72,7 +72,8 @@ class StorageManager {
     if (!userData) return null
 
     // Check if data is older than 24 hours
-    const isStale = Date.now() - ((userData as { lastUpdated?: number }).lastUpdated || 0) > 24 * 60 * 60 * 1000
+    const isStale =
+      Date.now() - ((userData as { lastUpdated?: number }).lastUpdated || 0) > 24 * 60 * 60 * 1000
     if (isStale && __DEV__) {
       console.log('User data is stale, should refresh from server')
     }
@@ -84,7 +85,7 @@ class StorageManager {
   async storeConversations(conversations: Conversation[]): Promise<boolean> {
     return this.safeStore(STORAGE_KEYS.CONVERSATIONS, {
       data: conversations,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
   }
 
@@ -97,7 +98,7 @@ class StorageManager {
   async storeMatches(matches: MatchItem[]): Promise<boolean> {
     return this.safeStore(STORAGE_KEYS.MATCHES, {
       data: matches,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
   }
 
@@ -110,7 +111,7 @@ class StorageManager {
   async storeRequests(requests: RequestItem[]): Promise<boolean> {
     return this.safeStore(STORAGE_KEYS.REQUESTS, {
       data: requests,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
   }
 
@@ -123,13 +124,13 @@ class StorageManager {
   async storeSuggested(suggested: SuggestedItem[]): Promise<boolean> {
     return this.safeStore(STORAGE_KEYS.SUGGESTED, {
       data: suggested,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
   }
 
   async getSuggested(): Promise<SuggestedItem[]> {
     const result = await this.safeRetrieve(STORAGE_KEYS.SUGGESTED, { data: [], timestamp: 0 })
-    
+
     // Suggestions expire after 30 minutes
     const isExpired = Date.now() - result.timestamp > 30 * 60 * 1000
     if (isExpired) {
@@ -151,7 +152,7 @@ class StorageManager {
     return this.safeRetrieve(STORAGE_KEYS.APP_STATE, {
       notifications: 0,
       lastSyncTimestamp: 0,
-      appVersion: '1.0.0'
+      appVersion: '1.0.0',
     })
   }
 
@@ -185,21 +186,18 @@ class StorageManager {
       STORAGE_KEYS.CONVERSATIONS,
       STORAGE_KEYS.MATCHES,
       STORAGE_KEYS.REQUESTS,
-      STORAGE_KEYS.SUGGESTED
+      STORAGE_KEYS.SUGGESTED,
     ]
 
-    const results = await Promise.all(keys.map(key => this.safeRemove(key)))
-    return results.every(result => result)
+    const results = await Promise.all(keys.map((key) => this.safeRemove(key)))
+    return results.every((result) => result)
   }
 
   async clearCache(): Promise<boolean> {
-    const cacheKeys = [
-      STORAGE_KEYS.SUGGESTED,
-      STORAGE_KEYS.LAST_SYNC
-    ]
+    const cacheKeys = [STORAGE_KEYS.SUGGESTED, STORAGE_KEYS.LAST_SYNC]
 
-    const results = await Promise.all(cacheKeys.map(key => this.safeRemove(key)))
-    return results.every(result => result)
+    const results = await Promise.all(cacheKeys.map((key) => this.safeRemove(key)))
+    return results.every((result) => result)
   }
 
   async clearAll(): Promise<boolean> {
@@ -213,10 +211,10 @@ class StorageManager {
   }
 
   // Diagnostic operations
-  async getStorageInfo(): Promise<{ keys: string[], totalSize: number }> {
+  async getStorageInfo(): Promise<{ keys: string[]; totalSize: number }> {
     try {
       const keys = await AsyncStorage.getAllKeys()
-      const binomeKeys = keys.filter(key => key.startsWith('@binomepay:'))
+      const binomeKeys = keys.filter((key) => key.startsWith('@binomepay:'))
 
       let totalSize = 0
       for (const key of binomeKeys) {
@@ -228,7 +226,7 @@ class StorageManager {
 
       return {
         keys: binomeKeys,
-        totalSize
+        totalSize,
       }
     } catch (error) {
       if (__DEV__) console.error('Failed to get storage info:', error)
@@ -253,10 +251,10 @@ export const persistAppData = async (data: {
     storageService.storeConversations(data.conversations),
     storageService.storeMatches(data.matches),
     storageService.storeRequests(data.requests),
-    storageService.storeAppState({ notifications: data.notifications })
+    storageService.storeAppState({ notifications: data.notifications }),
   ])
 
-  const success = results.every(result => result)
+  const success = results.every((result) => result)
   if (success) {
     await storageService.updateLastSync()
   }
@@ -271,7 +269,7 @@ export const loadAppData = async () => {
       storageService.getConversations(),
       storageService.getMatches(),
       storageService.getRequests(),
-      storageService.getAppState()
+      storageService.getAppState(),
     ])
 
     return {
@@ -280,7 +278,7 @@ export const loadAppData = async () => {
       matches,
       requests,
       notifications: appState.notifications,
-      isStale: await storageService.isDataStale()
+      isStale: await storageService.isDataStale(),
     }
   } catch (error) {
     if (__DEV__) console.error('Failed to load app data:', error)

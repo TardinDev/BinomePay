@@ -6,11 +6,13 @@ export const ConversationSchema = z.object({
   lastMessage: z.string(),
   updatedAt: z.number(),
   unreadCount: z.number().int().min(0),
-  matchDetails: z.object({
-    amount: z.number().positive(),
-    currency: z.string().length(3),
-    corridor: z.string(),
-  }).optional(),
+  matchDetails: z
+    .object({
+      amount: z.number().positive(),
+      currency: z.string().length(3),
+      corridor: z.string(),
+    })
+    .optional(),
 })
 
 export const MessageSchema = z.object({

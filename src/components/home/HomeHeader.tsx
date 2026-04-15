@@ -11,38 +11,54 @@ type Props = {
 
 const HowItWorksModal = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <View className="flex-1 bg-black/60 items-center justify-center px-5">
+    <View className="flex-1 items-center justify-center bg-black/60 px-5">
       <View className="w-full rounded-2xl border border-gray-800 bg-[#0B0F1A] p-5">
-        <Text className="text-white text-xl font-extrabold">Comment ça marche ?</Text>
-        <Text className="text-gray-300 mt-2">
-          Binome Pay met en relation deux personnes qui veulent échanger de l'argent localement, pour éviter les frais de change et aller plus vite.
+        <Text className="text-xl font-extrabold text-white">Comment ça marche ?</Text>
+        <Text className="mt-2 text-gray-300">
+          Binome Pay met en relation deux personnes qui veulent échanger de l'argent localement,
+          pour éviter les frais de change et aller plus vite.
         </Text>
-        <View className="h-[1px] bg-gray-800 my-4" />
+        <View className="my-4 h-[1px] bg-gray-800" />
         <View className="gap-3">
           <View className="flex-row items-start">
             <Ionicons name="pencil" size={16} color="#EAB308" />
-            <Text className="text-gray-200 text-sm ml-2">Créez une intention: montant, devise et pays de destination.</Text>
+            <Text className="ml-2 text-sm text-gray-200">
+              Créez une intention: montant, devise et pays de destination.
+            </Text>
           </View>
           <View className="flex-row items-start">
             <Ionicons name="search" size={16} color="#EAB308" />
-            <Text className="text-gray-200 text-sm ml-2">Recevez des propositions compatibles et choisissez un binôme.</Text>
+            <Text className="ml-2 text-sm text-gray-200">
+              Recevez des propositions compatibles et choisissez un binôme.
+            </Text>
           </View>
           <View className="flex-row items-start">
             <Ionicons name="swap-horizontal" size={16} color="#EAB308" />
-            <Text className="text-gray-200 text-sm ml-2">Match: vous échangez local contre local sur le corridor (ex: FR → SN).</Text>
+            <Text className="ml-2 text-sm text-gray-200">
+              Match: vous échangez local contre local sur le corridor (ex: FR → SN).
+            </Text>
           </View>
           <View className="flex-row items-start">
             <Ionicons name="chatbubbles" size={16} color="#EAB308" />
-            <Text className="text-gray-200 text-sm ml-2">Discutez pour convenir du lieu/heure. Profils vérifiés (KYC) et notes pour la confiance.</Text>
+            <Text className="ml-2 text-sm text-gray-200">
+              Discutez pour convenir du lieu/heure. Profils vérifiés (KYC) et notes pour la
+              confiance.
+            </Text>
           </View>
         </View>
 
-        <View className="flex-row justify-end gap-3 mt-5">
-          <Pressable onPress={onClose} className="px-4 py-2 rounded-full bg-gray-800">
-            <Text className="text-white font-semibold">J'ai compris</Text>
+        <View className="mt-5 flex-row justify-end gap-3">
+          <Pressable onPress={onClose} className="rounded-full bg-gray-800 px-4 py-2">
+            <Text className="font-semibold text-white">J'ai compris</Text>
           </Pressable>
-          <Pressable onPress={() => { onClose(); router.push('/(Protected)/new-intention') }} className="px-4 py-2 rounded-full bg-yellow-400">
-            <Text className="text-black font-extrabold">Créer une intention</Text>
+          <Pressable
+            onPress={() => {
+              onClose()
+              router.push('/(Protected)/new-intention')
+            }}
+            className="rounded-full bg-yellow-400 px-4 py-2"
+          >
+            <Text className="font-extrabold text-black">Créer une intention</Text>
           </Pressable>
         </View>
       </View>
@@ -54,31 +70,40 @@ export default function HomeHeader({ user }: Props) {
   const [showHowItWorks, setShowHowItWorks] = useState(false)
   const { user: clerkUser } = useClerkUser()
   const displayName = clerkUser?.firstName || user?.name || ''
-  
+
   const closeModal = useCallback(() => setShowHowItWorks(false), [])
-  
+
   const modalContent = useMemo(
-    () => showHowItWorks ? <HowItWorksModal visible={showHowItWorks} onClose={closeModal} /> : null,
+    () =>
+      showHowItWorks ? <HowItWorksModal visible={showHowItWorks} onClose={closeModal} /> : null,
     [showHowItWorks, closeModal]
   )
-  
+
   return (
-    <View className="rounded-2xl p-4 border bg-[#0B0F1A] border-gray-800">
+    <View className="rounded-2xl border border-gray-800 bg-[#0B0F1A] p-4">
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
-          <View className="bg-[#0B1220] p-2 rounded-full border border-gray-800">
+          <View className="rounded-full border border-gray-800 bg-[#0B1220] p-2">
             <Ionicons name="globe-outline" color="#EAB308" size={18} />
           </View>
           <View className="ml-3">
-            <Text className="text-white text-xl font-extrabold">Bonjour{displayName ? `, ${displayName}` : ''} 👋</Text>
-            <Text className="text-gray-400 text-xs">Prêt à échanger en toute confiance</Text>
-            <Pressable onPress={() => setShowHowItWorks(true)} className="flex-row items-center mt-1">
+            <Text className="text-xl font-extrabold text-white">
+              Bonjour{displayName ? `, ${displayName}` : ''} 👋
+            </Text>
+            <Text className="text-xs text-gray-400">Prêt à échanger en toute confiance</Text>
+            <Pressable
+              onPress={() => setShowHowItWorks(true)}
+              className="mt-1 flex-row items-center"
+            >
               <Ionicons name="chevron-down" size={14} color="#9CA3AF" />
-              <Text className="text-gray-300 text-xs ml-1">Comprendre le principe</Text>
+              <Text className="ml-1 text-xs text-gray-300">Comprendre le principe</Text>
             </Pressable>
           </View>
         </View>
-        <Pressable onPress={() => router.navigate('/(Protected)/profile')} className="bg-gray-800 py-2 px-3 rounded-full">
+        <Pressable
+          onPress={() => router.navigate('/(Protected)/profile')}
+          className="rounded-full bg-gray-800 px-3 py-2"
+        >
           <Ionicons name="person" color="#EAB308" size={20} />
         </Pressable>
       </View>
@@ -87,5 +112,3 @@ export default function HomeHeader({ user }: Props) {
     </View>
   )
 }
-
-

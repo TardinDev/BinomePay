@@ -33,21 +33,28 @@ export default function VerifyEmailScreen() {
 
   return (
     <ScrollView className="flex-1 bg-black px-5 pt-10">
-      <Text className="text-white text-3xl font-extrabold mb-4">Vérification email</Text>
-      <Text className="text-gray-400 mb-6">Un code a été envoyé à {email ?? 'votre email'}.</Text>
-      <View className="bg-neutral-900 rounded-2xl p-5 border" style={{ borderColor: '#334155' }}>
-        <Text className="text-gray-300 mb-2">Code</Text>
+      <Text className="mb-4 text-3xl font-extrabold text-white">Vérification email</Text>
+      <Text className="mb-6 text-gray-400">Un code a été envoyé à {email ?? 'votre email'}.</Text>
+      <View className="rounded-2xl border bg-neutral-900 p-5" style={{ borderColor: '#334155' }}>
+        <Text className="mb-2 text-gray-300">Code</Text>
         <TextInput
           value={code}
           onChangeText={setCode}
           placeholder="123456"
           placeholderTextColor="#6B7280"
           keyboardType="number-pad"
-          className="text-white bg-black/30 rounded-xl border border-gray-700 px-4 py-3"
+          className="rounded-xl border border-gray-700 bg-black/30 px-4 py-3 text-white"
         />
-        {error && <Text className="text-rose-400 mt-3">{error}</Text>}
-        <Pressable onPress={handleVerify} disabled={loading || !code} className="rounded-xl mt-6 items-center" style={{ backgroundColor: code && !loading ? '#FDE68A' : '#6B7280', paddingVertical: 14 }}>
-          <Text className="text-black font-extrabold text-base">{loading ? 'Vérification…' : 'Vérifier'}</Text>
+        {error && <Text className="mt-3 text-rose-400">{error}</Text>}
+        <Pressable
+          onPress={handleVerify}
+          disabled={loading || !code}
+          className="mt-6 items-center rounded-xl"
+          style={{ backgroundColor: code && !loading ? '#FDE68A' : '#6B7280', paddingVertical: 14 }}
+        >
+          <Text className="text-base font-extrabold text-black">
+            {loading ? 'Vérification…' : 'Vérifier'}
+          </Text>
         </Pressable>
         <Pressable
           onPress={async () => {
@@ -65,11 +72,11 @@ export default function VerifyEmailScreen() {
           }}
           className="mt-4 items-center"
         >
-          <Text className="text-gray-300 underline">{resending ? 'Renvoi…' : 'Renvoyer le code'}</Text>
+          <Text className="text-gray-300 underline">
+            {resending ? 'Renvoi…' : 'Renvoyer le code'}
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
   )
 }
-
-

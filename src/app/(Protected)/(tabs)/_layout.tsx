@@ -5,9 +5,8 @@ import { Tabs } from 'expo-router'
 import useAppStore from '@/store/useAppStore'
 import { Ionicons } from '@expo/vector-icons'
 
-
 export default function TabsLayout() {
-  const unreadTotal = useAppStore((s) => 
+  const unreadTotal = useAppStore((s) =>
     s.conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
   )
   return (
@@ -18,7 +17,7 @@ export default function TabsLayout() {
         tabBarShowLabel: true,
         tabBarBackground: () => (
           <LinearGradient
-            colors={["#0B1220", "#0B0F1A"]}
+            colors={['#0B1220', '#0B0F1A']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ flex: 1, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
@@ -68,13 +67,7 @@ export default function TabsLayout() {
         options={{
           title: 'Intention',
           tabBarActiveTintColor: '#EAB308',
-          tabBarIcon: ({ color }) => (
-            <Ionicons
-              name='swap-horizontal'
-              color={color}
-              size={28}
-            />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="swap-horizontal" color={color} size={28} />,
         }}
       />
       <Tabs.Screen
@@ -85,26 +78,31 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <View style={{ position: 'relative' }}>
               <Ionicons
-                name={focused ? "chatbubbles" : "chatbubbles-outline"}
+                name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
                 color={color}
                 size={28}
               />
               {unreadTotal > 0 && (
-                <View style={{
-                  position: 'absolute',
-                  top: -8,
-                  right: -8,
-                  minWidth: 18,
-                  height: 18,
-                  borderRadius: 9,
-                  backgroundColor: '#EF4444',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingHorizontal: 4,
-                  borderWidth: 2,
-                  borderColor: '#0B1220'
-                }}>
-                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }} numberOfLines={1}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    minWidth: 18,
+                    height: 18,
+                    borderRadius: 9,
+                    backgroundColor: '#EF4444',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingHorizontal: 4,
+                    borderWidth: 2,
+                    borderColor: '#0B1220',
+                  }}
+                >
+                  <Text
+                    style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}
+                    numberOfLines={1}
+                  >
                     {unreadTotal > 9 ? '9+' : unreadTotal}
                   </Text>
                 </View>
@@ -119,11 +117,7 @@ export default function TabsLayout() {
           title: 'Profil',
           tabBarActiveTintColor: '#10B981',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "person" : "person-outline"}
-              color={color}
-              size={28}
-            />
+            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={28} />
           ),
         }}
       />

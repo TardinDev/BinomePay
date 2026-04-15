@@ -29,7 +29,6 @@ export default function AuthCallback() {
         setTimeout(() => {
           router.replace('/(auth)/login')
         }, 2000)
-
       } catch (error) {
         if (__DEV__) console.error('Erreur callback auth:', error)
         router.replace('/(auth)/login')
@@ -40,11 +39,9 @@ export default function AuthCallback() {
   }, [params, isLoaded, isSignedIn])
 
   return (
-    <View className="flex-1 bg-black justify-center items-center">
+    <View className="flex-1 items-center justify-center bg-black">
       <ActivityIndicator color="#FDE68A" size="large" />
-      <Text className="text-white mt-4">Finalisation de la connexion...</Text>
+      <Text className="mt-4 text-white">Finalisation de la connexion...</Text>
     </View>
   )
 }
-
-

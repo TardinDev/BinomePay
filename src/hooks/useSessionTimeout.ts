@@ -70,16 +70,10 @@ export function useSessionTimeout({
   // Handle app state changes
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextAppState === 'active'
-      ) {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         // App came to foreground - check if session expired
         checkSessionTimeout()
-      } else if (
-        appState.current === 'active' &&
-        nextAppState.match(/inactive|background/)
-      ) {
+      } else if (appState.current === 'active' && nextAppState.match(/inactive|background/)) {
         // App going to background - save last activity
         updateLastActivity()
       }

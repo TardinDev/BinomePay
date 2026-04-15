@@ -115,10 +115,7 @@ export function useRateLimit(
     const recentTimestamps = cleanOldTimestamps(timestamps)
     const isLimited = recentTimestamps.length >= maxActions
 
-    const resetTime =
-      recentTimestamps.length > 0
-        ? Math.min(...recentTimestamps) + windowMs
-        : null
+    const resetTime = recentTimestamps.length > 0 ? Math.min(...recentTimestamps) + windowMs : null
 
     setState({
       isLimited,

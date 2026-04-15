@@ -1,13 +1,5 @@
 import React, { useState, useRef } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  Dimensions,
-  FlatList,
-  Animated,
-  ViewToken,
-} from 'react-native'
+import { View, Text, Pressable, Dimensions, FlatList, Animated, ViewToken } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -34,7 +26,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     icon: 'people',
     iconColor: '#60A5FA',
     title: 'Recevez des propositions',
-    description: 'Notre algorithme vous met en relation avec des personnes ayant des besoins complementaires.',
+    description:
+      'Notre algorithme vous met en relation avec des personnes ayant des besoins complementaires.',
   },
   {
     id: '3',
@@ -47,7 +40,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     id: '4',
     icon: 'checkmark-circle',
     iconColor: '#8B5CF6',
-    title: 'Effectuez l\'echange',
+    title: "Effectuez l'echange",
     description: 'Finalisez votre transfert et notez votre experience pour aider la communaute.',
   },
 ]
@@ -84,41 +77,31 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     handleComplete()
   }
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-        setCurrentIndex(viewableItems[0].index)
-      }
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+      setCurrentIndex(viewableItems[0].index)
     }
-  ).current
+  }).current
 
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current
 
   const renderStep = ({ item }: { item: OnboardingStep }) => (
     <View style={{ width }} className="flex-1 items-center justify-center px-8">
       <View
-        className="w-32 h-32 rounded-full items-center justify-center mb-8"
+        className="mb-8 h-32 w-32 items-center justify-center rounded-full"
         style={{ backgroundColor: `${item.iconColor}20` }}
       >
         <Ionicons name={item.icon} size={64} color={item.iconColor} />
       </View>
-      <Text className="text-white text-2xl font-extrabold text-center mb-4">
-        {item.title}
-      </Text>
-      <Text className="text-gray-400 text-center text-lg leading-7">
-        {item.description}
-      </Text>
+      <Text className="mb-4 text-center text-2xl font-extrabold text-white">{item.title}</Text>
+      <Text className="text-center text-lg leading-7 text-gray-400">{item.description}</Text>
     </View>
   )
 
   const renderDots = () => (
-    <View className="flex-row justify-center mb-8">
+    <View className="mb-8 flex-row justify-center">
       {ONBOARDING_STEPS.map((_, index) => {
-        const inputRange = [
-          (index - 1) * width,
-          index * width,
-          (index + 1) * width,
-        ]
+        const inputRange = [(index - 1) * width, index * width, (index + 1) * width]
 
         const dotWidth = scrollX.interpolate({
           inputRange,
@@ -152,9 +135,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   return (
     <View className="flex-1 bg-black">
       {/* Skip Button */}
-      <View className="absolute top-14 right-6 z-10">
+      <View className="absolute right-6 top-14 z-10">
         <Pressable onPress={handleSkip}>
-          <Text className="text-gray-400 font-semibold">Passer</Text>
+          <Text className="font-semibold text-gray-400">Passer</Text>
         </Pressable>
       </View>
 
@@ -168,10 +151,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         bounces={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: false }
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+          useNativeDriver: false,
+        })}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         contentContainerStyle={{ paddingTop: 100 }}
@@ -183,10 +165,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
         <Pressable
           onPress={handleNext}
-          className="rounded-xl items-center py-4"
+          className="items-center rounded-xl py-4"
           style={{ backgroundColor: '#EAB308' }}
         >
-          <Text className="text-black font-extrabold text-lg">
+          <Text className="text-lg font-extrabold text-black">
             {currentIndex === ONBOARDING_STEPS.length - 1 ? 'Commencer' : 'Suivant'}
           </Text>
         </Pressable>

@@ -52,20 +52,20 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View className="flex-1 bg-black px-6 pt-20">
-          <View className="items-center mb-8">
+          <View className="mb-8 items-center">
             <Ionicons name="warning-outline" size={80} color="#EF4444" />
-            <Text className="text-white text-2xl font-bold mt-4">Une erreur s'est produite</Text>
-            <Text className="text-gray-400 text-center mt-2">
+            <Text className="mt-4 text-2xl font-bold text-white">Une erreur s'est produite</Text>
+            <Text className="mt-2 text-center text-gray-400">
               L'application a rencontré un problème inattendu
             </Text>
           </View>
 
           {this.state.error && (
-            <ScrollView className="bg-neutral-900 rounded-xl p-4 mb-6">
-              <Text className="text-red-400 font-bold mb-2">Détails de l'erreur:</Text>
-              <Text className="text-gray-300 text-sm">{this.state.error.toString()}</Text>
+            <ScrollView className="mb-6 rounded-xl bg-neutral-900 p-4">
+              <Text className="mb-2 font-bold text-red-400">Détails de l'erreur:</Text>
+              <Text className="text-sm text-gray-300">{this.state.error.toString()}</Text>
               {this.state.errorInfo && (
-                <Text className="text-gray-500 text-xs mt-2">
+                <Text className="mt-2 text-xs text-gray-500">
                   {this.state.errorInfo.componentStack}
                 </Text>
               )}
@@ -74,9 +74,9 @@ export default class ErrorBoundary extends Component<Props, State> {
 
           <Pressable
             onPress={this.handleReset}
-            className="bg-yellow-400 rounded-xl py-4 items-center"
+            className="items-center rounded-xl bg-yellow-400 py-4"
           >
-            <Text className="text-black font-bold text-base">Réessayer</Text>
+            <Text className="text-base font-bold text-black">Réessayer</Text>
           </Pressable>
         </View>
       )

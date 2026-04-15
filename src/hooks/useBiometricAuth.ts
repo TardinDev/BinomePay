@@ -62,36 +62,39 @@ export function useBiometricAuth(): UseBiometricAuthResult {
     }
   }, [])
 
-  const authenticate = useCallback(async (reason?: string): Promise<boolean> => {
-    if (!isAvailable) {
-      if (__DEV__) console.warn('Biometric authentication not available')
-      return false
-    }
-
-    setIsAuthenticating(true)
-
-    try {
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: reason || 'Authentifiez-vous pour continuer',
-        cancelLabel: 'Annuler',
-        disableDeviceFallback: false,
-        fallbackLabel: 'Utiliser le code',
-      })
-
-      if (result.success) {
-        if (__DEV__) console.log('Biometric authentication successful')
-        return true
-      } else {
-        if (__DEV__) console.log('Biometric authentication failed:', result.error)
+  const authenticate = useCallback(
+    async (reason?: string): Promise<boolean> => {
+      if (!isAvailable) {
+        if (__DEV__) console.warn('Biometric authentication not available')
         return false
       }
-    } catch (error) {
-      if (__DEV__) console.error('Biometric authentication error:', error)
-      return false
-    } finally {
-      setIsAuthenticating(false)
-    }
-  }, [isAvailable])
+
+      setIsAuthenticating(true)
+
+      try {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: reason || 'Authentifiez-vous pour continuer',
+          cancelLabel: 'Annuler',
+          disableDeviceFallback: false,
+          fallbackLabel: 'Utiliser le code',
+        })
+
+        if (result.success) {
+          if (__DEV__) console.log('Biometric authentication successful')
+          return true
+        } else {
+          if (__DEV__) console.log('Biometric authentication failed:', result.error)
+          return false
+        }
+      } catch (error) {
+        if (__DEV__) console.error('Biometric authentication error:', error)
+        return false
+      } finally {
+        setIsAuthenticating(false)
+      }
+    },
+    [isAvailable]
+  )
 
   const enableBiometric = useCallback(async (): Promise<boolean> => {
     if (!isAvailable) {
@@ -100,7 +103,7 @@ export function useBiometricAuth(): UseBiometricAuthResult {
     }
 
     // Authenticate first to confirm identity
-    const authenticated = await authenticate('Activez l\'authentification biometrique')
+    const authenticated = await authenticate("Activez l'authentification biometrique")
 
     if (authenticated) {
       try {

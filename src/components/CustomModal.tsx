@@ -1,25 +1,25 @@
-import React from 'react';
-import { View, Text, Pressable, Modal, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+import React from 'react'
+import { View, Text, Pressable, Modal, Dimensions } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
+import { BlurView } from 'expo-blur'
 
 interface CustomModalProps {
-  visible: boolean;
-  onClose: () => void;
-  title: string;
-  message: string;
-  icon?: string;
-  iconColor?: string;
+  visible: boolean
+  onClose: () => void
+  title: string
+  message: string
+  icon?: string
+  iconColor?: string
   buttons: Array<{
-    text: string;
-    onPress: () => void;
-    style?: 'primary' | 'secondary' | 'danger';
-    loading?: boolean;
-  }>;
+    text: string
+    onPress: () => void
+    style?: 'primary' | 'secondary' | 'danger'
+    loading?: boolean
+  }>
 }
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window')
 
 export default function CustomModal({
   visible,
@@ -28,32 +28,29 @@ export default function CustomModal({
   message,
   icon = 'help-circle',
   iconColor = '#60A5FA',
-  buttons
+  buttons,
 }: CustomModalProps) {
   const getButtonStyle = (style: 'primary' | 'secondary' | 'danger' = 'primary') => {
     switch (style) {
       case 'primary':
-        return ['#10B981', '#059669']; // Vert
+        return ['#10B981', '#059669'] // Vert
       case 'danger':
-        return ['#EF4444', '#DC2626']; // Rouge
+        return ['#EF4444', '#DC2626'] // Rouge
       case 'secondary':
-        return ['#6B7280', '#4B5563']; // Gris
+        return ['#6B7280', '#4B5563'] // Gris
     }
-  };
+  }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      }}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        }}
+      >
         <BlurView
           intensity={20}
           style={{
@@ -64,7 +61,7 @@ export default function CustomModal({
             bottom: 0,
           }}
         />
-        
+
         <View
           style={{
             width: screenWidth * 0.85,
@@ -82,27 +79,16 @@ export default function CustomModal({
           }}
         >
           {/* Icône */}
-          <View className="items-center mb-4">
-            <View
-              className="rounded-full p-4 mb-4"
-              style={{ backgroundColor: iconColor + '20' }}
-            >
-              <Ionicons
-                name={icon as any}
-                size={40}
-                color={iconColor}
-              />
+          <View className="mb-4 items-center">
+            <View className="mb-4 rounded-full p-4" style={{ backgroundColor: iconColor + '20' }}>
+              <Ionicons name={icon as any} size={40} color={iconColor} />
             </View>
-            
+
             {/* Titre */}
-            <Text className="text-white text-xl font-bold text-center mb-2">
-              {title}
-            </Text>
-            
+            <Text className="mb-2 text-center text-xl font-bold text-white">{title}</Text>
+
             {/* Message */}
-            <Text className="text-gray-300 text-base text-center leading-6">
-              {message}
-            </Text>
+            <Text className="text-center text-base leading-6 text-gray-300">{message}</Text>
           </View>
 
           {/* Boutons */}
@@ -112,11 +98,17 @@ export default function CustomModal({
                 key={index}
                 onPress={button.onPress}
                 disabled={button.loading}
-                className={`rounded-xl overflow-hidden ${index < buttons.length - 1 ? 'mb-3' : ''}`}
+                className={`overflow-hidden rounded-xl ${index < buttons.length - 1 ? 'mb-3' : ''}`}
                 style={{ opacity: button.loading ? 0.7 : 1 }}
               >
                 <LinearGradient
-                  colors={getButtonStyle(button.style) as unknown as readonly [string, string, ...string[]]}
+                  colors={
+                    getButtonStyle(button.style) as unknown as readonly [
+                      string,
+                      string,
+                      ...string[],
+                    ]
+                  }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{ paddingVertical: 16, paddingHorizontal: 20 }}
@@ -127,9 +119,7 @@ export default function CustomModal({
                         <Ionicons name="hourglass" color="#FFFFFF" size={18} />
                       </View>
                     ) : null}
-                    <Text className="text-white font-bold text-base">
-                      {button.text}
-                    </Text>
+                    <Text className="text-base font-bold text-white">{button.text}</Text>
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -138,5 +128,5 @@ export default function CustomModal({
         </View>
       </View>
     </Modal>
-  );
+  )
 }

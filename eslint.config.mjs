@@ -83,6 +83,22 @@ export default [
     },
   },
   {
+    files: ['**/__tests__/**/*.{ts,tsx}', '**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        test: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        jest: 'readonly',
+      },
+    },
+  },
+  {
     ignores: [
       'node_modules/',
       '.expo/',
@@ -95,6 +111,7 @@ export default [
       'babel.config.js',
       'metro.config.js',
       'eslint.config.js',
+      'jest.setup.js',
     ],
   },
   prettier,

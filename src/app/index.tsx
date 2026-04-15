@@ -5,22 +5,27 @@ import { View, Text } from 'react-native'
 
 export default function RootIndex() {
   if (__DEV__) console.log('RootIndex rendering...')
-  
+
   const { isLoaded, isSignedIn } = useAuth()
-  
+
   if (!isLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'black',
+        }}
+      >
         <Text style={{ color: 'white' }}>Loading...</Text>
       </View>
     )
   }
-  
+
   if (isSignedIn) {
-    return <Redirect href='/(Protected)/(tabs)' />
+    return <Redirect href="/(Protected)/(tabs)" />
   }
-  
-  return <Redirect href='/(auth)/login' />
+
+  return <Redirect href="/(auth)/login" />
 }
-
-

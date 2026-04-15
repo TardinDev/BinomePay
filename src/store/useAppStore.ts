@@ -69,62 +69,62 @@ type AppState = {
   matches: MatchItem[]
   conversations: Conversation[]
   suggested: SuggestedItem[]
-  
+
   // Loading states
   isLoading: boolean
   isLoadingRequests: boolean
   isLoadingMatches: boolean
   isLoadingSuggested: boolean
-  
+
   // Optimistic UI states
   isAcceptingMatch: boolean
   isSendingMessage: boolean
   isCreatingIntention: boolean
-  
+
   // Error states
   error: string | null
-  
+
   // Auth states
   isLoggingOut: boolean
-  
+
   // User actions
   setUser: (user: User | null) => void
   initializeUserData: (userId: string) => Promise<void>
-  
+
   // Notifications
   incrementNotifications: () => void
   clearNotifications: () => void
-  
+
   // Requests/Intentions
   addRequest: (r: Omit<RequestItem, 'id' | 'status'> & { type: 'SEND' | 'RECEIVE' }) => void
   loadRequests: (userId: string) => Promise<void>
-  
+
   // Suggestions
   addSuggested: (s: Omit<SuggestedItem, 'id'>) => void
   loadSuggested: (userId: string) => Promise<void>
-  
+
   // Matches
   setMatches: (items: MatchItem[]) => void
   loadMatches: (userId: string) => Promise<void>
-  
+
   // Conversations
   markConversationRead: (id: string) => void
   loadConversations: (userId: string) => Promise<void>
   addConversation: (conversation: Omit<Conversation, 'id'>) => string
   addMessageToConversation: (conversationId: string, message: string, isFromMe: boolean) => void
-  
+
   // Match acceptance and matching logic
   acceptSuggestion: (suggestionId: string, myUserId: string) => Promise<string | null>
   removeSuggestion: (suggestionId: string) => void
-  
+
   // Optimistic UI actions
   setAcceptingMatch: (loading: boolean) => void
   setSendingMessage: (loading: boolean) => void
   setCreatingIntention: (loading: boolean) => void
-  
+
   // Rating system
   loadUserRating: (userId: string) => Promise<void>
-  
+
   // General utilities
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -165,7 +165,7 @@ const useAppStore = create<AppState>((set, get) => ({
   addRequest: async ({ type, amount, currency, originCountry, destCountry }) => {
     const state = get()
     if (!state.user?.id) return
-    
+
     // Optimistic update
     const tempRequest: RequestItem = {
       id: 'temp_' + nanoid(8),
@@ -176,21 +176,25 @@ const useAppStore = create<AppState>((set, get) => ({
       destCountry,
       status: 'OPEN',
     }
-    
+
     set((s) => ({
       requests: [...s.requests, tempRequest],
-      isCreatingIntention: true
+      isCreatingIntention: true,
     }))
-    
+
     try {
       const newRequest = await ApiService.createRequest(state.user.id, {
-        type, amount, currency, originCountry, destCountry
+        type,
+        amount,
+        currency,
+        originCountry,
+        destCountry,
       })
-      
+
       // Remplacer l'intention temporaire par la vraie
       set((s) => ({
-        requests: s.requests.map(r => r.id === tempRequest.id ? newRequest : r),
-        isCreatingIntention: false
+        requests: s.requests.map((r) => (r.id === tempRequest.id ? newRequest : r)),
+        isCreatingIntention: false,
       }))
     } catch (error) {
       // En cas d'erreur, ajouter à la queue hors ligne
@@ -198,14 +202,22 @@ const useAppStore = create<AppState>((set, get) => ({
         type: 'CREATE_REQUEST',
         payload: { type, amount, currency, originCountry, destCountry },
         userId: state.user.id,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       })
 
       set({ isCreatingIntention: false })
       if (__DEV__) console.error('Erreur création intention:', error)
     }
   },
-  addSuggested: ({ amount, currency, originCountryName, destCountryName, senderName, note, createdAt }) =>
+  addSuggested: ({
+    amount,
+    currency,
+    originCountryName,
+    destCountryName,
+    senderName,
+    note,
+    createdAt,
+  }) =>
     set((s) => ({
       suggested: [
         {
@@ -264,7 +276,7 @@ const useAppStore = create<AppState>((set, get) => ({
         storeState.loadMatches(userId),
         storeState.loadSuggested(userId),
         storeState.loadConversations(userId),
-        storeState.loadUserRating(userId)
+        storeState.loadUserRating(userId),
       ])
 
       // Initialiser le service de synchronisation
@@ -274,7 +286,6 @@ const useAppStore = create<AppState>((set, get) => ({
       } catch (error) {
         if (__DEV__) console.error('Erreur initialisation syncService:', error)
       }
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
       set({ error: errorMessage, isLoading: false })
@@ -331,11 +342,11 @@ const useAppStore = create<AppState>((set, get) => ({
       id: conversationId,
       ...conversation,
     }
-    
+
     set((s) => ({
       conversations: [newConversation, ...s.conversations],
     }))
-    
+
     return conversationId
   },
 
@@ -352,7 +363,7 @@ const useAppStore = create<AppState>((set, get) => ({
             }
           : c
       ),
-      isSendingMessage: isFromMe
+      isSendingMessage: isFromMe,
     }))
 
     // Si c'est mon message, l'envoyer à l'API
@@ -369,7 +380,7 @@ const useAppStore = create<AppState>((set, get) => ({
             type: 'SEND_MESSAGE',
             payload: { conversationId, message },
             userId: state.user.id,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           })
         }
         if (__DEV__) console.error('Erreur envoi message:', error)
@@ -378,7 +389,7 @@ const useAppStore = create<AppState>((set, get) => ({
       }
     } else {
       // Message reçu - envoyer notification
-      const conversation = get().conversations.find(c => c.id === conversationId)
+      const conversation = get().conversations.find((c) => c.id === conversationId)
       if (conversation) {
         notifyNewMessage(conversation.counterpartName, message, conversationId)
       }
@@ -389,7 +400,7 @@ const useAppStore = create<AppState>((set, get) => ({
   acceptSuggestion: async (suggestionId: string, myUserId: string) => {
     const state = get()
     const suggestion = state.suggested.find((s) => s.id === suggestionId)
-    
+
     if (!suggestion) return null
 
     set({ isAcceptingMatch: true })
@@ -397,7 +408,7 @@ const useAppStore = create<AppState>((set, get) => ({
     try {
       // Essayer d'accepter via l'API d'abord
       let apiResult: { conversationId: string; matchId: string } | null = null
-      
+
       try {
         apiResult = await ApiService.acceptSuggestion(suggestionId, myUserId)
       } catch (error) {
@@ -407,22 +418,24 @@ const useAppStore = create<AppState>((set, get) => ({
           type: 'ACCEPT_SUGGESTION',
           payload: { suggestionId },
           userId: myUserId,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         })
       }
 
       // Mise à jour locale (optimiste ou avec données API)
-      const conversationId = apiResult?.conversationId || state.addConversation({
-        counterpartName: suggestion.senderName,
-        lastMessage: 'Match créé ! Vous pouvez maintenant discuter.',
-        updatedAt: Date.now(),
-        unreadCount: 0,
-        matchDetails: {
-          amount: suggestion.amount,
-          currency: suggestion.currency,
-          corridor: `${suggestion.originCountryName} → ${suggestion.destCountryName}`
-        }
-      })
+      const conversationId =
+        apiResult?.conversationId ||
+        state.addConversation({
+          counterpartName: suggestion.senderName,
+          lastMessage: 'Match créé ! Vous pouvez maintenant discuter.',
+          updatedAt: Date.now(),
+          unreadCount: 0,
+          matchDetails: {
+            amount: suggestion.amount,
+            currency: suggestion.currency,
+            corridor: `${suggestion.originCountryName} → ${suggestion.destCountryName}`,
+          },
+        })
 
       const newMatch: MatchItem = {
         id: apiResult?.matchId || nanoid(8),
@@ -436,10 +449,8 @@ const useAppStore = create<AppState>((set, get) => ({
       set((s) => ({
         matches: [newMatch, ...s.matches],
         notifications: s.notifications + 1,
-        suggested: s.suggested.map((item) => 
-          item.id === suggestionId 
-            ? { ...item, isAccepted: true, conversationId }
-            : item
+        suggested: s.suggested.map((item) =>
+          item.id === suggestionId ? { ...item, isAccepted: true, conversationId } : item
         ),
       }))
 
@@ -452,7 +463,7 @@ const useAppStore = create<AppState>((set, get) => ({
 
       return conversationId
     } catch (error) {
-      get().setError('Erreur lors de l\'acceptation du match')
+      get().setError("Erreur lors de l'acceptation du match")
       if (__DEV__) console.error('Erreur acceptation match:', error)
       return null
     } finally {
@@ -486,26 +497,25 @@ const useAppStore = create<AppState>((set, get) => ({
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   setError: (error: string | null) => set({ error }),
   setLoggingOut: (logging: boolean) => set({ isLoggingOut: logging }),
-  
-  reset: () => set({
-    user: null,
-    notifications: 0,
-    requests: [],
-    matches: [],
-    conversations: [],
-    suggested: [],
-    isLoading: false,
-    isLoadingRequests: false,
-    isLoadingMatches: false,
-    isLoadingSuggested: false,
-    isAcceptingMatch: false,
-    isSendingMessage: false,
-    isCreatingIntention: false,
-    error: null,
-    isLoggingOut: false, // Reset du flag de déconnexion
-  }),
+
+  reset: () =>
+    set({
+      user: null,
+      notifications: 0,
+      requests: [],
+      matches: [],
+      conversations: [],
+      suggested: [],
+      isLoading: false,
+      isLoadingRequests: false,
+      isLoadingMatches: false,
+      isLoadingSuggested: false,
+      isAcceptingMatch: false,
+      isSendingMessage: false,
+      isCreatingIntention: false,
+      error: null,
+      isLoggingOut: false, // Reset du flag de déconnexion
+    }),
 }))
 
 export default useAppStore
-
-
