@@ -2,14 +2,17 @@ import { useEffect, useRef } from 'react'
 import { Stack, useRouter } from 'expo-router'
 import { useAuth, useUser, useSession } from '@clerk/clerk-expo'
 import { View } from 'react-native'
+import * as Notifications from 'expo-notifications'
 import useAppStore from '@/store/useAppStore'
 import ConnectionStatus from '@/components/ConnectionStatus'
 import { LoadingScreen } from '@/components/LoadingSpinner'
 import { setClerkTokenGetter } from '@/lib/supabase'
+import { initializeNotifications, handleNotificationResponse } from '@/services/notificationService'
 
 export default function ProtectedLayout() {
   const router = useRouter()
   const hasRedirected = useRef(false)
+  const notificationsInitialized = useRef(false)
 
   const { isLoaded, isSignedIn } = useAuth()
   const { user: clerkUser } = useUser()
@@ -29,6 +32,26 @@ export default function ProtectedLayout() {
     }
     return () => setClerkTokenGetter(null)
   }, [session])
+
+  // Initialiser les notifications push et configurer les listeners
+  useEffect(() => {
+    if (!isSignedIn || notificationsInitialized.current) return
+
+    notificationsInitialized.current = true
+    initializeNotifications()
+
+    // Listener quand l'utilisateur tape sur une notification
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        handleNotificationResponse(response, router)
+      }
+    )
+
+    return () => {
+      responseSubscription.remove()
+      notificationsInitialized.current = false
+    }
+  }, [isSignedIn, router])
 
   useEffect(() => {
     if (!isLoaded) return

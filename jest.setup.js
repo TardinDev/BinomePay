@@ -18,9 +18,17 @@ jest.mock('expo-secure-store', () => ({
 jest.mock('expo-notifications', () => ({
   getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
   requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
-  scheduleNotificationAsync: jest.fn(() => Promise.resolve()),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve('mock-notif-id')),
   setNotificationHandler: jest.fn(),
   getExpoPushTokenAsync: jest.fn(() => Promise.resolve({ data: 'mock-token' })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
+  dismissAllNotificationsAsync: jest.fn(() => Promise.resolve()),
+  getBadgeCountAsync: jest.fn(() => Promise.resolve(0)),
+  setBadgeCountAsync: jest.fn(() => Promise.resolve()),
+  AndroidImportance: { HIGH: 4, DEFAULT: 3 },
+  AndroidNotificationPriority: { HIGH: 'high' },
 }))
 
 // Mock expo-device
@@ -50,9 +58,17 @@ jest.mock('nanoid/non-secure', () => ({
 
 // Mock notification service
 jest.mock('@/services/notificationService', () => ({
+  initializeNotifications: jest.fn(() => Promise.resolve(true)),
+  scheduleLocalNotification: jest.fn(() => Promise.resolve('mock-notif-id')),
   notifyMatchAccepted: jest.fn(() => Promise.resolve()),
   notifyNewMessage: jest.fn(() => Promise.resolve()),
+  notifyMatchExpiring: jest.fn(() => Promise.resolve()),
   notifyNewSuggestion: jest.fn(() => Promise.resolve()),
+  notifyKycUpdate: jest.fn(() => Promise.resolve()),
+  handleNotificationResponse: jest.fn(),
+  clearAllNotifications: jest.fn(() => Promise.resolve()),
+  getBadgeCount: jest.fn(() => Promise.resolve(0)),
+  setBadgeCount: jest.fn(() => Promise.resolve()),
 }))
 
 // Mock rating service
