@@ -234,10 +234,18 @@ const useAppStore = create<AppState>((set, get) => ({
       ],
     })),
   setMatches: (items) => set({ matches: items }),
-  markConversationRead: (id) =>
+  markConversationRead: (id) => {
     set((s) => ({
       conversations: s.conversations.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c)),
-    })),
+    }))
+    // Synchroniser côté serveur
+    const userId = get().user?.id
+    if (userId) {
+      ApiService.markConversationAsRead(id, userId).catch((error) => {
+        if (__DEV__) console.error('Erreur sync markConversationAsRead:', error)
+      })
+    }
+  },
 
   // Dynamic data initialization with API integration
   initializeUserData: async (userId: string) => {
@@ -245,7 +253,7 @@ const useAppStore = create<AppState>((set, get) => ({
 
     // Ne pas initialiser si on est en train de se déconnecter
     if (currentState.isLoggingOut) {
-      if (__DEV__) console.log('Initialisation annulée - déconnexion en cours')
+      if (__DEV__) console.warn('Initialisation annulée - déconnexion en cours')
       return
     }
 

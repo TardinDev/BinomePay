@@ -46,67 +46,28 @@ export type OfflineAction =
   | AcceptSuggestionAction
   | UpdateProfileAction
 
-// Configuration de l'API
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ??
-  (() => {
-    if (!__DEV__) throw new Error('EXPO_PUBLIC_API_URL must be set in production')
-    return 'http://localhost:3000/api'
-  })()
-const USE_MOCK_API = process.env.EXPO_PUBLIC_MOCK_API === 'true'
-
-// Headers de base pour les requêtes API
-const getAuthHeaders = async (): Promise<HeadersInit> => {
-  const token = await AsyncStorage.getItem('auth_token')
-  return {
-    'Content-Type': 'application/json',
-    Authorization: token ? `Bearer ${token}` : '',
-  }
-}
-
-// Gestion des erreurs API
-class ApiError extends Error {
-  status: number
-
-  constructor(message: string, status: number) {
-    super(message)
-    this.status = status
-    this.name = 'ApiError'
-  }
-}
-
-const handleApiResponse = async (response: Response) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Erreur réseau' }))
-    throw new ApiError(errorData.message || 'Erreur API', response.status)
-  }
-  return response.json()
-}
-
 export class ApiService {
-  // Vérification du mode mock
-  private static shouldUseMockData(): boolean {
-    return USE_MOCK_API
-  }
   // ================================
   // GESTION UTILISATEUR
   // ================================
 
   static async fetchUserProfile(userId: string): Promise<User> {
-    if (this.shouldUseMockData()) {
-      if (__DEV__) console.log('Mode mock: retour de données utilisateur mock')
-      return Promise.resolve({
-        id: userId,
-        name: 'Utilisateur Mock',
-        kycStatus: 'verified',
-        ratingAvg: 4.8,
-      })
-    }
-
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, { headers })
-      return await handleApiResponse(response)
+      const { data, error } = await supabase
+        .from('users')
+        .select('clerk_id, name, kyc_status, rating_avg, avatar_url')
+        .eq('clerk_id', userId)
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.clerk_id,
+        name: data.name ?? 'Utilisateur',
+        kycStatus: (data.kyc_status as User['kycStatus']) ?? 'unverified',
+        ratingAvg: Number(data.rating_avg ?? 0),
+        avatarUrl: data.avatar_url ?? undefined,
+      }
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération profil:', error)
       throw error
@@ -115,13 +76,28 @@ export class ApiService {
 
   static async updateUserProfile(userId: string, updates: Partial<User>): Promise<User> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(updates),
-      })
-      return await handleApiResponse(response)
+      const dbUpdates: Record<string, unknown> = {}
+      if (updates.name !== undefined) dbUpdates.name = updates.name
+      if (updates.kycStatus !== undefined) dbUpdates.kyc_status = updates.kycStatus
+      if (updates.ratingAvg !== undefined) dbUpdates.rating_avg = updates.ratingAvg
+      if (updates.avatarUrl !== undefined) dbUpdates.avatar_url = updates.avatarUrl
+
+      const { data, error } = await supabase
+        .from('users')
+        .update({ ...dbUpdates, updated_at: new Date().toISOString() })
+        .eq('clerk_id', userId)
+        .select('clerk_id, name, kyc_status, rating_avg, avatar_url')
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.clerk_id,
+        name: data.name ?? 'Utilisateur',
+        kycStatus: (data.kyc_status as User['kycStatus']) ?? 'unverified',
+        ratingAvg: Number(data.rating_avg ?? 0),
+        avatarUrl: data.avatar_url ?? undefined,
+      }
     } catch (error) {
       if (__DEV__) console.error('Erreur mise à jour profil:', error)
       throw error
@@ -152,10 +128,10 @@ export class ApiService {
 
       if (error) throw error
 
-      return (data ?? []).map((row: any) => ({
+      return (data ?? []).map((row) => ({
         id: row.id,
         type: row.direction as 'SEND' | 'RECEIVE',
-        amount: row.amount,
+        amount: Number(row.amount),
         currency: row.currency,
         originCountry: row.origin_country,
         destCountry: row.dest_country,
@@ -172,13 +148,31 @@ export class ApiService {
     request: Omit<RequestItem, 'id' | 'status'>
   ): Promise<RequestItem> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/requests`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(request),
-      })
-      return await handleApiResponse(response)
+      const { data, error } = await supabase
+        .from('intents')
+        .insert({
+          user_id: userId,
+          direction: request.type,
+          amount: request.amount,
+          currency: request.currency,
+          origin_country: request.originCountry,
+          dest_country: request.destCountry,
+          status: 'OPEN',
+        })
+        .select('id, direction, amount, currency, origin_country, dest_country, status')
+        .single()
+
+      if (error) throw error
+
+      return {
+        id: data.id,
+        type: data.direction as 'SEND' | 'RECEIVE',
+        amount: Number(data.amount),
+        currency: data.currency,
+        originCountry: data.origin_country,
+        destCountry: data.dest_country,
+        status: data.status as 'OPEN' | 'MATCHED' | 'CLOSED',
+      }
     } catch (error) {
       if (__DEV__) console.error('Erreur création intention:', error)
       throw error
@@ -190,13 +184,12 @@ export class ApiService {
     status: RequestItem['status']
   ): Promise<void> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/requests/${requestId}/status`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ status }),
-      })
-      await handleApiResponse(response)
+      const { error } = await supabase
+        .from('intents')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', requestId)
+
+      if (error) throw error
     } catch (error) {
       if (__DEV__) console.error('Erreur mise à jour statut intention:', error)
       throw error
@@ -218,9 +211,9 @@ export class ApiService {
 
       if (error) throw error
 
-      return (data ?? []).map((row: any) => ({
+      return (data ?? []).map((row) => ({
         id: row.id,
-        amount: row.amount,
+        amount: Number(row.amount),
         currency: row.currency,
         originCountryName: row.origin_country,
         destCountryName: row.dest_country,
@@ -239,13 +232,93 @@ export class ApiService {
     userId: string
   ): Promise<{ conversationId: string; matchId: string }> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/suggestions/${suggestionId}/accept`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ userId }),
+      // 1. Récupérer l'intent de la suggestion
+      const { data: suggestion, error: suggestionError } = await supabase
+        .from('intents')
+        .select('id, user_id, direction, amount, currency, origin_country, dest_country, user_name')
+        .eq('id', suggestionId)
+        .eq('status', 'OPEN')
+        .single()
+
+      if (suggestionError || !suggestion) {
+        throw new Error('Suggestion introuvable ou déjà acceptée')
+      }
+
+      // 2. Récupérer le nom de l'utilisateur acceptant
+      const { data: acceptingUser } = await supabase
+        .from('users')
+        .select('name')
+        .eq('clerk_id', userId)
+        .single()
+
+      const acceptingUserName = acceptingUser?.name ?? 'Utilisateur'
+
+      // 3. Créer un intent complémentaire pour l'utilisateur qui accepte
+      const complementaryDirection = suggestion.direction === 'SEND' ? 'RECEIVE' : 'SEND'
+      const { data: myIntent, error: myIntentError } = await supabase
+        .from('intents')
+        .insert({
+          user_id: userId,
+          user_name: acceptingUserName,
+          direction: complementaryDirection,
+          amount: suggestion.amount,
+          currency: suggestion.currency,
+          origin_country: suggestion.origin_country,
+          dest_country: suggestion.dest_country,
+          status: 'MATCHED',
+        })
+        .select('id')
+        .single()
+
+      if (myIntentError || !myIntent) throw myIntentError ?? new Error("Erreur création d'intent")
+
+      // 4. Créer le match
+      const { data: match, error: matchError } = await supabase
+        .from('matches')
+        .insert({
+          intent_a: suggestion.id,
+          intent_b: myIntent.id,
+          status: 'ACCEPTED',
+        })
+        .select('id')
+        .single()
+
+      if (matchError || !match) throw matchError ?? new Error('Erreur création match')
+
+      // 5. Créer la conversation
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .insert({ match_id: match.id })
+        .select('id')
+        .single()
+
+      if (convError || !conversation) throw convError ?? new Error('Erreur création conversation')
+
+      // 6. Ajouter les 2 participants
+      const { error: participantsError } = await supabase.from('conversation_participants').insert([
+        { conversation_id: conversation.id, user_id: userId, unread_count: 0 },
+        { conversation_id: conversation.id, user_id: suggestion.user_id, unread_count: 1 },
+      ])
+
+      if (participantsError) throw participantsError
+
+      // 7. Mettre à jour l'intent de la suggestion → MATCHED
+      await supabase
+        .from('intents')
+        .update({ status: 'MATCHED', updated_at: new Date().toISOString() })
+        .eq('id', suggestion.id)
+
+      // 8. Insérer un message système dans la conversation
+      await supabase.from('messages').insert({
+        conversation_id: conversation.id,
+        sender_id: userId,
+        content: `Match créé ! ${acceptingUserName} a accepté la proposition de ${suggestion.amount} ${suggestion.currency}.`,
       })
-      return await handleApiResponse(response)
+
+      return {
+        conversationId: conversation.id,
+        matchId: match.id,
+      }
     } catch (error) {
       if (__DEV__) console.error('Erreur acceptation suggestion:', error)
       throw error
@@ -257,30 +330,75 @@ export class ApiService {
   // ================================
 
   static async fetchUserMatches(userId: string): Promise<MatchItem[]> {
-    if (this.shouldUseMockData()) {
-      if (__DEV__) console.log('Mode mock: retour de données matches mock')
-      return Promise.resolve([])
-    }
-
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/matches`, { headers })
-      return await handleApiResponse(response)
+      // Récupérer les IDs des intents de l'utilisateur
+      const { data: userIntents, error: intentsError } = await supabase
+        .from('intents')
+        .select('id')
+        .eq('user_id', userId)
+
+      if (intentsError) throw intentsError
+
+      const intentIds = (userIntents ?? []).map((i) => i.id)
+      if (intentIds.length === 0) return []
+
+      // Récupérer les matches où l'utilisateur est impliqué
+      const { data: matches, error: matchesError } = await supabase
+        .from('matches')
+        .select('id, intent_a, intent_b, status, created_at')
+        .or(`intent_a.in.(${intentIds.join(',')}),intent_b.in.(${intentIds.join(',')})`)
+        .order('created_at', { ascending: false })
+
+      if (matchesError) throw matchesError
+
+      // Pour chaque match, récupérer les détails de l'intent de l'autre utilisateur
+      const result: MatchItem[] = []
+      for (const match of matches ?? []) {
+        const otherIntentId = intentIds.includes(match.intent_a) ? match.intent_b : match.intent_a
+
+        const { data: otherIntent } = await supabase
+          .from('intents')
+          .select('user_id, amount, currency, origin_country, dest_country')
+          .eq('id', otherIntentId)
+          .single()
+
+        let counterpartName = 'Utilisateur'
+        if (otherIntent?.user_id) {
+          const { data: otherUser } = await supabase
+            .from('users')
+            .select('name')
+            .eq('clerk_id', otherIntent.user_id)
+            .single()
+          counterpartName = otherUser?.name ?? 'Utilisateur'
+        }
+
+        result.push({
+          id: match.id,
+          counterpartName,
+          amount: Number(otherIntent?.amount ?? 0),
+          currency: otherIntent?.currency ?? 'EUR',
+          corridor: otherIntent
+            ? `${otherIntent.origin_country.slice(0, 2).toUpperCase()} → ${otherIntent.dest_country.slice(0, 2).toUpperCase()}`
+            : '',
+          status: match.status as MatchItem['status'],
+        })
+      }
+
+      return result
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération matches:', error)
-      throw error
+      return []
     }
   }
 
   static async updateMatchStatus(matchId: string, status: MatchItem['status']): Promise<void> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/matches/${matchId}/status`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ status }),
-      })
-      await handleApiResponse(response)
+      const { error } = await supabase
+        .from('matches')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', matchId)
+
+      if (error) throw error
     } catch (error) {
       if (__DEV__) console.error('Erreur mise à jour statut match:', error)
       throw error
@@ -292,31 +410,121 @@ export class ApiService {
   // ================================
 
   static async fetchUserConversations(userId: string): Promise<Conversation[]> {
-    if (this.shouldUseMockData()) {
-      if (__DEV__) console.log('Mode mock: retour de données conversations mock')
-      return Promise.resolve([])
-    }
-
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/conversations`, { headers })
-      return await handleApiResponse(response)
+      // 1. Récupérer les conversations où l'utilisateur est participant
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id, unread_count')
+        .eq('user_id', userId)
+
+      if (partError) throw partError
+      if (!participations || participations.length === 0) return []
+
+      const convIds = participations.map((p) => p.conversation_id)
+      const unreadMap = new Map(participations.map((p) => [p.conversation_id, p.unread_count]))
+
+      // 2. Récupérer les détails des conversations
+      const { data: conversations, error: convError } = await supabase
+        .from('conversations')
+        .select('id, match_id, updated_at')
+        .in('id', convIds)
+        .order('updated_at', { ascending: false })
+
+      if (convError) throw convError
+
+      const result: Conversation[] = []
+
+      for (const conv of conversations ?? []) {
+        // 3. Trouver le counterpart
+        const { data: otherParticipant } = await supabase
+          .from('conversation_participants')
+          .select('user_id')
+          .eq('conversation_id', conv.id)
+          .neq('user_id', userId)
+          .single()
+
+        let counterpartName = 'Utilisateur'
+        if (otherParticipant?.user_id) {
+          const { data: otherUser } = await supabase
+            .from('users')
+            .select('name')
+            .eq('clerk_id', otherParticipant.user_id)
+            .single()
+          counterpartName = otherUser?.name ?? 'Utilisateur'
+        }
+
+        // 4. Dernier message
+        const { data: lastMsg } = await supabase
+          .from('messages')
+          .select('content')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+
+        // 5. Détails du match (montant, devise, corridor)
+        let matchDetails: Conversation['matchDetails'] = undefined
+        if (conv.match_id) {
+          const { data: match } = await supabase
+            .from('matches')
+            .select('intent_a')
+            .eq('id', conv.match_id)
+            .single()
+
+          if (match?.intent_a) {
+            const { data: intent } = await supabase
+              .from('intents')
+              .select('amount, currency, origin_country, dest_country')
+              .eq('id', match.intent_a)
+              .single()
+
+            if (intent) {
+              matchDetails = {
+                amount: Number(intent.amount),
+                currency: intent.currency,
+                corridor: `${intent.origin_country} → ${intent.dest_country}`,
+              }
+            }
+          }
+        }
+
+        result.push({
+          id: conv.id,
+          counterpartName,
+          lastMessage: lastMsg?.content ?? '',
+          updatedAt: new Date(conv.updated_at).getTime(),
+          unreadCount: unreadMap.get(conv.id) ?? 0,
+          matchDetails,
+        })
+      }
+
+      return result
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération conversations:', error)
-      throw error
+      return []
     }
   }
 
   static async fetchConversationMessages(conversationId: string): Promise<Message[]> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
-        headers,
-      })
-      return await handleApiResponse(response)
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, conversation_id, sender_id, content, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        conversationId: row.conversation_id,
+        senderId: row.sender_id,
+        content: row.content,
+        createdAt: new Date(row.created_at).getTime(),
+      }))
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération messages:', error)
-      throw error
+      return []
     }
   }
 
@@ -326,13 +534,38 @@ export class ApiService {
     senderId: string
   ): Promise<Message> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ message, senderId }),
+      // 1. Insérer le message
+      const { data: msg, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          content: message,
+          sender_id: senderId,
+        })
+        .select('id, conversation_id, sender_id, content, created_at')
+        .single()
+
+      if (messageError || !msg) throw messageError ?? new Error('Erreur insertion message')
+
+      // 2. Mettre à jour le timestamp de la conversation
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId)
+
+      // 3. Incrémenter unread_count de l'autre participant (RPC atomique)
+      await supabase.rpc('increment_unread_count', {
+        conv_id: conversationId,
+        sender: senderId,
       })
-      return await handleApiResponse(response)
+
+      return {
+        id: msg.id,
+        conversationId: msg.conversation_id,
+        senderId: msg.sender_id,
+        content: msg.content,
+        createdAt: new Date(msg.created_at).getTime(),
+      }
     } catch (error) {
       if (__DEV__) console.error('Erreur envoi message:', error)
       throw error
@@ -341,13 +574,13 @@ export class ApiService {
 
   static async markConversationAsRead(conversationId: string, userId: string): Promise<void> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/read`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ userId }),
-      })
-      await handleApiResponse(response)
+      const { error } = await supabase
+        .from('conversation_participants')
+        .update({ unread_count: 0, last_read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .eq('user_id', userId)
+
+      if (error) throw error
     } catch (error) {
       if (__DEV__) console.error('Erreur marquage conversation lue:', error)
       throw error
@@ -366,9 +599,15 @@ export class ApiService {
     conversations: Conversation[]
   }> {
     try {
-      const headers = await getAuthHeaders()
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/sync`, { headers })
-      return await handleApiResponse(response)
+      const [user, requests, matches, suggestions, conversations] = await Promise.all([
+        this.fetchUserProfile(userId),
+        this.fetchUserRequests(userId),
+        this.fetchUserMatches(userId),
+        this.fetchSuggestionsForUser(userId),
+        this.fetchUserConversations(userId),
+      ])
+
+      return { user, requests, matches, suggestions, conversations }
     } catch (error) {
       if (__DEV__) console.error('Erreur synchronisation:', error)
       throw error
@@ -393,7 +632,7 @@ export class ApiService {
       )
 
       if (isDuplicate) {
-        if (__DEV__) console.log('Action hors ligne dupliquée ignorée:', action.type)
+        if (__DEV__) console.warn('Action hors ligne dupliquée ignorée:', action.type)
         return
       }
 
@@ -454,43 +693,36 @@ export class ApiService {
   // ================================
 
   static async checkApiHealth(): Promise<boolean> {
-    if (this.shouldUseMockData()) {
-      if (__DEV__) console.log('Mode mock: API considérée comme disponible')
-      return Promise.resolve(true)
-    }
-
     try {
-      const response = await fetch(`${API_BASE_URL}/health`, {
-        method: 'GET',
-        timeout: 5000,
-      } as RequestInit & { timeout: number })
-      return response.ok
-    } catch (error) {
-      if (__DEV__) console.error('API non disponible:', error)
+      const { error } = await supabase.from('users').select('id', { head: true, count: 'exact' })
+      return !error
+    } catch {
       return false
     }
   }
 
   static async uploadAvatar(userId: string, imageUri: string): Promise<string> {
     try {
-      const formData = new FormData()
-      formData.append('avatar', {
-        uri: imageUri,
-        type: 'image/jpeg',
-        name: 'avatar.jpg',
-      } as unknown as Blob)
+      // Upload vers Supabase Storage
+      const fileName = `avatars/${userId}_${Date.now()}.jpg`
 
-      const headers = await getAuthHeaders()
-      delete (headers as Record<string, string>)['Content-Type']
+      const response = await fetch(imageUri)
+      const blob = await response.blob()
 
-      const response = await fetch(`${API_BASE_URL}/users/${userId}/avatar`, {
-        method: 'POST',
-        headers,
-        body: formData,
-      })
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true })
 
-      const result = await handleApiResponse(response)
-      return result.avatarUrl
+      if (uploadError) throw uploadError
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('avatars').getPublicUrl(fileName)
+
+      // Mettre à jour l'avatar dans le profil
+      await this.updateUserProfile(userId, { avatarUrl: publicUrl })
+
+      return publicUrl
     } catch (error) {
       if (__DEV__) console.error('Erreur upload avatar:', error)
       throw error
