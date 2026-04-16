@@ -9,14 +9,18 @@ const config: ExpoConfig = {
 
   version: '1.0.1', // ↗︎ bump version
   orientation: 'portrait',
-  userInterfaceStyle: 'light',
+  userInterfaceStyle: 'dark',
   newArchEnabled: true,
 
   icon: './assets/icon.png',
   splash: {
-    image: './assets/splash-icon.png',
+    image: './assets/splash.png',
     resizeMode: 'contain',
     backgroundColor: '#000000',
+  },
+  notification: {
+    icon: './assets/notification-icon.png',
+    color: '#EAB308',
   },
 
   runtimeVersion: {
@@ -83,7 +87,7 @@ const config: ExpoConfig = {
     router: { origin: false },
 
     eas: {
-      projectId: 'd845e873-458f-4c3d-a0de-80325975af0e',
+      projectId: '41fc888a-a918-40d3-a691-eac339936be5',
     },
   },
 }

@@ -107,6 +107,7 @@ export default [
       'dist/',
       'build/',
       'scripts/',
+      'assets/',
       '*.config.js',
       'babel.config.js',
       'metro.config.js',
