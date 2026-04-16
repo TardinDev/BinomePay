@@ -26,7 +26,7 @@ export default function ProtectedLayout() {
   // Connecter le token Clerk à Supabase pour l'auth third-party
   useEffect(() => {
     if (session) {
-      setClerkTokenGetter(() => session.getToken())
+      setClerkTokenGetter(() => session.getToken({ template: 'supabase' }))
     } else {
       setClerkTokenGetter(null)
     }
@@ -53,6 +53,8 @@ export default function ProtectedLayout() {
     }
   }, [isSignedIn, router])
 
+  // Initialiser les données utilisateur APRÈS que la session Clerk est disponible
+  // La session doit être prête pour que le token getter Supabase fonctionne
   useEffect(() => {
     if (!isLoaded) return
 
@@ -72,10 +74,12 @@ export default function ProtectedLayout() {
 
     if (isLoggingOut) return
 
-    if (isSignedIn && clerkUser?.id && !user) {
-      initializeUserData(clerkUser.id)
+    // Attendre que la session soit disponible avant d'appeler Supabase
+    if (isSignedIn && clerkUser?.id && session && !user) {
+      const userName = clerkUser.firstName || clerkUser.username || undefined
+      initializeUserData(clerkUser.id, userName)
     }
-  }, [isLoaded, isSignedIn, clerkUser?.id, isLoggingOut])
+  }, [isLoaded, isSignedIn, clerkUser?.id, isLoggingOut, session])
 
   if (!isLoaded) return <LoadingScreen message="Vérification de l'authentification..." />
 

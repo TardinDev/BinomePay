@@ -89,7 +89,7 @@ type AppState = {
 
   // User actions
   setUser: (user: User | null) => void
-  initializeUserData: (userId: string) => Promise<void>
+  initializeUserData: (userId: string, userName?: string) => Promise<void>
 
   // Notifications
   incrementNotifications: () => void
@@ -248,7 +248,7 @@ const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Dynamic data initialization with API integration
-  initializeUserData: async (userId: string) => {
+  initializeUserData: async (userId: string, userName?: string) => {
     const currentState = get()
 
     // Ne pas initialiser si on est en train de se déconnecter
@@ -260,15 +260,15 @@ const useAppStore = create<AppState>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      // Charger le profil utilisateur
+      // Charger le profil utilisateur (le crée dans Supabase s'il n'existe pas)
       try {
-        const userProfile = await ApiService.fetchUserProfile(userId)
+        const userProfile = await ApiService.fetchUserProfile(userId, userName)
         set({ user: userProfile })
       } catch (error) {
         if (__DEV__) console.warn('API non disponible, création profil par défaut:', error)
         const defaultUser: User = {
           id: userId,
-          name: 'Utilisateur',
+          name: userName || 'Utilisateur',
           kycStatus: 'unverified',
           ratingAvg: 0,
         }

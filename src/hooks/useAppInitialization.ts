@@ -28,7 +28,7 @@ export function useAppInitialization() {
       }
 
       setUser(userData)
-      initializeUserData(user.id)
+      initializeUserData(user.id, user.firstName || user.username || undefined)
     } else {
       // Utilisateur déconnecté - réinitialiser le store
       reset()

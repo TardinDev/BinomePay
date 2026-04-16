@@ -12,64 +12,31 @@ export class DataService {
    */
   static async syncUserWithSupabase(clerkUser: any): Promise<User> {
     try {
-      // Vérifier si l'utilisateur existe déjà
-      const { data: existingUser } = await supabase
+      const { data, error } = await supabase
         .from('users')
-        .select('*')
-        .eq('clerk_id', clerkUser.id)
-        .single()
-
-      if (existingUser) {
-        // Utilisateur existe, mettre à jour si nécessaire
-        const { data: updatedUser, error } = await supabase
-          .from('users')
-          .update({
-            name: clerkUser.firstName || clerkUser.username,
+        .upsert(
+          {
+            clerk_id: clerkUser.id,
+            name: clerkUser.firstName || clerkUser.username || 'Utilisateur',
             avatar_url: clerkUser.imageUrl,
             updated_at: new Date().toISOString(),
-          })
-          .eq('clerk_id', clerkUser.id)
-          .select()
-          .single()
+          },
+          { onConflict: 'clerk_id', ignoreDuplicates: false }
+        )
+        .select()
+        .single()
 
-        if (error) throw error
+      if (error) throw error
 
-        return {
-          id: clerkUser.id,
-          name: updatedUser.name,
-          kycStatus: updatedUser.kyc_status || 'unverified',
-          ratingAvg: updatedUser.rating_avg || 0,
-          avatarUrl: updatedUser.avatar_url,
-        }
-      } else {
-        // Créer un nouvel utilisateur
-        const { data: newUser, error } = await supabase
-          .from('users')
-          .insert([
-            {
-              clerk_id: clerkUser.id,
-              name: clerkUser.firstName || clerkUser.username || 'Utilisateur',
-              avatar_url: clerkUser.imageUrl,
-              kyc_status: 'unverified',
-              rating_avg: 0,
-            },
-          ])
-          .select()
-          .single()
-
-        if (error) throw error
-
-        return {
-          id: clerkUser.id,
-          name: newUser.name,
-          kycStatus: 'unverified',
-          ratingAvg: 0,
-          avatarUrl: newUser.avatar_url,
-        }
+      return {
+        id: clerkUser.id,
+        name: data.name,
+        kycStatus: data.kyc_status || 'unverified',
+        ratingAvg: data.rating_avg || 0,
+        avatarUrl: data.avatar_url,
       }
     } catch (error) {
       if (__DEV__) console.error('Error syncing user with Supabase:', error)
-      // Fallback: retourner des données basiques
       return {
         id: clerkUser.id,
         name: clerkUser.firstName || clerkUser.username || 'Utilisateur',

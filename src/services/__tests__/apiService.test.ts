@@ -26,6 +26,7 @@ function chain(result: { data?: any; error?: any } = { data: null, error: null }
   const methods = [
     'select',
     'insert',
+    'upsert',
     'update',
     'delete',
     'eq',
@@ -93,8 +94,10 @@ describe('ApiService', () => {
       expect(user.avatarUrl).toBeUndefined()
     })
 
-    it('lance une erreur si supabase échoue', async () => {
-      const error = { message: 'Not found', code: 'PGRST116' }
+    it('lance une erreur si supabase échoue avec un code non-PGRST116', async () => {
+      // PGRST116 = ligne inexistante → déclenche createUserProfile (pas un vrai échec)
+      // Les autres codes doivent remonter l'erreur.
+      const error = { message: 'Server error', code: '500' }
       mockSupabase.from.mockReturnValue(chain({ data: null, error }))
 
       await expect(ApiService.fetchUserProfile('user_bad')).rejects.toEqual(error)

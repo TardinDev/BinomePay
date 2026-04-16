@@ -51,7 +51,7 @@ export class ApiService {
   // GESTION UTILISATEUR
   // ================================
 
-  static async fetchUserProfile(userId: string): Promise<User> {
+  static async fetchUserProfile(userId: string, userName?: string): Promise<User> {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -59,7 +59,13 @@ export class ApiService {
         .eq('clerk_id', userId)
         .single()
 
-      if (error) throw error
+      if (error) {
+        // PGRST116 = 0 rows → l'utilisateur n'existe pas encore, le créer
+        if (error.code === 'PGRST116') {
+          return await this.createUserProfile(userId, userName)
+        }
+        throw error
+      }
 
       return {
         id: data.clerk_id,
@@ -70,6 +76,45 @@ export class ApiService {
       }
     } catch (error) {
       if (__DEV__) console.error('Erreur récupération profil:', error)
+      throw error
+    }
+  }
+
+  static async createUserProfile(userId: string, userName?: string): Promise<User> {
+    try {
+      // INSERT idempotent : ON CONFLICT DO NOTHING (préserve les valeurs existantes)
+      const { error: upsertError } = await supabase.from('users').upsert(
+        {
+          clerk_id: userId,
+          name: userName || 'Utilisateur',
+          kyc_status: 'unverified',
+          rating_avg: 0,
+        },
+        { onConflict: 'clerk_id', ignoreDuplicates: true }
+      )
+
+      if (upsertError) throw upsertError
+
+      // Relire la ligne (nouvellement insérée OU pré-existante)
+      const { data, error } = await supabase
+        .from('users')
+        .select('clerk_id, name, kyc_status, rating_avg, avatar_url')
+        .eq('clerk_id', userId)
+        .single()
+
+      if (error) throw error
+
+      if (__DEV__) console.log('Profil utilisateur assuré dans Supabase')
+
+      return {
+        id: data.clerk_id,
+        name: data.name ?? 'Utilisateur',
+        kycStatus: (data.kyc_status as User['kycStatus']) ?? 'unverified',
+        ratingAvg: Number(data.rating_avg ?? 0),
+        avatarUrl: data.avatar_url ?? undefined,
+      }
+    } catch (error) {
+      if (__DEV__) console.error('Erreur création profil:', error)
       throw error
     }
   }
