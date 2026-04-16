@@ -7,20 +7,16 @@ const config: ExpoConfig = {
   scheme: 'binomepay',
   description: 'BinomePay - Application de change de devises entre particuliers',
 
-  version: '1.0.1', // ↗︎ bump version
+  version: '1.0.2',
   orientation: 'portrait',
   userInterfaceStyle: 'dark',
-  newArchEnabled: true,
+  newArchEnabled: false,
 
   icon: './assets/icon.png',
   splash: {
     image: './assets/splash.png',
     resizeMode: 'contain',
     backgroundColor: '#000000',
-  },
-  notification: {
-    icon: './assets/notification-icon.png',
-    color: '#EAB308',
   },
 
   runtimeVersion: {
@@ -34,7 +30,7 @@ const config: ExpoConfig = {
 
   android: {
     package: 'com.binomepay.app',
-    versionCode: 2, // ↗︎ incrémente à chaque release
+    versionCode: 3, // ↗︎ incrémente à chaque release
 
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
@@ -64,6 +60,13 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-web-browser',
     'expo-secure-store',
+    [
+      'expo-notifications',
+      {
+        icon: './assets/notification-icon.png',
+        color: '#EAB308',
+      },
+    ],
     [
       'expo-build-properties',
       {
