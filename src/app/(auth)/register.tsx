@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, ScrollView } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useSignUp } from '@clerk/clerk-expo'
+import Logo from '@/components/Logo'
 
 export default function RegisterScreen() {
   const { signUp, setActive, isLoaded } = useSignUp()
@@ -140,8 +141,7 @@ export default function RegisterScreen() {
       contentContainerStyle={{ paddingBottom: 36 }}
     >
       <View className="mb-6 items-center">
-        <Text className="text-5xl font-extrabold text-white">Binome Pay</Text>
-        <Text className="mt-1 text-gray-400">Créer un compte</Text>
+        <Logo size={88} showWordmark wordmarkSize={32} tagline="Créer un compte" />
       </View>
 
       <View className="rounded-2xl border bg-neutral-900 p-5" style={{ borderColor: '#334155' }}>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { View, Text, Pressable, Modal } from 'react-native'
+import { View, Text, Pressable, Modal, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { User } from '@/store/useAppStore'
@@ -83,9 +83,11 @@ export default function HomeHeader({ user }: Props) {
     <View className="rounded-2xl border border-gray-800 bg-[#0B0F1A] p-4">
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
-          <View className="rounded-full border border-gray-800 bg-[#0B1220] p-2">
-            <Ionicons name="globe-outline" color="#EAB308" size={18} />
-          </View>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={{ width: 40, height: 40, borderRadius: 10 }}
+            resizeMode="contain"
+          />
           <View className="ml-3">
             <Text className="text-xl font-extrabold text-white">
               Bonjour{displayName ? `, ${displayName}` : ''} 👋

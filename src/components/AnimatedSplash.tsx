@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { View, Text, Dimensions, StyleSheet } from 'react-native'
+import { View, Text, Image, Dimensions, StyleSheet } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -12,7 +12,7 @@ type AnimatedSplashProps = {
 }
 
 const { width } = Dimensions.get('window')
-const logoSize = width * 0.28
+const logoSize = width * 0.32
 
 const styles = StyleSheet.create({
   container: {
@@ -28,22 +28,19 @@ const styles = StyleSheet.create({
   logo: {
     width: logoSize,
     height: logoSize,
-    borderRadius: 24,
-    backgroundColor: '#FFD700',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    color: '#000000',
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: 1,
+    borderRadius: logoSize * 0.22,
   },
   title: {
-    marginTop: 16,
+    marginTop: 20,
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  tagline: {
+    marginTop: 6,
+    color: '#9CA3AF',
+    fontSize: 13,
   },
 })
 
@@ -67,10 +64,9 @@ export default function AnimatedSplash({ ready }: AnimatedSplashProps) {
   return (
     <Animated.View style={[styles.container, containerStyle]}>
       <Animated.View style={[styles.cardContainer, cardStyle]}>
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>BP</Text>
-        </View>
+        <Image source={require('../../assets/icon.png')} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>BinomePay</Text>
+        <Text style={styles.tagline}>Change de devises entre particuliers</Text>
       </Animated.View>
     </Animated.View>
   )

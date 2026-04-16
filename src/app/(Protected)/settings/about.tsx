@@ -3,6 +3,7 @@ import { ScrollView, Text, View, Pressable, Linking, Alert } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import Constants from 'expo-constants'
+import Logo from '@/components/Logo'
 
 const PRIVACY_URL = 'https://binomepay.com/privacy'
 const TERMS_URL = 'https://binomepay.com/terms'
@@ -34,13 +35,7 @@ export default function AboutScreen() {
         className="mb-6 items-center rounded-2xl border bg-neutral-900 p-6"
         style={{ borderColor: '#334155' }}
       >
-        <View
-          className="mb-4 rounded-2xl p-4"
-          style={{ backgroundColor: '#0B1220', borderWidth: 1, borderColor: '#1F2937' }}
-        >
-          <Ionicons name="swap-horizontal" color="#EAB308" size={40} />
-        </View>
-        <Text className="text-xl font-extrabold text-white">BinomePay</Text>
+        <Logo size={88} showWordmark wordmarkSize={22} />
         <Text className="mt-1 text-xs text-gray-400">
           Version {appVersion} · build {androidVersionCode}
         </Text>
