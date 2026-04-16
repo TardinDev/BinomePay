@@ -31,9 +31,6 @@ const config: ExpoConfig = {
   android: {
     package: 'com.binomepay.app',
     versionCode: 2, // ↗︎ incrémente à chaque release
-    // Laisse Expo/EAS définir compile/target automatiquement.
-    // Si tu veux forcer, tu peux ajouter:
-    // targetSdkVersion: 35,
 
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
@@ -41,18 +38,14 @@ const config: ExpoConfig = {
     },
     edgeToEdgeEnabled: true,
 
-    // 🔒 Permissions minimales.
-    permissions: [
-      'CAMERA', // la caméra sera utilisé dans les prochaine mise à jour
-      'POST_NOTIFICATIONS',
-      'VIBRATE',
-      'WAKE_LOCK',
-    ],
+    permissions: ['POST_NOTIFICATIONS', 'VIBRATE', 'WAKE_LOCK'],
     blockedPermissions: [
-      'RECORD_AUDIO', // non utilisé
+      'CAMERA',
+      'RECORD_AUDIO',
       'ACCESS_FINE_LOCATION',
-      'ACCESS_COARSE_LOCATION', // non utilisé
-      // Pas de READ/WRITE_EXTERNAL_STORAGE si cela peux etre éviter
+      'ACCESS_COARSE_LOCATION',
+      'READ_EXTERNAL_STORAGE',
+      'WRITE_EXTERNAL_STORAGE',
     ],
 
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.binomepay.app',
@@ -63,7 +56,21 @@ const config: ExpoConfig = {
     bundler: 'metro',
   },
 
-  plugins: ['expo-router', 'expo-web-browser', 'expo-secure-store'],
+  plugins: [
+    'expo-router',
+    'expo-web-browser',
+    'expo-secure-store',
+    [
+      'expo-build-properties',
+      {
+        android: {
+          compileSdkVersion: 35,
+          targetSdkVersion: 35,
+          minSdkVersion: 24,
+        },
+      },
+    ],
+  ],
 
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,
