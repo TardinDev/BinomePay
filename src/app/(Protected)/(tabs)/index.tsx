@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react'
-import { Text, View, ScrollView, FlatList } from 'react-native'
+import React, { useCallback, useMemo, useState } from 'react'
+import { Text, View, ScrollView, FlatList, RefreshControl } from 'react-native'
 import useAppStore from '@/store/useAppStore'
 import HomeHeader from '@/components/home/HomeHeader'
 import KycBadge from '@/components/home/KycBadge'
@@ -7,6 +7,7 @@ import CreateIntentionButton from '@/components/home/CreateIntentionButton'
 import RecentMatchesList from '@/components/home/RecentMatchesList'
 import SuggestedCard from '@/components/home/SuggestedCard'
 import CountryFilter from '@/components/home/CountryFilter'
+import { syncService } from '@/services/syncService'
 
 export default function HomePage() {
   const user = useAppStore((s) => s.user)
@@ -14,6 +15,16 @@ export default function HomePage() {
   const storeSuggested = useAppStore((s) => s.suggested)
   const requests = useAppStore((s) => s.requests)
   const [countryFilter, setCountryFilter] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      await syncService.forceSync()
+    } finally {
+      setRefreshing(false)
+    }
+  }, [])
 
   const countries = useMemo(() => {
     const names = storeSuggested.map((s) => s.destCountryName)
@@ -127,6 +138,15 @@ export default function HomePage() {
         keyExtractor={(item, index) => `${item.type}-${index}`}
         renderItem={renderSectionItem}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#EAB308"
+            colors={['#EAB308']}
+            progressBackgroundColor="#0B1220"
+          />
+        }
         stickyHeaderIndices={
           sections.findIndex((s) => s.type === 'suggestions-header') >= 0
             ? [sections.findIndex((s) => s.type === 'suggestions-header')]
