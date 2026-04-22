@@ -7,6 +7,7 @@ import useAppStore from '@/store/useAppStore'
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import * as ImagePicker from 'expo-image-picker'
 import { useBiometricAuth, getBiometricLabel, getBiometricIcon } from '@/hooks/useBiometricAuth'
+import { unregisterPushTokenForUser } from '@/services/pushTokenService'
 
 type UnsafeMeta = Record<string, unknown> & { avatarUpdatedAt?: string }
 
@@ -97,6 +98,8 @@ export default function ProfileScreen() {
             origin: 'app://binomepay',
           }
         }
+        // Supprime le token push AVANT signOut (sinon le JWT est invalidé et la RLS bloque)
+        await unregisterPushTokenForUser()
         await signOut()
       } catch (e) {
         if (__DEV__) console.error('Erreur déconnexion:', e)

@@ -1,16 +1,21 @@
 /**
  * Notification service for BinomePay
- * Handles push notifications for matches, messages, and other events
+ * - Configure le handler foreground
+ * - Crée les canaux Android
+ * - Expose des helpers pour les notifications locales (fallback si push indisponible)
+ * - Gère la navigation lors du tap sur une notif
+ *
+ * L'enregistrement du token Expo Push est géré dans `pushTokenService.ts`.
  */
 
 import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
 import Constants from 'expo-constants'
+import { requestPushPermissions } from '@/services/pushTokenService'
 
-// Vérifier si on est dans Expo Go
 const isExpoGo = Constants.appOwnership === 'expo'
 
-// Configure notification behavior seulement si pas dans Expo Go
+// Handler foreground: affiche la notif même quand l'app est ouverte
 if (!isExpoGo) {
   Notifications.setNotificationHandler({
     handleNotification: async () =>
@@ -24,157 +29,123 @@ if (!isExpoGo) {
   })
 }
 
+export type NotificationType =
+  | 'match_accepted'
+  | 'new_message'
+  | 'match_expired'
+  | 'kyc_update'
+  | 'new_suggestion'
+
 export interface NotificationData {
-  type: 'match_accepted' | 'new_message' | 'match_expired' | 'kyc_update' | 'new_suggestion'
+  type: NotificationType
   title: string
   body: string
   data?: Record<string, any>
 }
 
-/**
- * Create notification channels for Android
- */
 const createNotificationChannels = async (): Promise<void> => {
   if (Platform.OS !== 'android') return
 
   try {
-    // Canal par défaut
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Notifications générales',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
+      lightColor: '#EAB308',
     } as any)
 
-    // Canal pour les matches
     await Notifications.setNotificationChannelAsync('match_accepted', {
       name: 'Nouveaux matches',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 500, 250, 500],
-      lightColor: '#00FF00',
+      lightColor: '#22C55E',
     } as any)
 
-    // Canal pour les messages
     await Notifications.setNotificationChannelAsync('new_message', {
       name: 'Nouveaux messages',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 125, 250],
-      lightColor: '#0099FF',
+      lightColor: '#3B82F6',
     } as any)
 
-    // Canal pour les suggestions
     await Notifications.setNotificationChannelAsync('new_suggestion', {
       name: 'Nouvelles propositions',
       importance: Notifications.AndroidImportance.DEFAULT,
       vibrationPattern: [0, 250],
-      lightColor: '#FFAA00',
+      lightColor: '#FDE68A',
     } as any)
 
-    if (__DEV__) console.log('Canaux de notification Android créés')
+    await Notifications.setNotificationChannelAsync('kyc_update', {
+      name: 'Vérification KYC',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#EAB308',
+    } as any)
   } catch (error) {
-    if (__DEV__) console.error('Erreur création canaux Android:', error)
+    if (__DEV__) console.error('[notif] création canaux Android:', error)
   }
 }
 
 /**
- * Initialize notification permissions
+ * Initialise l'infrastructure de notifications (canaux + permissions).
+ * À appeler au démarrage de la session authentifiée, avant `registerPushTokenForUser`.
  */
 export const initializeNotifications = async (): Promise<boolean> => {
   if (isExpoGo) {
-    if (__DEV__) console.log('Notifications désactivées dans Expo Go')
+    if (__DEV__) console.warn('[notif] Expo Go — notifications désactivées')
     return false
   }
 
   try {
-    // Créer les canaux de notification Android
-    if (Platform.OS === 'android') {
-      await createNotificationChannels()
-    }
-
-    const { status: existingStatus } = await Notifications.getPermissionsAsync()
-    let finalStatus = existingStatus
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync()
-      finalStatus = status
-    }
-
-    if (finalStatus !== 'granted') {
-      if (__DEV__) console.warn('Push notification permission not granted')
-      return false
-    }
-
-    // Get push token for production use
-    if (Platform.OS === 'ios' || Platform.OS === 'android') {
-      try {
-        const token = await Notifications.getExpoPushTokenAsync({
-          projectId: process.env.EXPO_PROJECT_ID || 'your-project-id',
-        })
-        if (__DEV__) console.log('Push token:', token.data)
-
-        // In production, send this token to your backend
-        // await sendTokenToBackend(token.data)
-      } catch (tokenError) {
-        if (__DEV__) console.warn("Impossible d'obtenir le token push:", tokenError)
-        // Continue même sans token push pour les notifications locales
-      }
-    }
-
-    return true
+    await createNotificationChannels()
+    const granted = await requestPushPermissions()
+    if (!granted && __DEV__) console.warn('[notif] Permission non accordée')
+    return granted
   } catch (error) {
-    if (__DEV__) console.error('Failed to initialize notifications:', error)
+    if (__DEV__) console.error('[notif] init échouée:', error)
     return false
   }
 }
 
 /**
- * Schedule a local notification
+ * Planifie une notification locale (fallback si le push serveur échoue ou pour tests).
  */
 export const scheduleLocalNotification = async (
-  notificationData: NotificationData,
+  notification: NotificationData,
   delaySeconds: number = 0
 ): Promise<string | null> => {
-  if (isExpoGo) {
-    if (__DEV__) console.log('Notification ignorée dans Expo Go:', notificationData.title)
-    return null
-  }
+  if (isExpoGo) return null
 
   try {
-    const notificationContent: any = {
-      title: notificationData.title,
-      body: notificationData.body,
-      data: notificationData.data || {},
+    const content: any = {
+      title: notification.title,
+      body: notification.body,
+      data: notification.data || {},
       sound: 'default',
     }
 
-    // Configuration spécifique Android
     if (Platform.OS === 'android') {
-      notificationContent.priority = Notifications.AndroidNotificationPriority.HIGH
-      // Utiliser le canal spécifique au type de notification
-      notificationContent.channelId =
-        notificationData.type === 'match_accepted' ||
-        notificationData.type === 'new_message' ||
-        notificationData.type === 'new_suggestion'
-          ? notificationData.type
-          : 'default'
-      notificationContent.categoryId = notificationData.type
+      content.priority = Notifications.AndroidNotificationPriority.HIGH
+      content.channelId = notification.type
     }
 
-    const identifier = await Notifications.scheduleNotificationAsync({
-      content: notificationContent,
+    return await Notifications.scheduleNotificationAsync({
+      content,
       trigger: delaySeconds > 0 ? ({ seconds: delaySeconds } as any) : null,
     })
-
-    return identifier
   } catch (error) {
-    if (__DEV__) console.error('Failed to schedule notification:', error)
+    if (__DEV__) console.error('[notif] schedule échouée:', error)
     return null
   }
 }
 
-/**
- * Send notification when a match is accepted
- */
+// ============================================================================
+// Helpers de notifications locales (fallback côté client)
+// Les événements déclenchés par d'autres users passent par les triggers DB +
+// l'Edge Function. Ces helpers servent pour les actions locales de l'user courant
+// ou en fallback si le push serveur n'est pas disponible.
+// ============================================================================
+
 export const notifyMatchAccepted = async (
   counterpartName: string,
   amount: number,
@@ -185,19 +156,10 @@ export const notifyMatchAccepted = async (
     type: 'match_accepted',
     title: '🎉 Nouveau match !',
     body: `${counterpartName} a accepté votre proposition de ${amount} ${currency} (${corridor})`,
-    data: {
-      type: 'match_accepted',
-      counterpartName,
-      amount,
-      currency,
-      corridor,
-    },
+    data: { type: 'match_accepted', counterpartName, amount, currency, corridor },
   })
 }
 
-/**
- * Send notification for new message
- */
 export const notifyNewMessage = async (
   senderName: string,
   message: string,
@@ -207,17 +169,10 @@ export const notifyNewMessage = async (
     type: 'new_message',
     title: `💬 ${senderName}`,
     body: message.length > 50 ? message.substring(0, 50) + '...' : message,
-    data: {
-      type: 'new_message',
-      conversationId,
-      senderName,
-    },
+    data: { type: 'new_message', conversationId, senderName },
   })
 }
 
-/**
- * Send notification when match is about to expire
- */
 export const notifyMatchExpiring = async (
   counterpartName: string,
   hoursRemaining: number
@@ -226,135 +181,92 @@ export const notifyMatchExpiring = async (
     type: 'match_expired',
     title: '⏰ Match expire bientôt',
     body: `Votre match avec ${counterpartName} expire dans ${hoursRemaining}h`,
-    data: {
-      type: 'match_expired',
-      counterpartName,
-      hoursRemaining,
-    },
+    data: { type: 'match_expired', counterpartName, hoursRemaining },
   })
 }
 
-/**
- * Send notification for new suggestion
- */
 export const notifyNewSuggestion = async (count: number): Promise<void> => {
   await scheduleLocalNotification({
     type: 'new_suggestion',
     title: '💡 Nouvelles propositions',
     body: `${count} nouvelle${count > 1 ? 's' : ''} proposition${count > 1 ? 's' : ''} pour vous`,
-    data: {
-      type: 'new_suggestion',
-      count,
-    },
+    data: { type: 'new_suggestion', count },
   })
 }
 
-/**
- * Send notification for KYC status update
- */
 export const notifyKycUpdate = async (
   status: 'verified' | 'rejected',
   reason?: string
 ): Promise<void> => {
   const isVerified = status === 'verified'
-
   await scheduleLocalNotification({
     type: 'kyc_update',
     title: isVerified ? '✅ Vérification réussie' : '❌ Vérification échouée',
     body: isVerified
       ? 'Votre identité a été vérifiée avec succès !'
       : `Vérification échouée: ${reason || 'Raison non spécifiée'}`,
-    data: {
-      type: 'kyc_update',
-      status,
-      reason,
-    },
+    data: { type: 'kyc_update', status, reason },
   })
 }
 
 /**
- * Handle notification response (when user taps notification)
+ * Gère le tap sur une notification (foreground, background ou app fermée).
+ * Route l'utilisateur vers le bon écran selon `data.type`.
  */
 export const handleNotificationResponse = (
   response: Notifications.NotificationResponse,
-  navigation: any
-) => {
-  const data = response.notification.request.content.data
+  router: any
+): void => {
+  const data = response.notification.request.content.data as
+    | { type?: NotificationType; conversationId?: string; matchId?: string }
+    | undefined
+
+  if (!data?.type) return
 
   switch (data.type) {
-    case 'match_accepted':
-      // Navigate to matches or conversations
-      navigation.navigate('(Protected)', {
-        screen: '(tabs)',
-        params: { screen: 'messages' },
-      })
-      break
-
     case 'new_message':
-      // Navigate directly to conversation
       if (data.conversationId) {
-        navigation.navigate('(Protected)', {
-          screen: 'messages',
-          params: { screen: data.conversationId },
-        })
+        router.push(`/(Protected)/messages/${data.conversationId}`)
+      } else {
+        router.push('/(Protected)/(tabs)/messages')
       }
       break
 
+    case 'match_accepted':
+      router.push('/(Protected)/(tabs)/messages')
+      break
+
     case 'match_expired':
-      // Navigate to matches screen
-      navigation.navigate('(Protected)', {
-        screen: '(tabs)',
-        params: { screen: 'index' },
-      })
+    case 'new_suggestion':
+      router.push('/(Protected)/(tabs)')
       break
 
     case 'kyc_update':
-      // Navigate to profile
-      navigation.navigate('(Protected)', {
-        screen: 'profile',
-      })
-      break
-
-    case 'new_suggestion':
-      // Navigate to suggestions/home screen
-      navigation.navigate('(Protected)', {
-        screen: '(tabs)',
-        params: { screen: 'index' },
-      })
+      router.push('/(Protected)/profile')
       break
   }
 }
 
-/**
- * Clear all notifications
- */
 export const clearAllNotifications = async (): Promise<void> => {
   try {
     await Notifications.dismissAllNotificationsAsync()
   } catch (error) {
-    if (__DEV__) console.error('Failed to clear notifications:', error)
+    if (__DEV__) console.error('[notif] clear échouée:', error)
   }
 }
 
-/**
- * Get badge count
- */
 export const getBadgeCount = async (): Promise<number> => {
   try {
     return await Notifications.getBadgeCountAsync()
-  } catch (error) {
-    if (__DEV__) console.error('Failed to get badge count:', error)
+  } catch {
     return 0
   }
 }
 
-/**
- * Set badge count
- */
 export const setBadgeCount = async (count: number): Promise<void> => {
   try {
     await Notifications.setBadgeCountAsync(count)
   } catch (error) {
-    if (__DEV__) console.error('Failed to set badge count:', error)
+    if (__DEV__) console.error('[notif] setBadgeCount échouée:', error)
   }
 }

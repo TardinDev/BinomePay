@@ -26,6 +26,12 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.binomepay.app',
+    // Nécessaire pour que l'OS réveille l'app quand un push arrive en background
+    infoPlist: {
+      UIBackgroundModes: ['remote-notification'],
+    },
+    // Fichier téléchargé depuis Firebase (iOS app). Voir docs/NOTIFICATIONS_SETUP.md
+    googleServicesFile: process.env.GOOGLE_SERVICES_PLIST ?? './GoogleService-Info.plist',
   },
 
   android: {
@@ -47,6 +53,9 @@ const config: ExpoConfig = {
       'READ_EXTERNAL_STORAGE',
       'WRITE_EXTERNAL_STORAGE',
     ],
+
+    // Fichier téléchargé depuis Firebase (Android app). Voir docs/NOTIFICATIONS_SETUP.md
+    googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
 
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.binomepay.app',
   },

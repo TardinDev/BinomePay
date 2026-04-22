@@ -23,6 +23,13 @@ service-account-key.json
 .env.local
 .env.*.local
 
+# Firebase / Push notifications (NE PAS COMMITTER — contient les clés FCM/APNs)
+google-services.json
+GoogleService-Info.plist
+# Clé service account Firebase (admin SDK) — secret serveur
+*firebase-adminsdk*.json
+binomepay-firebase-adminsdk-*.json
+
 # Play Store assets (générés)
 screenshots/
 store-assets/

@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react'
 import { Stack, useRouter } from 'expo-router'
 import { useAuth, useUser, useSession } from '@clerk/clerk-expo'
 import { View } from 'react-native'
-import * as Notifications from 'expo-notifications'
 import useAppStore from '@/store/useAppStore'
 import ConnectionStatus from '@/components/ConnectionStatus'
 import { LoadingScreen } from '@/components/LoadingSpinner'
 import { setClerkTokenGetter } from '@/lib/supabase'
-import { initializeNotifications, handleNotificationResponse } from '@/services/notificationService'
+import { initializeNotifications } from '@/services/notificationService'
+import { registerPushTokenForUser } from '@/services/pushTokenService'
+import { useNotificationListener } from '@/hooks/useNotificationListener'
 
 export default function ProtectedLayout() {
   const router = useRouter()
@@ -33,25 +34,29 @@ export default function ProtectedLayout() {
     return () => setClerkTokenGetter(null)
   }, [session])
 
-  // Initialiser les notifications push et configurer les listeners
+  // Listeners foreground + tap + cold start
+  useNotificationListener(Boolean(isSignedIn))
+
+  // Initialise canaux/permissions puis enregistre le token Expo Push dans Supabase.
+  // Dépend de clerkUser.id (pour user_id) + session (pour que le JWT Supabase soit prêt
+  // avant l'upsert dans push_tokens, sinon la policy RLS bloque l'insertion).
   useEffect(() => {
-    if (!isSignedIn || notificationsInitialized.current) return
+    if (!isSignedIn || !clerkUser?.id || !session || notificationsInitialized.current) return
 
     notificationsInitialized.current = true
-    initializeNotifications()
-
-    // Listener quand l'utilisateur tape sur une notification
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        handleNotificationResponse(response, router)
+    ;(async () => {
+      const granted = await initializeNotifications()
+      if (granted) {
+        await registerPushTokenForUser(clerkUser.id)
       }
-    )
+    })()
+  }, [isSignedIn, clerkUser?.id, session])
 
-    return () => {
-      responseSubscription.remove()
+  useEffect(() => {
+    if (!isSignedIn) {
       notificationsInitialized.current = false
     }
-  }, [isSignedIn, router])
+  }, [isSignedIn])
 
   // Initialiser les données utilisateur APRÈS que la session Clerk est disponible
   // La session doit être prête pour que le token getter Supabase fonctionne

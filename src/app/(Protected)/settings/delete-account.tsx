@@ -43,7 +43,12 @@ export default function DeleteAccountScreen() {
               const userId = clerkUser.id
 
               // 1. Supprimer les données Supabase (RLS permet l'effacement par le propriétaire)
-              // On supprime en cascade logique : intents -> conversations -> messages -> user
+              // On supprime en cascade logique : push_tokens -> intents -> user
+              try {
+                await supabase.from('push_tokens').delete().eq('user_id', userId)
+              } catch (e) {
+                if (__DEV__) console.warn('delete push_tokens', e)
+              }
               try {
                 await supabase.from('intents').delete().eq('user_id', userId)
               } catch (e) {
