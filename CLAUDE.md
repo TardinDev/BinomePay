@@ -23,25 +23,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **BinomePay** is a React Native mobile app that facilitates peer-to-peer currency exchanges. Users create exchange intentions (SEND or RECEIVE money), and the app matches compatible users who can then communicate and complete the exchange locally.
 
 **Target platforms:** Android (Play Store) & iOS (App Store)
-**Current version:** 1.0.1
+**Current version:** 1.0.2
 
 ---
 
 ## Tech Stack
 
-| Layer          | Technology                     | Version                  |
-| -------------- | ------------------------------ | ------------------------ |
-| Framework      | Expo SDK                       | ~53.0.23                 |
-| Language       | TypeScript                     | ~5.8.3 (strict mode)     |
-| Navigation     | Expo Router                    | ~5.1.7 (file-based)      |
-| Styling        | NativeWind (Tailwind CSS)      | ^4.1.23                  |
-| State (client) | Zustand                        | ^5.0.7                   |
-| State (server) | TanStack React Query           | ^5.87.1                  |
-| Auth           | Clerk (@clerk/clerk-expo)      | ^2.14.20                 |
-| Database       | Supabase (PostgreSQL)          | ^2.55.0                  |
-| Validation     | Zod                            | ^4.1.5                   |
-| Animations     | React Native Reanimated        | ~3.17.4                  |
-| Runtime        | React 19 + React Native 0.79.6 | New Architecture enabled |
+| Layer          | Technology                            | Version                  |
+| -------------- | ------------------------------------- | ------------------------ |
+| Framework      | Expo SDK                              | ~53.0.23                 |
+| Language       | TypeScript                            | ~5.8.3 (strict mode)     |
+| Navigation     | Expo Router                           | ~5.1.7 (file-based)      |
+| Styling        | NativeWind (Tailwind CSS)             | ^4.1.23                  |
+| State (client) | Zustand                               | ^5.0.7                   |
+| State (server) | TanStack React Query                  | ^5.87.1                  |
+| Auth           | Supabase Auth (@supabase/supabase-js) | ^2.55.0                  |
+| Database       | Supabase (PostgreSQL)                 | ^2.55.0                  |
+| Validation     | Zod                                   | ^4.1.5                   |
+| Animations     | React Native Reanimated               | ~3.17.4                  |
+| Runtime        | React 19 + React Native 0.79.6        | New Architecture enabled |
 
 ---
 
@@ -73,16 +73,16 @@ npm run pre-deploy-check          # Run pre-deployment checks
 ```
 src/
 ├── app/                              # Expo Router - file-based routing
-│   ├── _layout.tsx                   # Root: ClerkProvider > QueryProvider > SafeAreaView > Slot
+│   ├── _layout.tsx                   # Root: AuthProvider > QueryProvider > SafeAreaView > Slot
 │   ├── (auth)/                       # Public auth screens
 │   │   ├── _layout.tsx               # Auth layout with login/register switcher tabs
-│   │   ├── login.tsx                 # Sign in with Clerk
-│   │   ├── register.tsx              # Sign up + email verification
-│   │   ├── verify.tsx                # Email code verification
-│   │   ├── forgot-password.tsx       # Password reset (2-step: email then code+new password)
+│   │   ├── login.tsx                 # Sign in via Supabase Auth (signInWithPassword)
+│   │   ├── register.tsx              # Sign up via Supabase Auth + email verification
+│   │   ├── verify.tsx                # Email OTP verification (verifyOtp signup)
+│   │   ├── forgot-password.tsx       # Password reset (2-step: email then OTP+new password)
 │   │   └── terms.tsx                 # Terms of service (CGU)
 │   └── (Protected)/                  # Authenticated screens (redirects to login if not signed in)
-│       ├── _layout.tsx               # Auth guard: useAuth() + useUser() + data init
+│       ├── _layout.tsx               # Auth guard via useAuth() + data init
 │       ├── (tabs)/                   # Bottom tab navigation
 │       │   ├── _layout.tsx           # Tab bar with gradient + badge for unread messages
 │       │   ├── index.tsx             # Home: matches + my intentions + suggestions from others
@@ -118,7 +118,7 @@ src/
 │
 ├── services/
 │   ├── apiService.ts                 # Main API layer: Supabase queries + REST fallback + offline queue
-│   ├── dataService.ts                # User sync between Clerk and Supabase
+│   ├── dataService.ts                # Lit le profil Supabase pour l'utilisateur courant
 │   ├── syncService.ts                # Periodic data sync (30s interval) + connectivity aware
 │   ├── notificationService.ts        # Push notifications via expo-notifications
 │   ├── ratingService.ts              # User rating system
@@ -132,8 +132,8 @@ src/
 │                                     # Optimistic updates, offline queue, loading/error states
 │
 ├── lib/
-│   ├── clerk.ts                      # Clerk config: publishable key + Expo SecureStore token cache
-│   ├── supabase.ts                   # Supabase client initialization
+│   ├── auth.tsx                      # AuthProvider + useAuth() wrapper around supabase.auth
+│   ├── supabase.ts                   # Supabase client initialization (AsyncStorage persisted)
 │   ├── schemas/                      # Zod validation schemas
 │   │   ├── user.ts                   # User profile schema
 │   │   ├── exchange.ts               # RequestItem + SuggestedItem schemas
@@ -173,13 +173,23 @@ src/
 ### Authentication Flow
 
 ```
-App Launch → ClerkProvider (root _layout.tsx)
+App Launch → AuthProvider (root _layout.tsx, wraps supabase.auth)
   → (auth)/ screens if not signed in
   → (Protected)/_layout.tsx if signed in
-    → useAuth() checks session
-    → initializeUserData(clerkUser.id) loads all data
+    → useAuth() exposes { isLoaded, isSignedIn, user, session }
+    → initializeUserData(authUser.id) loads all data
     → Tab navigation renders
 ```
+
+### Auth API mapping
+
+- Sign in: `supabase.auth.signInWithPassword({ email, password })`
+- Sign up: `supabase.auth.signUp({ email, password, options: { data: { firstName } } })`
+- Verify signup OTP: `supabase.auth.verifyOtp({ email, token, type: 'signup' })`
+- Reset password: `resetPasswordForEmail` → `verifyOtp(type:'recovery')` → `updateUser({ password })`
+- Sign out: `supabase.auth.signOut()`
+- A SQL trigger `handle_new_user` creates `profiles` + `users` rows on every new `auth.users` insert.
+- Account deletion goes through the `delete-account` Edge Function (service role bypasses RLS).
 
 ### Intention Creation Flow
 
@@ -209,7 +219,7 @@ Action fails → ApiService.queueOfflineAction() → AsyncStorage
 
 - **Zustand** (`useAppStore`): Client state, UI state, optimistic updates
 - **TanStack Query** (configured but Zustand is primary): Server state caching
-- **Clerk**: Auth state, session tokens (stored in Expo SecureStore)
+- **Supabase Auth**: Session + JWT (stored in AsyncStorage, auto-refresh on app foreground)
 - **Supabase**: Database source of truth, real-time subscriptions (configurable)
 
 ---
@@ -272,8 +282,7 @@ type Conversation = { id; counterpartName; lastMessage; updatedAt; unreadCount; 
 
 **Key env vars:**
 
-- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk auth key (pk*test* for dev, pk*live* for prod)
-- `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` - Supabase connection
+- `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` - Supabase connection (auth + DB)
 - `EXPO_PUBLIC_API_URL` - Backend API URL
 - `EXPO_PUBLIC_MOCK_API` - Toggle mock data (true/false)
 

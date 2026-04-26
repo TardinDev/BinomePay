@@ -8,41 +8,50 @@ import { RequestItem, SuggestedItem, User } from '@/store/useAppStore'
 
 export class DataService {
   /**
-   * Synchronise un utilisateur Clerk avec Supabase
+   * Récupère le profil utilisateur depuis Supabase.
+   * La row dans `users` est créée automatiquement par le trigger SQL `handle_new_user`
+   * lors du sign-up, donc cette méthode n'a qu'à lire (et mettre à jour les champs mutables).
    */
-  static async syncUserWithSupabase(clerkUser: any): Promise<User> {
+  static async syncUserWithSupabase(authUser: {
+    id: string
+    user_metadata?: Record<string, any>
+  }): Promise<User> {
+    const firstName = (authUser.user_metadata?.firstName as string) || 'Utilisateur'
+
     try {
       const { data, error } = await supabase
         .from('users')
-        .upsert(
-          {
-            clerk_id: clerkUser.id,
-            name: clerkUser.firstName || clerkUser.username || 'Utilisateur',
-            avatar_url: clerkUser.imageUrl,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'clerk_id', ignoreDuplicates: false }
-        )
-        .select()
-        .single()
+        .select('auth_id, name, kyc_status, rating_avg, avatar_url')
+        .eq('auth_id', authUser.id)
+        .maybeSingle()
 
       if (error) throw error
 
+      if (!data) {
+        return {
+          id: authUser.id,
+          name: firstName,
+          kycStatus: 'unverified',
+          ratingAvg: 0,
+          avatarUrl: undefined,
+        }
+      }
+
       return {
-        id: clerkUser.id,
-        name: data.name,
-        kycStatus: data.kyc_status || 'unverified',
-        ratingAvg: data.rating_avg || 0,
-        avatarUrl: data.avatar_url,
+        id: authUser.id,
+        name: data.name || firstName,
+        kycStatus: (data.kyc_status as User['kycStatus']) || 'unverified',
+        ratingAvg: Number(data.rating_avg) || 0,
+        avatarUrl: data.avatar_url || undefined,
       }
     } catch (error) {
       if (__DEV__) console.error('Error syncing user with Supabase:', error)
       return {
-        id: clerkUser.id,
-        name: clerkUser.firstName || clerkUser.username || 'Utilisateur',
+        id: authUser.id,
+        name: firstName,
         kycStatus: 'unverified',
         ratingAvg: 0,
-        avatarUrl: clerkUser.imageUrl,
+        avatarUrl: undefined,
       }
     }
   }
@@ -86,7 +95,7 @@ export class DataService {
         .select(
           `
           id, amount, currency, origin_country, dest_country, created_at,
-          users!intents_user_id_fkey (name)
+          user_name
         `
         )
         .eq('status', 'OPEN')
@@ -102,7 +111,7 @@ export class DataService {
         currency: intent.currency,
         originCountryName: intent.origin_country,
         destCountryName: intent.dest_country,
-        senderName: (intent.users as any)?.name || 'Utilisateur',
+        senderName: (intent as any).user_name || 'Utilisateur',
         createdAt: new Date(intent.created_at).getTime(),
       }))
     } catch (error) {

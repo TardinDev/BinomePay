@@ -108,5 +108,11 @@ jest.mock('@/services/apiService', () => ({
   __esModule: true,
 }))
 
+// Env vars used by Supabase client init (createClient throws if URL is empty)
+process.env.EXPO_PUBLIC_SUPABASE_URL =
+  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://test.supabase.co'
+process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key'
+
 // Global __DEV__ flag
 global.__DEV__ = true

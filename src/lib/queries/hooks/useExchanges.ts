@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 import ApiService from '@/services/apiService'
 import { queryKeys } from '../keys'
 import { RequestItemSchema, MatchItemSchema, SuggestedItemSchema } from '@/lib/schemas'

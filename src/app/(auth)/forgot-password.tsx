@@ -2,10 +2,9 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, Pressable, ScrollView } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { useSignIn } from '@clerk/clerk-expo'
+import { supabase } from '@/lib/supabase'
 
 export default function ForgotPasswordScreen() {
-  const { signIn, setActive, isLoaded } = useSignIn()
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -23,17 +22,17 @@ export default function ForgotPasswordScreen() {
     try {
       setLoading(true)
       setError(null)
-      if (!isLoaded) return
 
-      await signIn.create({
-        strategy: 'reset_password_email_code',
-        identifier: email,
-      })
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim())
+
+      if (resetError) {
+        setError(resetError.message)
+        return
+      }
 
       setStep('code')
-    } catch (e: unknown) {
-      const err = e as { errors?: Array<{ message?: string }> }
-      setError(err?.errors?.[0]?.message ?? "Erreur lors de l'envoi du code.")
+    } catch (e: any) {
+      setError(e?.message ?? "Erreur lors de l'envoi du code.")
     } finally {
       setLoading(false)
     }
@@ -55,30 +54,42 @@ export default function ForgotPasswordScreen() {
     try {
       setLoading(true)
       setError(null)
-      if (!isLoaded) return
 
-      const result = await signIn.attemptFirstFactor({
-        strategy: 'reset_password_email_code',
-        code,
-        password: newPassword,
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: 'recovery',
       })
 
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId })
-        router.replace('/(Protected)/(tabs)')
-      } else {
-        setError('Réinitialisation incomplète. Veuillez réessayer.')
+      if (verifyError) {
+        setError(
+          verifyError.message.toLowerCase().includes('expired') ? 'Code expiré.' : 'Code invalide.'
+        )
+        return
       }
-    } catch (e: unknown) {
-      const err = e as { errors?: Array<{ message?: string; code?: string }> }
-      const clerkError = err?.errors?.[0]
-      if (clerkError?.code === 'form_code_incorrect') {
-        setError('Code invalide ou expiré.')
-      } else if (clerkError?.code === 'form_password_pwned') {
-        setError('Ce mot de passe est trop commun. Choisissez-en un plus sécurisé.')
-      } else {
-        setError(clerkError?.message ?? 'Erreur lors de la réinitialisation.')
+
+      if (!data.session) {
+        setError('Vérification incomplète. Veuillez réessayer.')
+        return
       }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+
+      if (updateError) {
+        if (
+          updateError.message.toLowerCase().includes('weak') ||
+          updateError.message.toLowerCase().includes('password')
+        ) {
+          setError('Mot de passe trop faible. Choisissez-en un plus sécurisé.')
+        } else {
+          setError(updateError.message)
+        }
+        return
+      }
+
+      router.replace('/(Protected)/(tabs)')
+    } catch (e: any) {
+      setError(e?.message ?? 'Erreur lors de la réinitialisation.')
     } finally {
       setLoading(false)
     }

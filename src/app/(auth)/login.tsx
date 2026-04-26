@@ -2,11 +2,10 @@ import React, { useState } from 'react'
 import { View, Text, TextInput, Pressable, ScrollView } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { useSignIn } from '@clerk/clerk-expo'
+import { supabase } from '@/lib/supabase'
 import Logo from '@/components/Logo'
 
 export default function LoginScreen() {
-  const { signIn, setActive, isLoaded } = useSignIn()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,10 +22,24 @@ export default function LoginScreen() {
     try {
       setLoading(true)
       setError(null)
-      if (!isLoaded) return
-      const res = await signIn.create({ identifier: email, password })
-      if (res.status === 'complete') {
-        await setActive({ session: res.createdSessionId })
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      })
+
+      if (signInError) {
+        if (signInError.message.toLowerCase().includes('invalid login')) {
+          setError('Email ou mot de passe incorrect.')
+        } else if (signInError.message.toLowerCase().includes('email not confirmed')) {
+          setError('Email non vérifié. Vérifiez votre boîte mail.')
+        } else {
+          setError(signInError.message)
+        }
+        return
+      }
+
+      if (data.session) {
         router.replace('/(Protected)/(tabs)')
       } else {
         setError('Connexion incomplète')

@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useUser } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 import useAppStore from '@/store/useAppStore'
 import { syncService } from '@/services/syncService'
 import NetInfo from '@react-native-community/netinfo'
 
 export function useDataSync() {
-  const { user: clerkUser } = useUser()
+  const { user: authUser } = useAuth()
   const user = useAppStore((s) => s.user)
   const isLoggingOut = useAppStore((s) => s.isLoggingOut)
   const initializeUserData = useAppStore((s) => s.initializeUserData)
@@ -43,11 +43,11 @@ export function useDataSync() {
     // Ne pas initialiser si on est en train de se déconnecter
     if (isLoggingOut) return
 
-    if (clerkUser?.id && !user) {
-      if (__DEV__) console.log('Initialisation des données pour:', clerkUser.id)
-      initializeUserData(clerkUser.id)
+    if (authUser?.id && !user) {
+      if (__DEV__) console.log('Initialisation des données pour:', authUser.id)
+      initializeUserData(authUser.id)
     }
-  }, [clerkUser?.id, isLoggingOut, initializeUserData])
+  }, [authUser?.id, isLoggingOut, initializeUserData])
 
   // Synchronisation manuelle
   const handleSync = useCallback(async () => {

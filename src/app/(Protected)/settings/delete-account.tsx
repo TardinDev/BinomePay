@@ -10,15 +10,14 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useUser, useAuth } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 import useAppStore from '@/store/useAppStore'
 import { supabase } from '@/lib/supabase'
 
 const CONFIRM_PHRASE = 'SUPPRIMER'
 
 export default function DeleteAccountScreen() {
-  const { user: clerkUser, isLoaded } = useUser()
-  const { signOut } = useAuth()
+  const { user: authUser, isLoaded, signOut } = useAuth()
   const setLoggingOut = useAppStore((s) => s.setLoggingOut)
   const [confirmText, setConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
@@ -26,7 +25,7 @@ export default function DeleteAccountScreen() {
   const canDelete = confirmText.trim().toUpperCase() === CONFIRM_PHRASE
 
   const handleDelete = async () => {
-    if (!clerkUser || !canDelete) return
+    if (!authUser || !canDelete) return
 
     Alert.alert(
       'Confirmation finale',
@@ -40,37 +39,16 @@ export default function DeleteAccountScreen() {
             setDeleting(true)
             setLoggingOut(true)
             try {
-              const userId = clerkUser.id
+              const { error } = await supabase.functions.invoke('delete-account', {
+                method: 'POST',
+              })
+              if (error) throw error
 
-              // 1. Supprimer les données Supabase (RLS permet l'effacement par le propriétaire)
-              // On supprime en cascade logique : push_tokens -> intents -> user
-              try {
-                await supabase.from('push_tokens').delete().eq('user_id', userId)
-              } catch (e) {
-                if (__DEV__) console.warn('delete push_tokens', e)
-              }
-              try {
-                await supabase.from('intents').delete().eq('user_id', userId)
-              } catch (e) {
-                if (__DEV__) console.warn('delete intents', e)
-              }
-              try {
-                await supabase.from('users').delete().eq('clerk_id', userId)
-              } catch (e) {
-                if (__DEV__) console.warn('delete user row', e)
-              }
-
-              // 2. Supprimer le compte Clerk (déclenche aussi la déconnexion)
-              await clerkUser.delete()
-
-              // 3. Sign out de sécurité si signature Clerk persiste
               try {
                 await signOut()
               } catch (e) {
                 if (__DEV__) console.warn('signOut après delete', e)
               }
-
-              // Redirection auto par ProtectedLayout
             } catch (e) {
               setDeleting(false)
               setLoggingOut(false)

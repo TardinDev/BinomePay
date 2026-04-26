@@ -3,7 +3,7 @@ import { View, Text, Pressable, Modal, Image } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { User } from '@/store/useAppStore'
-import { useUser as useClerkUser } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 
 type Props = {
   user: User | null
@@ -68,8 +68,8 @@ const HowItWorksModal = ({ visible, onClose }: { visible: boolean; onClose: () =
 
 export default function HomeHeader({ user }: Props) {
   const [showHowItWorks, setShowHowItWorks] = useState(false)
-  const { user: clerkUser } = useClerkUser()
-  const displayName = clerkUser?.firstName || user?.name || ''
+  const { user: authUser } = useAuth()
+  const displayName = (authUser?.user_metadata?.firstName as string) || user?.name || ''
 
   const closeModal = useCallback(() => setShowHowItWorks(false), [])
 

@@ -14,7 +14,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import useAppStore from '@/store/useAppStore'
-import { useUser } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 import ApiService, { Message as ApiMessage } from '@/services/apiService'
 
 type Message = {
@@ -46,7 +46,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
 
 export default function MessageDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { user } = useUser()
+  const { user } = useAuth()
   const conversations = useAppStore((s) => s.conversations)
   const addMessageToConversation = useAppStore((s) => s.addMessageToConversation)
 

@@ -12,18 +12,19 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useUser } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 
 export default function EditProfileScreen() {
-  const { user: clerkUser, isLoaded } = useUser()
-  const [firstName, setFirstName] = useState(clerkUser?.firstName ?? '')
-  const [lastName, setLastName] = useState(clerkUser?.lastName ?? '')
+  const { user: authUser, isLoaded } = useAuth()
+  const [firstName, setFirstName] = useState((authUser?.user_metadata?.firstName as string) ?? '')
+  const [lastName, setLastName] = useState((authUser?.user_metadata?.lastName as string) ?? '')
   const [saving, setSaving] = useState(false)
 
-  const primaryEmail = clerkUser?.primaryEmailAddress?.emailAddress ?? '—'
+  const primaryEmail = authUser?.email ?? '—'
 
   const handleSave = async () => {
-    if (!clerkUser) return
+    if (!authUser) return
     const trimmedFirst = firstName.trim()
     if (trimmedFirst.length < 2) {
       Alert.alert('Nom invalide', 'Le prénom doit contenir au moins 2 caractères.')
@@ -31,7 +32,15 @@ export default function EditProfileScreen() {
     }
     setSaving(true)
     try {
-      await clerkUser.update({ firstName: trimmedFirst, lastName: lastName.trim() })
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...authUser.user_metadata,
+          firstName: trimmedFirst,
+          lastName: lastName.trim(),
+        },
+      })
+      if (error) throw error
+
       Alert.alert('Enregistré', 'Vos informations ont été mises à jour.', [
         { text: 'OK', onPress: () => router.back() },
       ])

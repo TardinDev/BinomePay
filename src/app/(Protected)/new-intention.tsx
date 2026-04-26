@@ -5,10 +5,10 @@ import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 import { LinearGradient } from 'expo-linear-gradient'
 import { supabase } from '@/lib/supabase'
-import { useUser } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 
 export default function NewIntentionPage() {
-  const { user } = useUser()
+  const { user } = useAuth()
   const [direction, setDirection] = useState<'SEND' | 'RECEIVE'>('SEND')
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState('EUR')
@@ -64,7 +64,7 @@ export default function NewIntentionPage() {
     }
 
     try {
-      const userName = user?.firstName || user?.username || 'Utilisateur'
+      const userName = (user?.user_metadata?.firstName as string) || 'Utilisateur'
 
       // Persister dans Supabase (visible par tous les autres utilisateurs)
       const { error: supabaseError } = await supabase.from('intents').insert([

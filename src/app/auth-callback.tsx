@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react'
 import { View, ActivityIndicator, Text } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useAuth } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 
-// Ce composant gère les callbacks d'authentification OAuth (si utilisé avec Clerk)
-// Pour une authentification Clerk standard, ce fichier peut être supprimé
+// Ce composant gère les callbacks d'authentification (deep link / magic link).
 export default function AuthCallback() {
   const params = useLocalSearchParams<{ code?: string; state?: string; error?: string }>()
   const { isLoaded, isSignedIn } = useAuth()

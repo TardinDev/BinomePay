@@ -56,7 +56,7 @@ describe('ApiService', () => {
   describe('fetchUserProfile', () => {
     it('retourne un profil utilisateur correctement mappé', async () => {
       const dbRow = {
-        clerk_id: 'user_123',
+        auth_id: 'user_123',
         name: 'Jean',
         kyc_status: 'verified',
         rating_avg: 4.5,
@@ -78,7 +78,7 @@ describe('ApiService', () => {
 
     it('utilise des valeurs par défaut pour les champs null', async () => {
       const dbRow = {
-        clerk_id: 'user_123',
+        auth_id: 'user_123',
         name: null,
         kyc_status: null,
         rating_avg: null,
@@ -110,7 +110,7 @@ describe('ApiService', () => {
   describe('updateUserProfile', () => {
     it('met à jour et retourne le profil', async () => {
       const dbRow = {
-        clerk_id: 'user_123',
+        auth_id: 'user_123',
         name: 'Jean Updated',
         kyc_status: 'verified',
         rating_avg: 4.8,
@@ -123,13 +123,13 @@ describe('ApiService', () => {
 
       expect(user.name).toBe('Jean Updated')
       expect(c.update).toHaveBeenCalled()
-      expect(c.eq).toHaveBeenCalledWith('clerk_id', 'user_123')
+      expect(c.eq).toHaveBeenCalledWith('auth_id', 'user_123')
     })
 
     it('mappe correctement les champs camelCase vers snake_case', async () => {
       const c = chain({
         data: {
-          clerk_id: 'u1',
+          auth_id: 'u1',
           name: 'N',
           kyc_status: 'pending',
           rating_avg: 3,

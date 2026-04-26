@@ -4,12 +4,9 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import Constants from 'expo-constants'
 import useAppStore from '@/store/useAppStore'
-import { useAuth, useUser } from '@clerk/clerk-expo'
-import * as ImagePicker from 'expo-image-picker'
+import { useAuth } from '@/lib/auth'
 import { useBiometricAuth, getBiometricLabel, getBiometricIcon } from '@/hooks/useBiometricAuth'
 import { unregisterPushTokenForUser } from '@/services/pushTokenService'
-
-type UnsafeMeta = Record<string, unknown> & { avatarUpdatedAt?: string }
 
 type RowProps = {
   icon: string
@@ -58,8 +55,7 @@ function SettingsRow({
 export default function ProfileScreen() {
   const user = useAppStore((s) => s.user)
   const setLoggingOut = useAppStore((s) => s.setLoggingOut)
-  const { signOut } = useAuth()
-  const { user: clerkUser, isLoaded } = useUser()
+  const { signOut, user: authUser } = useAuth()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const isMounted = useRef(true)
 
@@ -79,12 +75,16 @@ export default function ProfileScreen() {
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.1'
 
-  const memberSince = clerkUser?.createdAt
-    ? new Date(clerkUser.createdAt).toLocaleDateString('fr-FR', {
+  const memberSince = authUser?.created_at
+    ? new Date(authUser.created_at).toLocaleDateString('fr-FR', {
         month: 'short',
         year: 'numeric',
       })
     : '—'
+
+  const firstName = (authUser?.user_metadata?.firstName as string) || ''
+  const avatarUrl = (authUser?.user_metadata?.avatar_url as string) || ''
+  const email = authUser?.email ?? ''
 
   const handleLogout = async () => {
     if (!isMounted.current) return
@@ -93,12 +93,6 @@ export default function ProfileScreen() {
 
     setTimeout(async () => {
       try {
-        if (typeof window !== 'undefined' && !window.location) {
-          ;(window as unknown as { location: { origin: string } }).location = {
-            origin: 'app://binomepay',
-          }
-        }
-        // Supprime le token push AVANT signOut (sinon le JWT est invalidé et la RLS bloque)
         await unregisterPushTokenForUser()
         await signOut()
       } catch (e) {
@@ -118,54 +112,6 @@ export default function ProfileScreen() {
       { text: 'Annuler', style: 'cancel' },
       { text: 'Se déconnecter', style: 'destructive', onPress: handleLogout },
     ])
-  }
-
-  const handleChangePhoto = async () => {
-    if (!isLoaded || !clerkUser) return
-    const meta = (clerkUser.unsafeMetadata ?? {}) as UnsafeMeta
-    const last = meta.avatarUpdatedAt
-    if (last) {
-      const lastTs = new Date(last).getTime()
-      const now = Date.now()
-      const threeMonthsMs = 90 * 24 * 60 * 60 * 1000
-      const remain = threeMonthsMs - (now - lastTs)
-      if (remain > 0) {
-        const nextDate = new Date(lastTs + threeMonthsMs)
-        Alert.alert(
-          'Non autorisé',
-          `Vous pourrez changer la photo après le ${nextDate.toLocaleDateString()}.`
-        )
-        return
-      }
-    }
-
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (!perm.granted) {
-      Alert.alert(
-        'Permission requise',
-        "Activez l'accès aux photos pour changer votre image de profil."
-      )
-      return
-    }
-    const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.9,
-    })
-    if (picked.canceled || !picked.assets?.length) return
-    const uri = picked.assets[0].uri
-    try {
-      const resp = await fetch(uri)
-      const blob = await resp.blob()
-      await clerkUser.setProfileImage({ file: blob as any })
-      const current = (clerkUser.unsafeMetadata ?? {}) as UnsafeMeta
-      const nextMeta: UnsafeMeta = { ...current, avatarUpdatedAt: new Date().toISOString() }
-      await clerkUser.update({ unsafeMetadata: nextMeta })
-      Alert.alert('Succès', 'Votre photo de profil a été mise à jour.')
-    } catch (e: any) {
-      Alert.alert('Erreur', e?.message ?? "Impossible de mettre à jour l'image")
-    }
   }
 
   const handleToggleBiometric = async (next: boolean) => {
@@ -212,46 +158,41 @@ export default function ProfileScreen() {
         <View style={{ width: 32 }} />
       </View>
 
-      {/* Carte profil */}
       <View
         className="mt-6 rounded-2xl border bg-neutral-900 p-5"
         style={{ borderColor: '#334155' }}
       >
         <View className="flex-row items-center">
-          <Pressable onPress={handleChangePhoto} accessibilityLabel="Changer la photo de profil">
-            {clerkUser?.imageUrl ? (
-              <Image
-                source={{ uri: clerkUser.imageUrl }}
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 9999,
-                  borderWidth: 1,
-                  borderColor: '#1F2937',
-                  backgroundColor: '#0B1220',
-                }}
-              />
-            ) : (
-              <View
-                style={{
-                  backgroundColor: '#0B1220',
-                  padding: 18,
-                  borderRadius: 9999,
-                  borderWidth: 1,
-                  borderColor: '#1F2937',
-                }}
-              >
-                <Ionicons name="person" color="#EAB308" size={28} />
-              </View>
-            )}
-          </Pressable>
+          {avatarUrl ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 9999,
+                borderWidth: 1,
+                borderColor: '#1F2937',
+                backgroundColor: '#0B1220',
+              }}
+            />
+          ) : (
+            <View
+              style={{
+                backgroundColor: '#0B1220',
+                padding: 18,
+                borderRadius: 9999,
+                borderWidth: 1,
+                borderColor: '#1F2937',
+              }}
+            >
+              <Ionicons name="person" color="#EAB308" size={28} />
+            </View>
+          )}
           <View className="ml-4 flex-1">
             <Text className="text-xl font-extrabold text-white">
-              {clerkUser?.firstName || user?.name || 'Utilisateur'}
+              {firstName || user?.name || 'Utilisateur'}
             </Text>
-            <Text className="text-xs text-gray-400">
-              {clerkUser?.primaryEmailAddress?.emailAddress ?? ''}
-            </Text>
+            <Text className="text-xs text-gray-400">{email}</Text>
             <View className="mt-2 flex-row items-center">
               <View
                 className="rounded-full px-2 py-0.5"
@@ -280,7 +221,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Section Compte */}
       <Text className="mb-2 mt-6 text-xs font-semibold uppercase text-gray-500">Compte</Text>
       <View className="rounded-2xl border bg-neutral-900" style={{ borderColor: '#334155' }}>
         <SettingsRow
@@ -296,7 +236,6 @@ export default function ProfileScreen() {
         />
       </View>
 
-      {/* Section Préférences */}
       <Text className="mb-2 mt-6 text-xs font-semibold uppercase text-gray-500">Préférences</Text>
       <View className="rounded-2xl border bg-neutral-900" style={{ borderColor: '#334155' }}>
         <SettingsRow
@@ -328,7 +267,6 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Section Support */}
       <Text className="mb-2 mt-6 text-xs font-semibold uppercase text-gray-500">Support</Text>
       <View className="rounded-2xl border bg-neutral-900" style={{ borderColor: '#334155' }}>
         <SettingsRow
@@ -345,7 +283,6 @@ export default function ProfileScreen() {
         />
       </View>
 
-      {/* Section Danger */}
       <Text className="mb-2 mt-6 text-xs font-semibold uppercase text-gray-500">Zone sensible</Text>
       <View className="rounded-2xl border bg-neutral-900" style={{ borderColor: '#334155' }}>
         <SettingsRow
@@ -363,7 +300,6 @@ export default function ProfileScreen() {
         />
       </View>
 
-      {/* Modal de déconnexion */}
       <Modal visible={showLogoutModal} transparent={true} animationType="fade">
         <View
           className="flex-1 items-center justify-center"

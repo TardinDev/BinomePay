@@ -98,7 +98,7 @@ export const registerPushTokenForUser = async (userId: string): Promise<string |
 
 /**
  * Supprime le token Expo Push du device courant de Supabase.
- * À appeler AVANT reset/logout de Clerk (sinon le JWT est perdu et la policy RLS bloque la suppression).
+ * À appeler AVANT signOut Supabase (sinon le JWT est perdu et la policy RLS bloque la suppression).
  */
 export const unregisterPushTokenForUser = async (): Promise<void> => {
   try {

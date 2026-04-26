@@ -4,13 +4,13 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import useAppStore from '@/store/useAppStore'
-import { useUser } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 import CustomModal from '@/components/CustomModal'
 import { useToast } from '@/hooks/useToast'
 
 export default function SuggestedDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { user } = useUser()
+  const { user } = useAuth()
   const suggested = useAppStore((s) => s.suggested)
   const acceptSuggestion = useAppStore((s) => s.acceptSuggestion)
   const conversations = useAppStore((s) => s.conversations)

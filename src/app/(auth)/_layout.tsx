@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Stack, router, usePathname } from 'expo-router'
-import { useAuth } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 
 function AuthSwitcher() {
   const pathname = usePathname()

@@ -55,8 +55,8 @@ export class ApiService {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('clerk_id, name, kyc_status, rating_avg, avatar_url')
-        .eq('clerk_id', userId)
+        .select('auth_id, name, kyc_status, rating_avg, avatar_url')
+        .eq('auth_id', userId)
         .single()
 
       if (error) {
@@ -68,7 +68,7 @@ export class ApiService {
       }
 
       return {
-        id: data.clerk_id,
+        id: data.auth_id,
         name: data.name ?? 'Utilisateur',
         kycStatus: (data.kyc_status as User['kycStatus']) ?? 'unverified',
         ratingAvg: Number(data.rating_avg ?? 0),
@@ -85,12 +85,12 @@ export class ApiService {
       // INSERT idempotent : ON CONFLICT DO NOTHING (préserve les valeurs existantes)
       const { error: upsertError } = await supabase.from('users').upsert(
         {
-          clerk_id: userId,
+          auth_id: userId,
           name: userName || 'Utilisateur',
           kyc_status: 'unverified',
           rating_avg: 0,
         },
-        { onConflict: 'clerk_id', ignoreDuplicates: true }
+        { onConflict: 'auth_id', ignoreDuplicates: true }
       )
 
       if (upsertError) throw upsertError
@@ -98,8 +98,8 @@ export class ApiService {
       // Relire la ligne (nouvellement insérée OU pré-existante)
       const { data, error } = await supabase
         .from('users')
-        .select('clerk_id, name, kyc_status, rating_avg, avatar_url')
-        .eq('clerk_id', userId)
+        .select('auth_id, name, kyc_status, rating_avg, avatar_url')
+        .eq('auth_id', userId)
         .single()
 
       if (error) throw error
@@ -107,7 +107,7 @@ export class ApiService {
       if (__DEV__) console.log('Profil utilisateur assuré dans Supabase')
 
       return {
-        id: data.clerk_id,
+        id: data.auth_id,
         name: data.name ?? 'Utilisateur',
         kycStatus: (data.kyc_status as User['kycStatus']) ?? 'unverified',
         ratingAvg: Number(data.rating_avg ?? 0),
@@ -130,14 +130,14 @@ export class ApiService {
       const { data, error } = await supabase
         .from('users')
         .update({ ...dbUpdates, updated_at: new Date().toISOString() })
-        .eq('clerk_id', userId)
-        .select('clerk_id, name, kyc_status, rating_avg, avatar_url')
+        .eq('auth_id', userId)
+        .select('auth_id, name, kyc_status, rating_avg, avatar_url')
         .single()
 
       if (error) throw error
 
       return {
-        id: data.clerk_id,
+        id: data.auth_id,
         name: data.name ?? 'Utilisateur',
         kycStatus: (data.kyc_status as User['kycStatus']) ?? 'unverified',
         ratingAvg: Number(data.rating_avg ?? 0),
@@ -293,7 +293,7 @@ export class ApiService {
       const { data: acceptingUser } = await supabase
         .from('users')
         .select('name')
-        .eq('clerk_id', userId)
+        .eq('auth_id', userId)
         .single()
 
       const acceptingUserName = acceptingUser?.name ?? 'Utilisateur'
@@ -412,7 +412,7 @@ export class ApiService {
           const { data: otherUser } = await supabase
             .from('users')
             .select('name')
-            .eq('clerk_id', otherIntent.user_id)
+            .eq('auth_id', otherIntent.user_id)
             .single()
           counterpartName = otherUser?.name ?? 'Utilisateur'
         }
@@ -493,7 +493,7 @@ export class ApiService {
           const { data: otherUser } = await supabase
             .from('users')
             .select('name')
-            .eq('clerk_id', otherParticipant.user_id)
+            .eq('auth_id', otherParticipant.user_id)
             .single()
           counterpartName = otherUser?.name ?? 'Utilisateur'
         }

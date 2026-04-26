@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { AppState, AppStateStatus } from 'react-native'
-import { useAuth } from '@clerk/clerk-expo'
+import { useAuth } from '@/lib/auth'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const LAST_ACTIVITY_KEY = '@binomepay_last_activity'
