@@ -1,5 +1,15 @@
 import React, { useState, useCallback } from 'react'
-import { View, Text, Modal, Pressable, TextInput, Alert, ActivityIndicator } from 'react-native'
+import {
+  View,
+  Text,
+  Modal,
+  Pressable,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useReportRateLimit, formatTimeRemaining } from '@/hooks/useRateLimit'
 
@@ -88,113 +98,121 @@ export default function ReportUserModal({
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
-      <View className="flex-1 bg-black">
-        {/* Header */}
-        <View
-          className="flex-row items-center justify-between border-b px-4 py-4"
-          style={{ borderColor: '#1F2937' }}
-        >
-          <Pressable onPress={handleClose} className="p-2">
-            <Ionicons name="close" color="#9CA3AF" size={24} />
-          </Pressable>
-          <Text className="text-lg font-bold text-white">Signaler {userName}</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
-        {/* Content */}
-        <View className="flex-1 px-4 pt-6">
-          <Text className="mb-6 text-gray-400">
-            Selectionnez la raison de votre signalement. Nos moderateurs examineront votre rapport.
-          </Text>
-
-          {/* Reason Selection */}
-          {REPORT_REASONS.map((reason) => (
-            <Pressable
-              key={reason.id}
-              onPress={() => setSelectedReason(reason.id)}
-              className="mb-2 flex-row items-center rounded-xl p-4"
-              style={{
-                backgroundColor: selectedReason === reason.id ? '#374151' : '#1F2937',
-                borderWidth: selectedReason === reason.id ? 1 : 0,
-                borderColor: '#EAB308',
-              }}
-            >
-              <View
-                className="mr-3 h-10 w-10 items-center justify-center rounded-full"
-                style={{ backgroundColor: '#0B1220' }}
-              >
-                <Ionicons
-                  name={reason.icon as any}
-                  color={selectedReason === reason.id ? '#EAB308' : '#6B7280'}
-                  size={20}
-                />
-              </View>
-              <Text
-                className={`flex-1 ${selectedReason === reason.id ? 'font-semibold text-white' : 'text-gray-300'}`}
-              >
-                {reason.label}
-              </Text>
-              {selectedReason === reason.id && (
-                <Ionicons name="checkmark-circle" color="#EAB308" size={24} />
-              )}
-            </Pressable>
-          ))}
-
-          {/* Details Input */}
-          {selectedReason && (
-            <View className="mt-4">
-              <Text className="mb-2 text-gray-400">Details supplementaires (optionnel)</Text>
-              <TextInput
-                className="rounded-xl p-4 text-white"
-                style={{ backgroundColor: '#1F2937', minHeight: 100 }}
-                placeholder="Decrivez le probleme..."
-                placeholderTextColor="#6B7280"
-                value={details}
-                onChangeText={setDetails}
-                multiline
-                textAlignVertical="top"
-                maxLength={500}
-              />
-              <Text className="mt-1 text-right text-xs text-gray-500">{details.length}/500</Text>
-            </View>
-          )}
-
-          {/* Rate Limit Warning */}
-          {rateLimitState.isLimited && (
-            <View className="mt-4 rounded-xl p-4" style={{ backgroundColor: '#7F1D1D' }}>
-              <View className="flex-row items-center">
-                <Ionicons name="time-outline" color="#FCA5A5" size={20} />
-                <Text className="ml-2 text-red-300">
-                  Limite atteinte. Reessayez dans{' '}
-                  {formatTimeRemaining(rateLimitState.timeUntilReset || 0)}
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
-
-        {/* Submit Button */}
-        <View className="px-4 pb-8">
-          <Pressable
-            onPress={handleSubmit}
-            disabled={!selectedReason || isSubmitting || rateLimitState.isLimited}
-            className="items-center rounded-xl py-4"
-            style={{
-              backgroundColor:
-                !selectedReason || isSubmitting || rateLimitState.isLimited ? '#374151' : '#EF4444',
-            }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1, backgroundColor: '#000' }}
+      >
+        <View className="flex-1 bg-black">
+          {/* Header */}
+          <View
+            className="flex-row items-center justify-between border-b px-4 py-4"
+            style={{ borderColor: '#1F2937' }}
           >
-            {isSubmitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <View className="flex-row items-center">
-                <Ionicons name="flag-outline" color="#fff" size={20} />
-                <Text className="ml-2 font-bold text-white">Envoyer le signalement</Text>
+            <Pressable onPress={handleClose} className="p-2">
+              <Ionicons name="close" color="#9CA3AF" size={24} />
+            </Pressable>
+            <Text className="text-lg font-bold text-white">Signaler {userName}</Text>
+            <View style={{ width: 40 }} />
+          </View>
+
+          {/* Content */}
+          <View className="flex-1 px-4 pt-6">
+            <Text className="mb-6 text-gray-400">
+              Selectionnez la raison de votre signalement. Nos moderateurs examineront votre
+              rapport.
+            </Text>
+
+            {/* Reason Selection */}
+            {REPORT_REASONS.map((reason) => (
+              <Pressable
+                key={reason.id}
+                onPress={() => setSelectedReason(reason.id)}
+                className="mb-2 flex-row items-center rounded-xl p-4"
+                style={{
+                  backgroundColor: selectedReason === reason.id ? '#374151' : '#1F2937',
+                  borderWidth: selectedReason === reason.id ? 1 : 0,
+                  borderColor: '#EAB308',
+                }}
+              >
+                <View
+                  className="mr-3 h-10 w-10 items-center justify-center rounded-full"
+                  style={{ backgroundColor: '#0B1220' }}
+                >
+                  <Ionicons
+                    name={reason.icon as any}
+                    color={selectedReason === reason.id ? '#EAB308' : '#6B7280'}
+                    size={20}
+                  />
+                </View>
+                <Text
+                  className={`flex-1 ${selectedReason === reason.id ? 'font-semibold text-white' : 'text-gray-300'}`}
+                >
+                  {reason.label}
+                </Text>
+                {selectedReason === reason.id && (
+                  <Ionicons name="checkmark-circle" color="#EAB308" size={24} />
+                )}
+              </Pressable>
+            ))}
+
+            {/* Details Input */}
+            {selectedReason && (
+              <View className="mt-4">
+                <Text className="mb-2 text-gray-400">Details supplementaires (optionnel)</Text>
+                <TextInput
+                  className="rounded-xl p-4 text-white"
+                  style={{ backgroundColor: '#1F2937', minHeight: 100 }}
+                  placeholder="Decrivez le probleme..."
+                  placeholderTextColor="#6B7280"
+                  value={details}
+                  onChangeText={setDetails}
+                  multiline
+                  textAlignVertical="top"
+                  maxLength={500}
+                />
+                <Text className="mt-1 text-right text-xs text-gray-500">{details.length}/500</Text>
               </View>
             )}
-          </Pressable>
+
+            {/* Rate Limit Warning */}
+            {rateLimitState.isLimited && (
+              <View className="mt-4 rounded-xl p-4" style={{ backgroundColor: '#7F1D1D' }}>
+                <View className="flex-row items-center">
+                  <Ionicons name="time-outline" color="#FCA5A5" size={20} />
+                  <Text className="ml-2 text-red-300">
+                    Limite atteinte. Reessayez dans{' '}
+                    {formatTimeRemaining(rateLimitState.timeUntilReset || 0)}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Submit Button */}
+          <View className="px-4 pb-8">
+            <Pressable
+              onPress={handleSubmit}
+              disabled={!selectedReason || isSubmitting || rateLimitState.isLimited}
+              className="items-center rounded-xl py-4"
+              style={{
+                backgroundColor:
+                  !selectedReason || isSubmitting || rateLimitState.isLimited
+                    ? '#374151'
+                    : '#EF4444',
+              }}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <View className="flex-row items-center">
+                  <Ionicons name="flag-outline" color="#fff" size={20} />
+                  <Text className="ml-2 font-bold text-white">Envoyer le signalement</Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }

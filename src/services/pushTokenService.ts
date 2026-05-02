@@ -6,11 +6,15 @@
 
 import { Platform } from 'react-native'
 import * as Device from 'expo-device'
-import * as Notifications from 'expo-notifications'
+import type * as NotificationsType from 'expo-notifications'
 import Constants from 'expo-constants'
 import { supabase } from '@/lib/supabase'
 
 const isExpoGo = Constants.appOwnership === 'expo'
+
+const Notifications: typeof NotificationsType | null = isExpoGo
+  ? null
+  : (require('expo-notifications') as typeof NotificationsType)
 
 const getProjectId = (): string | undefined => {
   return (
@@ -21,6 +25,8 @@ const getProjectId = (): string | undefined => {
 }
 
 export const requestPushPermissions = async (): Promise<boolean> => {
+  if (!Notifications) return false
+
   const { status: existing } = await Notifications.getPermissionsAsync()
   if (existing === 'granted') return true
 
@@ -33,7 +39,7 @@ export const requestPushPermissions = async (): Promise<boolean> => {
  * Retourne null si on est dans Expo Go, sur un simulateur/émulateur, ou si les permissions sont refusées.
  */
 export const getExpoPushToken = async (): Promise<string | null> => {
-  if (isExpoGo) {
+  if (isExpoGo || !Notifications) {
     if (__DEV__) console.warn('[push] Expo Go détecté — push désactivé')
     return null
   }

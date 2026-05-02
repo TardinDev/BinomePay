@@ -8,15 +8,20 @@
  * L'enregistrement du token Expo Push est géré dans `pushTokenService.ts`.
  */
 
-import * as Notifications from 'expo-notifications'
+import type * as NotificationsType from 'expo-notifications'
 import { Platform } from 'react-native'
 import Constants from 'expo-constants'
 import { requestPushPermissions } from '@/services/pushTokenService'
 
 const isExpoGo = Constants.appOwnership === 'expo'
 
-// Handler foreground: affiche la notif même quand l'app est ouverte
-if (!isExpoGo) {
+// Lazy-load: en Expo Go SDK 53+, le module crash sur import (push retiré).
+// On ne l'importe que dans un dev/prod build.
+const Notifications: typeof NotificationsType | null = isExpoGo
+  ? null
+  : (require('expo-notifications') as typeof NotificationsType)
+
+if (Notifications) {
   Notifications.setNotificationHandler({
     handleNotification: async () =>
       ({
@@ -44,7 +49,7 @@ export interface NotificationData {
 }
 
 const createNotificationChannels = async (): Promise<void> => {
-  if (Platform.OS !== 'android') return
+  if (Platform.OS !== 'android' || !Notifications) return
 
   try {
     await Notifications.setNotificationChannelAsync('default', {
@@ -114,7 +119,7 @@ export const scheduleLocalNotification = async (
   notification: NotificationData,
   delaySeconds: number = 0
 ): Promise<string | null> => {
-  if (isExpoGo) return null
+  if (isExpoGo || !Notifications) return null
 
   try {
     const content: any = {
@@ -214,7 +219,7 @@ export const notifyKycUpdate = async (
  * Route l'utilisateur vers le bon écran selon `data.type`.
  */
 export const handleNotificationResponse = (
-  response: Notifications.NotificationResponse,
+  response: NotificationsType.NotificationResponse,
   router: any
 ): void => {
   const data = response.notification.request.content.data as
@@ -248,6 +253,7 @@ export const handleNotificationResponse = (
 }
 
 export const clearAllNotifications = async (): Promise<void> => {
+  if (!Notifications) return
   try {
     await Notifications.dismissAllNotificationsAsync()
   } catch (error) {
@@ -256,6 +262,7 @@ export const clearAllNotifications = async (): Promise<void> => {
 }
 
 export const getBadgeCount = async (): Promise<number> => {
+  if (!Notifications) return 0
   try {
     return await Notifications.getBadgeCountAsync()
   } catch {
@@ -264,6 +271,7 @@ export const getBadgeCount = async (): Promise<number> => {
 }
 
 export const setBadgeCount = async (count: number): Promise<void> => {
+  if (!Notifications) return
   try {
     await Notifications.setBadgeCountAsync(count)
   } catch (error) {

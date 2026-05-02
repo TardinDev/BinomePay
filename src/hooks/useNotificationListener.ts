@@ -1,10 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'expo-router'
-import * as Notifications from 'expo-notifications'
+import type * as NotificationsType from 'expo-notifications'
 import Constants from 'expo-constants'
 import { handleNotificationResponse } from '@/services/notificationService'
 
 const isExpoGo = Constants.appOwnership === 'expo'
+
+const Notifications: typeof NotificationsType | null = isExpoGo
+  ? null
+  : (require('expo-notifications') as typeof NotificationsType)
 
 /**
  * Installe les listeners de notifications pour la session authentifiée.
@@ -17,7 +21,7 @@ export const useNotificationListener = (enabled: boolean) => {
   const coldStartHandled = useRef(false)
 
   useEffect(() => {
-    if (!enabled || isExpoGo) return
+    if (!enabled || isExpoGo || !Notifications) return
 
     // Cold start: app ouverte depuis une notification (tap alors qu'elle était fermée)
     if (!coldStartHandled.current) {

@@ -1,5 +1,14 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, Pressable, Alert, ScrollView } from 'react-native'
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
@@ -98,210 +107,223 @@ export default function NewIntentionPage() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-black px-5 pt-6" contentContainerStyle={{ paddingBottom: 36 }}>
-      <View className="mb-3 flex-row items-center">
-        <Pressable
-          onPress={() => router.back()}
-          className="mr-3"
-          style={{
-            padding: 10,
-            borderRadius: 9999,
-            backgroundColor: '#111827',
-            borderWidth: 1,
-            borderColor: '#1F2937',
-          }}
-        >
-          <Ionicons name="arrow-back" color="#E5E7EB" size={20} />
-        </Pressable>
-      </View>
-
-      <View className="mb-5 w-full items-center">
-        <Text className="text-3xl font-extrabold text-white">Binome Pay</Text>
-        <Text className="mt-1 text-xs text-gray-400">Créer une nouvelle intention</Text>
-      </View>
-
-      <View className="rounded-2xl border border-gray-800 bg-neutral-900 p-4">
-        <Text className="mb-2 text-gray-300">Type d'opération</Text>
-        <View className="mb-4 flex-row overflow-hidden rounded-xl border border-gray-700">
-          <Pressable
-            onPress={() => setDirection('SEND')}
-            className="flex-1 items-center py-3"
-            style={{ backgroundColor: direction === 'SEND' ? '#F59E0B' : 'transparent' }}
-          >
-            <Text
-              className={
-                direction === 'SEND' ? 'font-extrabold text-black' : 'font-semibold text-gray-400'
-              }
-            >
-              Envoyer
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setDirection('RECEIVE')}
-            className="flex-1 items-center py-3"
-            style={{ backgroundColor: direction === 'RECEIVE' ? '#3B82F6' : 'transparent' }}
-          >
-            <Text
-              className={
-                direction === 'RECEIVE'
-                  ? 'font-extrabold text-white'
-                  : 'font-semibold text-gray-400'
-              }
-            >
-              Recevoir
-            </Text>
-          </Pressable>
-        </View>
-
-        <Text className="mb-2 text-gray-300">Montant</Text>
-        <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
-          <Ionicons name="cash-outline" color="#9CA3AF" size={18} />
-          <TextInput
-            placeholder="Ex: 150"
-            placeholderTextColor="#6B7280"
-            keyboardType="numeric"
-            value={amount}
-            onChangeText={setAmount}
-            className="ml-3 flex-1 text-white"
-          />
-        </View>
-
-        <Text className="mb-2 mt-4 text-gray-300">Devise</Text>
-        <Pressable
-          onPress={() => setIsCurrencyOpen((v) => !v)}
-          className="flex-row items-center justify-between rounded-xl border border-gray-700 bg-black/30 px-4 py-3"
-        >
-          <View className="flex-row items-center">
-            <Ionicons name="pricetags-outline" color="#9CA3AF" size={18} />
-            <Text className="ml-3 font-semibold text-white">{currency}</Text>
-          </View>
-          <Ionicons
-            name={isCurrencyOpen ? 'chevron-up' : 'chevron-down'}
-            color="#9CA3AF"
-            size={18}
-          />
-        </Pressable>
-        {isCurrencyOpen && (
-          <View
-            className="mt-2 overflow-hidden rounded-xl border border-gray-700"
-            style={{ backgroundColor: '#0B0F1A' }}
-          >
-            {currencyOptions.map((c, idx) => (
-              <Pressable
-                key={c}
-                onPress={() => {
-                  setCurrency(c)
-                  setIsCurrencyOpen(false)
-                }}
-                className="flex-row items-center justify-between px-4 py-3"
-                style={{
-                  borderBottomWidth: idx === currencyOptions.length - 1 ? 0 : 1,
-                  borderBottomColor: '#111827',
-                }}
-              >
-                <Text className="text-white">{c}</Text>
-                {c === currency && <Ionicons name="checkmark" size={18} color="#EAB308" />}
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        <Text className="mb-2 mt-4 text-gray-300">Pays d'origine</Text>
-        <Pressable
-          onPress={() => {
-            setIsOriginOpen((v) => !v)
-            if (isDestOpen) setIsDestOpen(false)
-          }}
-          className="flex-row items-center justify-between rounded-xl border border-gray-700 bg-black/30 px-4 py-3"
-        >
-          <View className="flex-row items-center">
-            <Ionicons name="airplane-outline" color="#9CA3AF" size={18} />
-            <Text className="ml-3 font-semibold text-white">{originCountry}</Text>
-          </View>
-          <Ionicons name={isOriginOpen ? 'chevron-up' : 'chevron-down'} color="#9CA3AF" size={18} />
-        </Pressable>
-        {isOriginOpen && (
-          <View
-            className="mt-2 overflow-hidden rounded-xl border border-gray-700"
-            style={{ backgroundColor: '#0B0F1A' }}
-          >
-            {countryOptions.map((c, idx) => (
-              <Pressable
-                key={`origin-${c}`}
-                onPress={() => {
-                  setOriginCountry(c)
-                  setIsOriginOpen(false)
-                }}
-                className="flex-row items-center justify-between px-4 py-3"
-                style={{
-                  borderBottomWidth: idx === countryOptions.length - 1 ? 0 : 1,
-                  borderBottomColor: '#111827',
-                }}
-              >
-                <Text className="text-white">{c}</Text>
-                {c === originCountry && <Ionicons name="checkmark" size={18} color="#EAB308" />}
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        <Text className="mb-2 mt-4 text-gray-300">Pays de destination</Text>
-        <Pressable
-          onPress={() => {
-            setIsDestOpen((v) => !v)
-            if (isOriginOpen) setIsOriginOpen(false)
-          }}
-          className="flex-row items-center justify-between rounded-xl border border-gray-700 bg-black/30 px-4 py-3"
-        >
-          <View className="flex-row items-center">
-            <Ionicons name="flag-outline" color="#9CA3AF" size={18} />
-            <Text className="ml-3 font-semibold text-white">{destCountry}</Text>
-          </View>
-          <Ionicons name={isDestOpen ? 'chevron-up' : 'chevron-down'} color="#9CA3AF" size={18} />
-        </Pressable>
-        {isDestOpen && (
-          <View
-            className="mt-2 overflow-hidden rounded-xl border border-gray-700"
-            style={{ backgroundColor: '#0B0F1A' }}
-          >
-            {countryOptions.map((c, idx) => (
-              <Pressable
-                key={`dest-${c}`}
-                onPress={() => {
-                  setDestCountry(c)
-                  setIsDestOpen(false)
-                }}
-                className="flex-row items-center justify-between px-4 py-3"
-                style={{
-                  borderBottomWidth: idx === countryOptions.length - 1 ? 0 : 1,
-                  borderBottomColor: '#111827',
-                }}
-              >
-                <Text className="text-white">{c}</Text>
-                {c === destCountry && <Ionicons name="checkmark" size={18} color="#EAB308" />}
-              </Pressable>
-            ))}
-          </View>
-        )}
-      </View>
-
-      <Pressable
-        onPress={handleSubmit}
-        disabled={!isValid()}
-        className="mt-6 overflow-hidden rounded-xl"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: '#000' }}
+    >
+      <ScrollView
+        className="flex-1 bg-black px-5 pt-6"
+        contentContainerStyle={{ paddingBottom: 36 }}
+        keyboardShouldPersistTaps="handled"
       >
-        <LinearGradient
-          colors={isValid() ? ['#FDE68A', '#F59E0B'] : ['#9CA3AF', '#6B7280']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ paddingVertical: 14, paddingHorizontal: 20, borderRadius: 12 }}
-        >
-          <View className="flex-row items-center justify-center">
-            <Ionicons name="checkmark-circle" color="#111827" size={20} />
-            <Text className="ml-2 text-base font-extrabold text-black">Créer</Text>
+        <View className="mb-3 flex-row items-center">
+          <Pressable
+            onPress={() => router.back()}
+            className="mr-3"
+            style={{
+              padding: 10,
+              borderRadius: 9999,
+              backgroundColor: '#111827',
+              borderWidth: 1,
+              borderColor: '#1F2937',
+            }}
+          >
+            <Ionicons name="arrow-back" color="#E5E7EB" size={20} />
+          </Pressable>
+        </View>
+
+        <View className="mb-5 w-full items-center">
+          <Text className="text-3xl font-extrabold text-white">Binome Pay</Text>
+          <Text className="mt-1 text-xs text-gray-400">Créer une nouvelle intention</Text>
+        </View>
+
+        <View className="rounded-2xl border border-gray-800 bg-neutral-900 p-4">
+          <Text className="mb-2 text-gray-300">Type d'opération</Text>
+          <View className="mb-4 flex-row overflow-hidden rounded-xl border border-gray-700">
+            <Pressable
+              onPress={() => setDirection('SEND')}
+              className="flex-1 items-center py-3"
+              style={{ backgroundColor: direction === 'SEND' ? '#F59E0B' : 'transparent' }}
+            >
+              <Text
+                className={
+                  direction === 'SEND' ? 'font-extrabold text-black' : 'font-semibold text-gray-400'
+                }
+              >
+                Envoyer
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setDirection('RECEIVE')}
+              className="flex-1 items-center py-3"
+              style={{ backgroundColor: direction === 'RECEIVE' ? '#3B82F6' : 'transparent' }}
+            >
+              <Text
+                className={
+                  direction === 'RECEIVE'
+                    ? 'font-extrabold text-white'
+                    : 'font-semibold text-gray-400'
+                }
+              >
+                Recevoir
+              </Text>
+            </Pressable>
           </View>
-        </LinearGradient>
-      </Pressable>
-    </ScrollView>
+
+          <Text className="mb-2 text-gray-300">Montant</Text>
+          <View className="flex-row items-center rounded-xl border border-gray-700 bg-black/30 px-4 py-3">
+            <Ionicons name="cash-outline" color="#9CA3AF" size={18} />
+            <TextInput
+              placeholder="Ex: 150"
+              placeholderTextColor="#6B7280"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+              className="ml-3 flex-1 text-white"
+            />
+          </View>
+
+          <Text className="mb-2 mt-4 text-gray-300">Devise</Text>
+          <Pressable
+            onPress={() => setIsCurrencyOpen((v) => !v)}
+            className="flex-row items-center justify-between rounded-xl border border-gray-700 bg-black/30 px-4 py-3"
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="pricetags-outline" color="#9CA3AF" size={18} />
+              <Text className="ml-3 font-semibold text-white">{currency}</Text>
+            </View>
+            <Ionicons
+              name={isCurrencyOpen ? 'chevron-up' : 'chevron-down'}
+              color="#9CA3AF"
+              size={18}
+            />
+          </Pressable>
+          {isCurrencyOpen && (
+            <View
+              className="mt-2 overflow-hidden rounded-xl border border-gray-700"
+              style={{ backgroundColor: '#0B0F1A' }}
+            >
+              {currencyOptions.map((c, idx) => (
+                <Pressable
+                  key={c}
+                  onPress={() => {
+                    setCurrency(c)
+                    setIsCurrencyOpen(false)
+                  }}
+                  className="flex-row items-center justify-between px-4 py-3"
+                  style={{
+                    borderBottomWidth: idx === currencyOptions.length - 1 ? 0 : 1,
+                    borderBottomColor: '#111827',
+                  }}
+                >
+                  <Text className="text-white">{c}</Text>
+                  {c === currency && <Ionicons name="checkmark" size={18} color="#EAB308" />}
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          <Text className="mb-2 mt-4 text-gray-300">Pays d'origine</Text>
+          <Pressable
+            onPress={() => {
+              setIsOriginOpen((v) => !v)
+              if (isDestOpen) setIsDestOpen(false)
+            }}
+            className="flex-row items-center justify-between rounded-xl border border-gray-700 bg-black/30 px-4 py-3"
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="airplane-outline" color="#9CA3AF" size={18} />
+              <Text className="ml-3 font-semibold text-white">{originCountry}</Text>
+            </View>
+            <Ionicons
+              name={isOriginOpen ? 'chevron-up' : 'chevron-down'}
+              color="#9CA3AF"
+              size={18}
+            />
+          </Pressable>
+          {isOriginOpen && (
+            <View
+              className="mt-2 overflow-hidden rounded-xl border border-gray-700"
+              style={{ backgroundColor: '#0B0F1A' }}
+            >
+              {countryOptions.map((c, idx) => (
+                <Pressable
+                  key={`origin-${c}`}
+                  onPress={() => {
+                    setOriginCountry(c)
+                    setIsOriginOpen(false)
+                  }}
+                  className="flex-row items-center justify-between px-4 py-3"
+                  style={{
+                    borderBottomWidth: idx === countryOptions.length - 1 ? 0 : 1,
+                    borderBottomColor: '#111827',
+                  }}
+                >
+                  <Text className="text-white">{c}</Text>
+                  {c === originCountry && <Ionicons name="checkmark" size={18} color="#EAB308" />}
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          <Text className="mb-2 mt-4 text-gray-300">Pays de destination</Text>
+          <Pressable
+            onPress={() => {
+              setIsDestOpen((v) => !v)
+              if (isOriginOpen) setIsOriginOpen(false)
+            }}
+            className="flex-row items-center justify-between rounded-xl border border-gray-700 bg-black/30 px-4 py-3"
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="flag-outline" color="#9CA3AF" size={18} />
+              <Text className="ml-3 font-semibold text-white">{destCountry}</Text>
+            </View>
+            <Ionicons name={isDestOpen ? 'chevron-up' : 'chevron-down'} color="#9CA3AF" size={18} />
+          </Pressable>
+          {isDestOpen && (
+            <View
+              className="mt-2 overflow-hidden rounded-xl border border-gray-700"
+              style={{ backgroundColor: '#0B0F1A' }}
+            >
+              {countryOptions.map((c, idx) => (
+                <Pressable
+                  key={`dest-${c}`}
+                  onPress={() => {
+                    setDestCountry(c)
+                    setIsDestOpen(false)
+                  }}
+                  className="flex-row items-center justify-between px-4 py-3"
+                  style={{
+                    borderBottomWidth: idx === countryOptions.length - 1 ? 0 : 1,
+                    borderBottomColor: '#111827',
+                  }}
+                >
+                  <Text className="text-white">{c}</Text>
+                  {c === destCountry && <Ionicons name="checkmark" size={18} color="#EAB308" />}
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <Pressable
+          onPress={handleSubmit}
+          disabled={!isValid()}
+          className="mt-6 overflow-hidden rounded-xl"
+        >
+          <LinearGradient
+            colors={isValid() ? ['#FDE68A', '#F59E0B'] : ['#9CA3AF', '#6B7280']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ paddingVertical: 14, paddingHorizontal: 20, borderRadius: 12 }}
+          >
+            <View className="flex-row items-center justify-center">
+              <Ionicons name="checkmark-circle" color="#111827" size={20} />
+              <Text className="ml-2 text-base font-extrabold text-black">Créer</Text>
+            </View>
+          </LinearGradient>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
