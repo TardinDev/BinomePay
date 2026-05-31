@@ -75,8 +75,8 @@ export default function RegisterScreen() {
       } else {
         setError('Inscription incomplète. Veuillez réessayer.')
       }
-    } catch (e: any) {
-      setError(e?.message ?? "Erreur lors de l'inscription. Veuillez réessayer.")
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur lors de l'inscription. Veuillez réessayer.")
     } finally {
       setLoading(false)
     }

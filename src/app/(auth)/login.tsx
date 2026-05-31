@@ -52,8 +52,8 @@ export default function LoginScreen() {
       } else {
         setError('Connexion incomplète')
       }
-    } catch (e: any) {
-      setError(e?.message ?? 'Erreur inconnue')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur inconnue')
     } finally {
       setLoading(false)
     }

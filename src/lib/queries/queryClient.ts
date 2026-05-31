@@ -5,9 +5,10 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: unknown) => {
         // Don't retry on authentication errors
-        if (error?.status === 401 || error?.status === 403) {
+        const status = (error as { status?: number } | null)?.status
+        if (status === 401 || status === 403) {
           return false
         }
         return failureCount < 3
@@ -18,9 +19,10 @@ export const queryClient = new QueryClient({
       refetchInterval: false, // Pas de polling automatique
     },
     mutations: {
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: unknown) => {
         // Don't retry on client errors (4xx)
-        if (error?.status >= 400 && error?.status < 500) {
+        const status = (error as { status?: number } | null)?.status
+        if (status !== undefined && status >= 400 && status < 500) {
           return false
         }
         return failureCount < 2

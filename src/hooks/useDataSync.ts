@@ -1,14 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
-import { useAuth } from '@/lib/auth'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import useAppStore from '@/store/useAppStore'
 import { syncService } from '@/services/syncService'
 import NetInfo from '@react-native-community/netinfo'
+import { logger } from '@/utils/logger'
 
 export function useDataSync() {
-  const { user: authUser } = useAuth()
   const user = useAppStore((s) => s.user)
-  const isLoggingOut = useAppStore((s) => s.isLoggingOut)
-  const initializeUserData = useAppStore((s) => s.initializeUserData)
   const isLoading = useAppStore((s) => s.isLoading)
   const error = useAppStore((s) => s.error)
   const setError = useAppStore((s) => s.setError)
@@ -18,6 +15,16 @@ export function useDataSync() {
   const [isSyncing, setIsSyncing] = useState(false)
 
   const useMockApi = process.env.EXPO_PUBLIC_MOCK_API === 'true'
+
+  // Référence stable vers la dernière version de handleSync et de l'id user.
+  // Permet aux effets ci-dessous de déclencher une synchro sans dépendre de
+  // ces valeurs (ce qui recréerait les listeners/timers et provoquerait des
+  // boucles ou une double initialisation).
+  const handleSyncRef = useRef<() => Promise<boolean>>(() => Promise.resolve(false))
+  const userIdRef = useRef<string | undefined>(user?.id)
+  userIdRef.current = user?.id
+  const isOnlineRef = useRef<boolean>(isOnline)
+  isOnlineRef.current = isOnline
 
   // Surveiller la connectivité réseau (seulement en mode API réel)
   useEffect(() => {
@@ -30,31 +37,24 @@ export function useDataSync() {
       setIsOnline(!!state.isConnected)
 
       // Déclencher une synchronisation quand on revient en ligne
-      if (state.isConnected && user?.id) {
-        handleSync()
+      if (state.isConnected && userIdRef.current) {
+        handleSyncRef.current()
       }
     })
 
     return unsubscribe
-  }, [useMockApi]) // Retirer user?.id qui cause des boucles
+  }, [useMockApi])
 
-  // Initialiser les données utilisateur lors de la connexion
-  useEffect(() => {
-    // Ne pas initialiser si on est en train de se déconnecter
-    if (isLoggingOut) return
-
-    if (authUser?.id && !user) {
-      if (__DEV__) console.log('Initialisation des données pour:', authUser.id)
-      initializeUserData(authUser.id)
-    }
-  }, [authUser?.id, isLoggingOut, initializeUserData])
+  // NB: L'initialisation des données utilisateur est gérée exclusivement par
+  // (Protected)/_layout.tsx (un seul owner) afin d'éviter les doubles fetch et
+  // la double initialisation du syncService (listeners NetInfo + interval).
 
   // Synchronisation manuelle
   const handleSync = useCallback(async () => {
     if (!user?.id || isSyncing) return false
 
     if (useMockApi) {
-      if (__DEV__) console.log('Mode mock - synchronisation simulée')
+      logger.debug('Mode mock - synchronisation simulée')
       setLastSyncTime(new Date())
       setError(null)
       return true
@@ -68,7 +68,7 @@ export function useDataSync() {
         setError(null)
       }
       return success
-    } catch (_error: any) {
+    } catch {
       setError('Erreur de synchronisation')
       return false
     } finally {
@@ -76,29 +76,28 @@ export function useDataSync() {
     }
   }, [user?.id, isSyncing, setError, useMockApi])
 
-  // Synchronisation automatique périodique (désactivée en mode mock)
+  // Garder la ref synchronisée avec la dernière closure handleSync.
+  handleSyncRef.current = handleSync
+
+  // Synchronisation initiale après connexion (désactivée en mode mock).
+  // La synchronisation périodique est entièrement pilotée par syncService
+  // (un seul interval), initialisé dans initializeUserData. On ne lance ici
+  // qu'une synchro initiale ponctuelle pour rafraîchir l'UI rapidement.
   useEffect(() => {
     if (!user?.id || useMockApi) return
 
-    // Synchronisation initiale après connexion
     const initialSync = setTimeout(() => {
-      if (isOnline) {
-        handleSync()
+      // On lit isOnline au moment du tick via la ref pour éviter de redéclencher
+      // l'effet (et donc une double synchro) à chaque changement de connectivité.
+      if (isOnlineRef.current) {
+        handleSyncRef.current()
       }
     }, 1000)
 
-    // Synchronisation périodique toutes les 30 secondes
-    const interval = setInterval(() => {
-      if (isOnline && !isSyncing) {
-        syncService.performSync()
-      }
-    }, 30000)
-
     return () => {
       clearTimeout(initialSync)
-      clearInterval(interval)
     }
-  }, [user?.id, useMockApi]) // Retirer isOnline et isSyncing qui changent souvent
+  }, [user?.id, useMockApi])
 
   return {
     isInitialized: !!user,

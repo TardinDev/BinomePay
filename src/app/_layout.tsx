@@ -9,6 +9,7 @@ import QueryProvider from '@/components/QueryProvider'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { AuthProvider } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/utils/logger'
 
 // Capture le deep link Supabase (binomepay://verify#access_token=...&refresh_token=...)
 // après confirmation email ou reset password, et hydrate la session.
@@ -23,11 +24,11 @@ const handleAuthDeepLink = async (url: string) => {
   if (!access_token || !refresh_token) return
 
   const { error } = await supabase.auth.setSession({ access_token, refresh_token })
-  if (error && __DEV__) console.error('[deeplink] setSession a échoué:', error)
+  if (error) logger.debug('[deeplink] setSession a échoué:', error)
 }
 
 export default function RootLayout() {
-  if (__DEV__) console.log('RootLayout rendering...')
+  logger.debug('RootLayout rendering...')
 
   useEffect(() => {
     Linking.getInitialURL().then((url) => {

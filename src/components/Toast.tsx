@@ -1,7 +1,9 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { Text, Animated } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name']
 
 interface ToastProps {
   visible: boolean
@@ -21,7 +23,11 @@ export default function Toast({
   const translateY = useRef(new Animated.Value(-100)).current
   const opacity = useRef(new Animated.Value(0)).current
 
-  const getToastConfig = (toastType: string) => {
+  const isVisibleRef = useRef(false)
+
+  const getToastConfig = (
+    toastType: string
+  ): { colors: string[]; icon: IoniconName; iconColor: string } => {
     switch (toastType) {
       case 'success':
         return {
@@ -52,8 +58,27 @@ export default function Toast({
 
   const config = getToastConfig(type)
 
+  const hideToast = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -100,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      isVisibleRef.current = false
+      if (onHide) onHide()
+    })
+  }, [translateY, opacity, onHide])
+
   useEffect(() => {
     if (visible) {
+      isVisibleRef.current = true
       // Animation d'entrée
       Animated.parallel([
         Animated.timing(translateY, {
@@ -77,26 +102,9 @@ export default function Toast({
     } else {
       hideToast()
     }
-  }, [visible])
+  }, [visible, duration, hideToast, opacity, translateY])
 
-  const hideToast = () => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: -100,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      if (onHide) onHide()
-    })
-  }
-
-  if (!visible && (opacity as any)._value === 0) return null
+  if (!visible && !isVisibleRef.current) return null
 
   return (
     <Animated.View
@@ -127,7 +135,7 @@ export default function Toast({
         }}
       >
         <Ionicons
-          name={config.icon as any}
+          name={config.icon}
           size={24}
           color={config.iconColor}
           style={{ marginRight: 12 }}

@@ -75,9 +75,14 @@ export default function SuggestedDetailPage() {
   }
 
   const confirmAccept = async () => {
+    if (!item || !user?.id) {
+      setShowConfirmModal(false)
+      showError('Action impossible. Veuillez réessayer.')
+      return
+    }
     setIsProcessing(true)
     try {
-      const conversationId = await acceptSuggestion(item!.id, user!.id)
+      const conversationId = await acceptSuggestion(item.id, user.id)
 
       if (conversationId) {
         setCreatedConversationId(conversationId)
@@ -236,7 +241,7 @@ export default function SuggestedDetailPage() {
         onClose={() => setShowConfirmModal(false)}
         title="Accepter la proposition"
         message={`Voulez-vous accepter cette proposition de ${item?.senderName} pour ${item?.amount} ${item?.currency} vers ${item?.destCountryName} ?\n\nUn match sera créé et vous pourrez discuter avec votre partenaire.`}
-        icon="handshake-outline"
+        icon="people-outline"
         iconColor="#10B981"
         buttons={[
           {

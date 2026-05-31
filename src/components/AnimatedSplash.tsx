@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { View, StyleSheet, Dimensions } from 'react-native'
+import { StyleSheet, Dimensions } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -36,13 +36,13 @@ export default function AnimatedSplash({ ready }: AnimatedSplashProps) {
       withTiming(1.05, { duration: 700, easing: Easing.out(Easing.back(1.5)) }),
       withTiming(1, { duration: 300, easing: Easing.inOut(Easing.ease) })
     )
-  }, [])
+  }, [opacity, scale])
 
   useEffect(() => {
     if (ready) {
       containerOpacity.value = withTiming(0, { duration: 500, easing: Easing.in(Easing.quad) })
     }
-  }, [ready])
+  }, [ready, containerOpacity])
 
   const containerStyle = useAnimatedStyle(() => ({ opacity: containerOpacity.value }))
   const logoStyle = useAnimatedStyle(() => ({

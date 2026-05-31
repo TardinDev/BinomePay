@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { View, Text, Pressable, ScrollView, Alert, Image, Modal, Switch } from 'react-native'
-import { router } from 'expo-router'
+import { router, type Href } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import Constants from 'expo-constants'
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name']
 import useAppStore from '@/store/useAppStore'
 import { useAuth } from '@/lib/auth'
 import { useBiometricAuth, getBiometricLabel, getBiometricIcon } from '@/hooks/useBiometricAuth'
 import { unregisterPushTokenForUser } from '@/services/pushTokenService'
 
 type RowProps = {
-  icon: string
+  icon: IoniconName
   iconColor?: string
   label: string
   value?: string
@@ -38,7 +40,7 @@ function SettingsRow({
         className="mr-3 rounded-full p-2"
         style={{ backgroundColor: '#0B1220', borderWidth: 1, borderColor: '#1F2937' }}
       >
-        <Ionicons name={icon as any} color={destructive ? '#EF4444' : iconColor} size={18} />
+        <Ionicons name={icon} color={destructive ? '#EF4444' : iconColor} size={18} />
       </View>
       <Text className={`flex-1 ${destructive ? 'text-red-400' : 'text-white'}`}>{label}</Text>
       {right ?? (
@@ -142,7 +144,7 @@ export default function ProfileScreen() {
         <Pressable
           onPress={() => {
             try {
-              const canGoBack = (router as any)?.canGoBack?.()
+              const canGoBack = router.canGoBack?.()
               if (canGoBack) router.back()
               else router.replace('/(Protected)/(tabs)')
             } catch {
@@ -226,12 +228,12 @@ export default function ProfileScreen() {
         <SettingsRow
           icon="person"
           label="Modifier le profil"
-          onPress={() => router.push('/(Protected)/settings/edit-profile' as any)}
+          onPress={() => router.push('/(Protected)/settings/edit-profile' as Href)}
         />
         <SettingsRow
           icon="time"
           label="Historique des transactions"
-          onPress={() => router.push('/(Protected)/history' as any)}
+          onPress={() => router.push('/(Protected)/history' as Href)}
           last
         />
       </View>
@@ -241,11 +243,11 @@ export default function ProfileScreen() {
         <SettingsRow
           icon="notifications"
           label="Notifications"
-          onPress={() => router.push('/(Protected)/settings/notifications' as any)}
+          onPress={() => router.push('/(Protected)/settings/notifications' as Href)}
         />
         {bioAvailable ? (
           <SettingsRow
-            icon={getBiometricIcon(biometricType)}
+            icon={getBiometricIcon(biometricType) as IoniconName}
             label={getBiometricLabel(biometricType)}
             right={
               <Switch
@@ -272,13 +274,13 @@ export default function ProfileScreen() {
         <SettingsRow
           icon="help-circle"
           label="Aide & Support"
-          onPress={() => router.push('/(Protected)/settings/help' as any)}
+          onPress={() => router.push('/(Protected)/settings/help' as Href)}
         />
         <SettingsRow
           icon="information-circle"
           label="À propos"
           value={`v${appVersion}`}
-          onPress={() => router.push('/(Protected)/settings/about' as any)}
+          onPress={() => router.push('/(Protected)/settings/about' as Href)}
           last
         />
       </View>
@@ -295,7 +297,7 @@ export default function ProfileScreen() {
           icon="trash-outline"
           label="Supprimer mon compte"
           destructive
-          onPress={() => router.push('/(Protected)/settings/delete-account' as any)}
+          onPress={() => router.push('/(Protected)/settings/delete-account' as Href)}
           last
         />
       </View>

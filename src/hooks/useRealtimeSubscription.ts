@@ -1,7 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { RealtimeChannel } from '@supabase/supabase-js'
+import {
+  RealtimeChannel,
+  REALTIME_LISTEN_TYPES,
+  RealtimePostgresChangesPayload,
+} from '@supabase/supabase-js'
 import useAppStore from '@/store/useAppStore'
+import { logger } from '@/utils/logger'
 
 type SubscriptionEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
 
@@ -25,10 +30,17 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>(
 ) {
   const channelRef = useRef<RealtimeChannel | null>(null)
 
+  // Conserver le dernier callback dans une ref pour éviter de recréer le canal
+  // à chaque rendu si l'appelant passe une fonction non mémoïsée.
+  const onPayloadRef = useRef(onPayload)
+  onPayloadRef.current = onPayload
+
+  // Extraire les primitives hors de l'effet : les dépendances restent stables
+  // (et non l'objet `config` qui est recréé à chaque rendu).
+  const { table, event = '*', filter, schema = 'public' } = config
+
   useEffect(() => {
     if (!enabled || !supabase) return
-
-    const { table, event = '*', filter, schema = 'public' } = config
 
     const channelName = `${table}_${event}_${filter || 'all'}_${Date.now()}`
 
@@ -36,31 +48,25 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>(
       const channel = supabase
         .channel(channelName)
         .on(
-          'postgres_changes' as any,
-          {
-            event,
-            schema,
-            table,
-            filter,
-          } as any,
-          (payload: any) => {
-            if (__DEV__) {
-              console.log(`Realtime update on ${table}:`, payload.eventType)
-            }
-            onPayload(payload as PostgresPayload<T>)
+          REALTIME_LISTEN_TYPES.POSTGRES_CHANGES,
+          { event, schema, table, filter } as {
+            event: SubscriptionEvent
+            schema: string
+            table: string
+            filter?: string
+          },
+          (payload: RealtimePostgresChangesPayload<T>) => {
+            logger.debug(`Realtime update on ${table}:`, payload.eventType)
+            onPayloadRef.current(payload as unknown as PostgresPayload<T>)
           }
         )
         .subscribe((status: string) => {
-          if (__DEV__) {
-            console.log(`Subscription status for ${table}:`, status)
-          }
+          logger.debug(`Subscription status for ${table}:`, status)
         })
 
       channelRef.current = channel
     } catch (error) {
-      if (__DEV__) {
-        console.error('Error setting up realtime subscription:', error)
-      }
+      logger.error('Error setting up realtime subscription:', error)
     }
 
     return () => {
@@ -69,7 +75,7 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>(
         channelRef.current = null
       }
     }
-  }, [config.table, config.event, config.filter, config.schema, enabled, onPayload])
+  }, [table, event, filter, schema, enabled])
 
   return channelRef.current
 }
@@ -117,9 +123,7 @@ export function useMatchesSubscription(userId: string | undefined) {
 
   const handlePayload = useCallback(
     (payload: PostgresPayload<{ id: string; status: string }>) => {
-      if (__DEV__) {
-        console.log('Match update received:', payload.eventType)
-      }
+      logger.debug('Match update received:', payload.eventType)
       // Refetch matches when there's any change
       if (userId) {
         loadMatches(userId)
@@ -144,9 +148,7 @@ export function useSuggestionsSubscription(userId: string | undefined) {
 
   const handlePayload = useCallback(
     (payload: PostgresPayload<{ id: string }>) => {
-      if (__DEV__) {
-        console.log('Suggestion update received:', payload.eventType)
-      }
+      logger.debug('Suggestion update received:', payload.eventType)
       // Refetch suggestions when there's any change
       if (userId) {
         loadSuggested(userId)
@@ -176,9 +178,7 @@ export function useNotificationsSubscription(userId: string | undefined) {
       } else if (payload.eventType === 'UPDATE' && payload.new?.read) {
         // Note: We don't have a decrementNotifications, so we'd need to refetch
         // For now, just log it
-        if (__DEV__) {
-          console.log('Notification marked as read')
-        }
+        logger.debug('Notification marked as read')
       }
     },
     [incrementNotifications]

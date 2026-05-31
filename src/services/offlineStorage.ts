@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import NetInfo from '@react-native-community/netinfo'
 import { User, MatchItem, Conversation, SuggestedItem, RequestItem } from '@/store/useAppStore'
+import { logger } from '@/utils/logger'
 
 export interface OfflineData {
   user: User | null
@@ -14,7 +15,7 @@ export interface OfflineData {
 export interface PendingAction {
   id: string
   type: 'create_match' | 'send_message' | 'create_intention' | 'accept_suggestion'
-  data: any
+  data: unknown
   timestamp: number
   retries: number
 }
@@ -169,22 +170,22 @@ class OfflineStorageService {
     switch (action.type) {
       case 'send_message':
         // await apiService.sendMessage(action.data);
-        if (__DEV__) console.log('Envoi du message en attente:', action.data)
+        logger.debug('Envoi du message en attente:', action.data)
         break
 
       case 'create_intention':
         // await apiService.createIntention(action.data);
-        if (__DEV__) console.log("Création de l'intention en attente:", action.data)
+        logger.debug("Création de l'intention en attente:", action.data)
         break
 
       case 'accept_suggestion':
         // await apiService.acceptSuggestion(action.data);
-        if (__DEV__) console.log('Acceptation de suggestion en attente:', action.data)
+        logger.debug('Acceptation de suggestion en attente:', action.data)
         break
 
       case 'create_match':
         // await apiService.createMatch(action.data);
-        if (__DEV__) console.log('Création de match en attente:', action.data)
+        logger.debug('Création de match en attente:', action.data)
         break
     }
   }
@@ -208,7 +209,7 @@ class OfflineStorageService {
     if (age > maxAge) {
       await AsyncStorage.removeItem(this.STORAGE_KEYS.OFFLINE_DATA)
       await AsyncStorage.removeItem(this.STORAGE_KEYS.PENDING_ACTIONS)
-      if (__DEV__) console.log('Données hors-ligne anciennes supprimées')
+      logger.debug('Données hors-ligne anciennes supprimées')
     }
   }
 

@@ -7,6 +7,7 @@ import useAppStore, {
   SuggestedItem,
 } from '@/store/useAppStore'
 import { notifyMatchAccepted, notifyNewMessage, notifyNewSuggestion } from './notificationService'
+import { logger } from '@/utils/logger'
 
 class SyncService {
   private syncInProgress = false
@@ -23,7 +24,7 @@ class SyncService {
 
   async initialize(): Promise<void> {
     if (this.USE_MOCK_API) {
-      if (__DEV__) console.log('Mode mock actif - synchronisation désactivée')
+      logger.debug('Mode mock actif - synchronisation désactivée')
       return
     }
 
@@ -73,7 +74,7 @@ class SyncService {
 
   async performSync(force = false): Promise<boolean> {
     if (this.USE_MOCK_API) {
-      if (__DEV__) console.log('Mode mock - synchronisation ignorée')
+      logger.debug('Mode mock - synchronisation ignorée')
       return true
     }
 
@@ -96,25 +97,25 @@ class SyncService {
       const userId = store.user?.id
 
       if (!userId) {
-        if (__DEV__) console.log('Aucun utilisateur connecté pour la synchronisation')
+        logger.debug('Aucun utilisateur connecté pour la synchronisation')
         return false
       }
 
       // Vérifier la connectivité
       const netInfo = await NetInfo.fetch()
       if (!netInfo.isConnected) {
-        if (__DEV__) console.log('Pas de connexion réseau pour la synchronisation')
+        logger.debug('Pas de connexion réseau pour la synchronisation')
         return false
       }
 
       // Vérifier la santé de l'API
       const apiHealthy = await ApiService.checkApiHealth()
       if (!apiHealthy) {
-        if (__DEV__) console.log('API non disponible')
+        logger.debug('API non disponible')
         return false
       }
 
-      if (__DEV__) console.log("Début de la synchronisation pour l'utilisateur:", userId)
+      logger.debug("Début de la synchronisation pour l'utilisateur:", userId)
 
       // 1. Traiter d'abord les actions hors ligne en attente
       await ApiService.processOfflineQueue()
@@ -122,7 +123,7 @@ class SyncService {
       // 2. Synchroniser les données utilisateur
       await this.syncAllUserData(userId)
 
-      if (__DEV__) console.log('Synchronisation terminée avec succès')
+      logger.debug('Synchronisation terminée avec succès')
       return true
     } catch (error) {
       if (__DEV__) console.error('Erreur lors de la synchronisation:', error)
@@ -231,7 +232,7 @@ class SyncService {
     // Comparer et mettre à jour seulement si différent
     if (this.hasDataChanged(currentRequests, newRequests)) {
       useAppStore.setState({ requests: newRequests })
-      if (__DEV__) console.log('Intentions mises à jour')
+      logger.debug('Intentions mises à jour')
     }
   }
 
@@ -244,7 +245,7 @@ class SyncService {
 
       // Détecter les nouveaux matches pour les notifications
       this.checkForNewMatches(currentMatches, newMatches)
-      if (__DEV__) console.log('Matches mis à jour')
+      logger.debug('Matches mis à jour')
     }
   }
 
@@ -258,7 +259,7 @@ class SyncService {
 
       // Mettre à jour le store
       useAppStore.setState({ conversations: newConversations })
-      if (__DEV__) console.log('Conversations mises à jour')
+      logger.debug('Conversations mises à jour')
     }
   }
 
@@ -271,7 +272,7 @@ class SyncService {
       this.checkForNewSuggestions(currentSuggestions, newSuggestions)
 
       useAppStore.setState({ suggested: newSuggestions })
-      if (__DEV__) console.log('Suggestions mises à jour')
+      logger.debug('Suggestions mises à jour')
     }
   }
 
@@ -341,11 +342,11 @@ class SyncService {
 
   async forceSync(): Promise<boolean> {
     if (this.USE_MOCK_API) {
-      if (__DEV__) console.log('Mode mock - synchronisation forcée ignorée')
+      logger.debug('Mode mock - synchronisation forcée ignorée')
       return true
     }
 
-    if (__DEV__) console.log("Synchronisation forcée par l'utilisateur")
+    logger.debug("Synchronisation forcée par l'utilisateur")
     return await this.performSync(true)
   }
 

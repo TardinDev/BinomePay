@@ -8,6 +8,13 @@ import RecentMatchesList from '@/components/home/RecentMatchesList'
 import SuggestedCard from '@/components/home/SuggestedCard'
 import CountryFilter from '@/components/home/CountryFilter'
 import { syncService } from '@/services/syncService'
+import type { RequestItem, MatchItem, SuggestedItem } from '@/lib/schemas'
+
+type HomeSection =
+  | { type: 'matches'; data: MatchItem[] }
+  | { type: 'intentions'; data: RequestItem[] }
+  | { type: 'suggestions-header'; data: never[] }
+  | { type: 'suggestion'; data: SuggestedItem }
 
 export default function HomePage() {
   const user = useAppStore((s) => s.user)
@@ -39,14 +46,14 @@ export default function HomePage() {
   }, [storeSuggested, countryFilter])
 
   // Créer les sections pour la FlatList
-  const sections = [
+  const sections: HomeSection[] = [
     { type: 'matches', data: matches },
-    ...(requests.length > 0 ? [{ type: 'intentions', data: requests }] : []),
+    ...(requests.length > 0 ? [{ type: 'intentions' as const, data: requests }] : []),
     { type: 'suggestions-header', data: [] },
-    ...filteredSuggested.map((item) => ({ type: 'suggestion', data: item })),
+    ...filteredSuggested.map((item) => ({ type: 'suggestion' as const, data: item })),
   ]
 
-  const renderSectionItem = ({ item }: { item: any }) => {
+  const renderSectionItem = ({ item }: { item: HomeSection }) => {
     switch (item.type) {
       case 'matches':
         return (
@@ -67,7 +74,7 @@ export default function HomePage() {
               className="mb-4"
               contentContainerStyle={{ paddingHorizontal: 0 }}
             >
-              {item.data.map((req: any, index: number) => (
+              {item.data.map((req: RequestItem, index: number) => (
                 <View
                   key={req.id}
                   className="rounded-lg border border-gray-800 bg-neutral-900 p-2"

@@ -64,7 +64,18 @@ export default function ProtectedLayout() {
       const userName = (authUser.user_metadata?.firstName as string) || undefined
       initializeUserData(authUser.id, userName)
     }
-  }, [isLoaded, isSignedIn, authUser?.id, isLoggingOut, session])
+  }, [
+    isLoaded,
+    isSignedIn,
+    authUser?.id,
+    authUser?.user_metadata?.firstName,
+    isLoggingOut,
+    session,
+    user,
+    initializeUserData,
+    reset,
+    router,
+  ])
 
   if (!isLoaded) return <LoadingScreen message="Vérification de l'authentification..." />
 

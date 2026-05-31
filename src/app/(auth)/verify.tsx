@@ -19,6 +19,7 @@ export default function VerifyEmailScreen() {
   const [resending, setResending] = useState(false)
 
   const handleVerify = async () => {
+    if (loading) return
     if (!code.trim() || !email) return
     try {
       setLoading(true)
@@ -42,14 +43,15 @@ export default function VerifyEmailScreen() {
       } else {
         setError('Vérification incomplète')
       }
-    } catch (e: any) {
-      setError(e?.message ?? 'Erreur inconnue')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur inconnue')
     } finally {
       setLoading(false)
     }
   }
 
   const handleResend = async () => {
+    if (resending) return
     if (!email) return
     try {
       setResending(true)
@@ -66,8 +68,8 @@ export default function VerifyEmailScreen() {
       }
 
       Alert.alert('Renvoi', 'Nouveau code envoyé par email.')
-    } catch (e: any) {
-      setError(e?.message ?? 'Erreur lors du renvoi du code')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur lors du renvoi du code')
     } finally {
       setResending(false)
     }

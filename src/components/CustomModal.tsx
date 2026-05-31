@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BlurView } from 'expo-blur'
 
+type IoniconName = React.ComponentProps<typeof Ionicons>['name']
+
 interface CustomModalProps {
   visible: boolean
   onClose: () => void
   title: string
   message: string
-  icon?: string
+  icon?: IoniconName
   iconColor?: string
   buttons: Array<{
     text: string
@@ -81,7 +83,7 @@ export default function CustomModal({
           {/* Icône */}
           <View className="mb-4 items-center">
             <View className="mb-4 rounded-full p-4" style={{ backgroundColor: iconColor + '20' }}>
-              <Ionicons name={icon as any} size={40} color={iconColor} />
+              <Ionicons name={icon} size={40} color={iconColor} />
             </View>
 
             {/* Titre */}

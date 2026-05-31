@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { AppState, AppStateStatus } from 'react-native'
 import { useAuth } from '@/lib/auth'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { logger } from '@/utils/logger'
 
 const LAST_ACTIVITY_KEY = '@binomepay_last_activity'
 const SESSION_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutes
@@ -41,7 +42,7 @@ export function useSessionTimeout({
       const timeSinceActivity = Date.now() - lastActivity
 
       if (timeSinceActivity >= timeoutMs) {
-        if (__DEV__) console.log('Session timeout - logging out')
+        logger.debug('Session timeout - logging out')
 
         if (onTimeout) {
           onTimeout()

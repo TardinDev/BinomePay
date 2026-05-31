@@ -66,15 +66,16 @@ describe('validateIntention', () => {
   it('avertit pour un corridor à haut risque', () => {
     const result = validateIntention(100, 'EUR', 'France', 'Mali')
     expect(result.isValid).toBe(true)
-    expect(result.warnings).toBeDefined()
-    expect(result.warnings![0]).toContain('vérification')
+    const warnings = result.warnings ?? []
+    expect(warnings).not.toHaveLength(0)
+    expect(warnings[0]).toContain('vérification')
   })
 
   it('avertit pour un montant élevé (>80% du max)', () => {
     const result = validateIntention(9000, 'EUR', 'France', 'Sénégal')
     expect(result.isValid).toBe(true)
-    expect(result.warnings).toBeDefined()
-    expect(result.warnings!.some((w) => w.includes('Montant élevé'))).toBe(true)
+    const warnings = result.warnings ?? []
+    expect(warnings.some((w) => w.includes('Montant élevé'))).toBe(true)
   })
 })
 
@@ -106,15 +107,17 @@ describe('validateMessage', () => {
   it('avertit pour un message contenant "mot de passe"', () => {
     const result = validateMessage('Quel est votre mot de passe ?')
     expect(result.isValid).toBe(true)
-    expect(result.warnings).toBeDefined()
-    expect(result.warnings![0]).toContain('informations sensibles')
+    const warnings = result.warnings ?? []
+    expect(warnings).not.toHaveLength(0)
+    expect(warnings[0]).toContain('informations sensibles')
   })
 
   it('avertit pour un message contenant un numéro de carte', () => {
     const result = validateMessage('Ma carte: 4532 1234 5678 9012')
     expect(result.isValid).toBe(true)
-    expect(result.warnings).toBeDefined()
-    expect(result.warnings![0]).toContain('informations sensibles')
+    const warnings = result.warnings ?? []
+    expect(warnings).not.toHaveLength(0)
+    expect(warnings[0]).toContain('informations sensibles')
   })
 
   it('rejette un message spam (caractères répétés)', () => {

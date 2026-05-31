@@ -96,7 +96,7 @@ type AppState = {
   clearNotifications: () => void
 
   // Requests/Intentions
-  addRequest: (r: Omit<RequestItem, 'id' | 'status'> & { type: 'SEND' | 'RECEIVE' }) => void
+  addRequest: (r: Omit<RequestItem, 'status'> & { type: 'SEND' | 'RECEIVE' }) => void
   loadRequests: (userId: string) => Promise<void>
 
   // Suggestions
@@ -132,6 +132,13 @@ type AppState = {
   reset: () => void
 }
 
+// Garde anti-réentrance pour l'initialisation des données utilisateur.
+// Empêche les appels concurrents/répétés (ex: déclenchés simultanément par
+// (Protected)/_layout.tsx) de lancer un double fetch et une double init du
+// syncService (qui ajouterait deux listeners NetInfo + deux intervals).
+let initializedUserId: string | null = null
+let isInitializing = false
+
 const useAppStore = create<AppState>((set, get) => ({
   // User data - initialement null
   user: null,
@@ -162,13 +169,12 @@ const useAppStore = create<AppState>((set, get) => ({
   setUser: (user) => set({ user }),
   incrementNotifications: () => set((s) => ({ notifications: s.notifications + 1 })),
   clearNotifications: () => set({ notifications: 0 }),
-  addRequest: async ({ type, amount, currency, originCountry, destCountry }) => {
-    const state = get()
-    if (!state.user?.id) return
-
-    // Optimistic update
-    const tempRequest: RequestItem = {
-      id: 'temp_' + nanoid(8),
+  addRequest: ({ id, type, amount, currency, originCountry, destCountry }) => {
+    // Mise à jour optimiste locale UNIQUEMENT.
+    // La persistance serveur est gérée par l'écran appelant (new-intention.tsx),
+    // qui fournit l'id réel renvoyé par Supabase. Aucun second insert ici.
+    const newRequest: RequestItem = {
+      id,
       type,
       amount,
       currency,
@@ -178,36 +184,8 @@ const useAppStore = create<AppState>((set, get) => ({
     }
 
     set((s) => ({
-      requests: [...s.requests, tempRequest],
-      isCreatingIntention: true,
+      requests: [...s.requests, newRequest],
     }))
-
-    try {
-      const newRequest = await ApiService.createRequest(state.user.id, {
-        type,
-        amount,
-        currency,
-        originCountry,
-        destCountry,
-      })
-
-      // Remplacer l'intention temporaire par la vraie
-      set((s) => ({
-        requests: s.requests.map((r) => (r.id === tempRequest.id ? newRequest : r)),
-        isCreatingIntention: false,
-      }))
-    } catch (error) {
-      // En cas d'erreur, ajouter à la queue hors ligne
-      await ApiService.queueOfflineAction({
-        type: 'CREATE_REQUEST',
-        payload: { type, amount, currency, originCountry, destCountry },
-        userId: state.user.id,
-        timestamp: Date.now(),
-      })
-
-      set({ isCreatingIntention: false })
-      if (__DEV__) console.error('Erreur création intention:', error)
-    }
   },
   addSuggested: ({
     amount,
@@ -257,6 +235,15 @@ const useAppStore = create<AppState>((set, get) => ({
       return
     }
 
+    // Garde anti-réentrance : coalescer les appels concurrents/répétés
+    // pour le même utilisateur (évite double fetch + double init syncService).
+    if (isInitializing || initializedUserId === userId) {
+      if (__DEV__) console.warn('Initialisation déjà en cours/effectuée pour:', userId)
+      return
+    }
+    isInitializing = true
+    initializedUserId = userId
+
     set({ isLoading: true, error: null })
 
     try {
@@ -298,6 +285,10 @@ const useAppStore = create<AppState>((set, get) => ({
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
       set({ error: errorMessage, isLoading: false })
       if (__DEV__) console.error('Erreur initialisation données utilisateur:', error)
+      // Échec : permettre une nouvelle tentative ultérieure
+      initializedUserId = null
+    } finally {
+      isInitializing = false
     }
   },
 
@@ -506,7 +497,11 @@ const useAppStore = create<AppState>((set, get) => ({
   setError: (error: string | null) => set({ error }),
   setLoggingOut: (logging: boolean) => set({ isLoggingOut: logging }),
 
-  reset: () =>
+  reset: () => {
+    // Réinitialiser la garde d'init pour permettre une nouvelle initialisation
+    // lors d'une prochaine connexion.
+    initializedUserId = null
+    isInitializing = false
     set({
       user: null,
       notifications: 0,
@@ -523,7 +518,8 @@ const useAppStore = create<AppState>((set, get) => ({
       isCreatingIntention: false,
       error: null,
       isLoggingOut: false, // Reset du flag de déconnexion
-    }),
+    })
+  },
 }))
 
 export default useAppStore

@@ -23,14 +23,13 @@ const Notifications: typeof NotificationsType | null = isExpoGo
 
 if (Notifications) {
   Notifications.setNotificationHandler({
-    handleNotification: async () =>
-      ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }) as any,
+    handleNotification: async (): Promise<NotificationsType.NotificationBehavior> => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
   })
 }
 
@@ -45,47 +44,64 @@ export interface NotificationData {
   type: NotificationType
   title: string
   body: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }
 
 const createNotificationChannels = async (): Promise<void> => {
   if (Platform.OS !== 'android' || !Notifications) return
 
   try {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'Notifications générales',
-      importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#EAB308',
-    } as any)
+    const channels: Array<[string, NotificationsType.NotificationChannelInput]> = [
+      [
+        'default',
+        {
+          name: 'Notifications générales',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#EAB308',
+        },
+      ],
+      [
+        'match_accepted',
+        {
+          name: 'Nouveaux matches',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 500, 250, 500],
+          lightColor: '#22C55E',
+        },
+      ],
+      [
+        'new_message',
+        {
+          name: 'Nouveaux messages',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 125, 250],
+          lightColor: '#3B82F6',
+        },
+      ],
+      [
+        'new_suggestion',
+        {
+          name: 'Nouvelles propositions',
+          importance: Notifications.AndroidImportance.DEFAULT,
+          vibrationPattern: [0, 250],
+          lightColor: '#FDE68A',
+        },
+      ],
+      [
+        'kyc_update',
+        {
+          name: 'Vérification KYC',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#EAB308',
+        },
+      ],
+    ]
 
-    await Notifications.setNotificationChannelAsync('match_accepted', {
-      name: 'Nouveaux matches',
-      importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 500, 250, 500],
-      lightColor: '#22C55E',
-    } as any)
-
-    await Notifications.setNotificationChannelAsync('new_message', {
-      name: 'Nouveaux messages',
-      importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 250, 125, 250],
-      lightColor: '#3B82F6',
-    } as any)
-
-    await Notifications.setNotificationChannelAsync('new_suggestion', {
-      name: 'Nouvelles propositions',
-      importance: Notifications.AndroidImportance.DEFAULT,
-      vibrationPattern: [0, 250],
-      lightColor: '#FDE68A',
-    } as any)
-
-    await Notifications.setNotificationChannelAsync('kyc_update', {
-      name: 'Vérification KYC',
-      importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#EAB308',
-    } as any)
+    for (const [id, config] of channels) {
+      await Notifications.setNotificationChannelAsync(id, config)
+    }
   } catch (error) {
     if (__DEV__) console.error('[notif] création canaux Android:', error)
   }
@@ -122,7 +138,7 @@ export const scheduleLocalNotification = async (
   if (isExpoGo || !Notifications) return null
 
   try {
-    const content: any = {
+    const content: NotificationsType.NotificationContentInput & { channelId?: string } = {
       title: notification.title,
       body: notification.body,
       data: notification.data || {},
@@ -134,9 +150,17 @@ export const scheduleLocalNotification = async (
       content.channelId = notification.type
     }
 
+    const trigger: NotificationsType.NotificationTriggerInput =
+      delaySeconds > 0
+        ? {
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: delaySeconds,
+          }
+        : null
+
     return await Notifications.scheduleNotificationAsync({
       content,
-      trigger: delaySeconds > 0 ? ({ seconds: delaySeconds } as any) : null,
+      trigger,
     })
   } catch (error) {
     if (__DEV__) console.error('[notif] schedule échouée:', error)
@@ -218,9 +242,19 @@ export const notifyKycUpdate = async (
  * Gère le tap sur une notification (foreground, background ou app fermée).
  * Route l'utilisateur vers le bon écran selon `data.type`.
  */
+/**
+ * Minimal navigation contract needed to route a notification tap. Accepts any
+ * router exposing `push` and/or `navigate` (expo-router exposes both; some tests
+ * mock only `navigate`).
+ */
+interface NotificationRouter {
+  push?: (_href: string) => void
+  navigate?: (_href: string) => void
+}
+
 export const handleNotificationResponse = (
   response: NotificationsType.NotificationResponse,
-  router: any
+  router: NotificationRouter
 ): void => {
   const data = response.notification.request.content.data as
     | { type?: NotificationType; conversationId?: string; matchId?: string }
@@ -228,26 +262,31 @@ export const handleNotificationResponse = (
 
   if (!data?.type) return
 
+  const go = (href: string): void => {
+    if (router.push) router.push(href)
+    else if (router.navigate) router.navigate(href)
+  }
+
   switch (data.type) {
     case 'new_message':
       if (data.conversationId) {
-        router.push(`/(Protected)/messages/${data.conversationId}`)
+        go(`/(Protected)/messages/${data.conversationId}`)
       } else {
-        router.push('/(Protected)/(tabs)/messages')
+        go('/(Protected)/(tabs)/messages')
       }
       break
 
     case 'match_accepted':
-      router.push('/(Protected)/(tabs)/messages')
+      go('/(Protected)/(tabs)/messages')
       break
 
     case 'match_expired':
     case 'new_suggestion':
-      router.push('/(Protected)/(tabs)')
+      go('/(Protected)/(tabs)')
       break
 
     case 'kyc_update':
-      router.push('/(Protected)/profile')
+      go('/(Protected)/profile')
       break
   }
 }

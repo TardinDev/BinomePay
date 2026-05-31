@@ -1,8 +1,21 @@
 import useAppStore from '../useAppStore'
+import ApiService from '@/services/apiService'
+
+// Mock du service API pour piloter succès/échec des appels réseau
+jest.mock('@/services/apiService', () => ({
+  __esModule: true,
+  default: {
+    createRequest: jest.fn(),
+    queueOfflineAction: jest.fn(),
+  },
+}))
+
+const mockedApi = ApiService as jest.Mocked<typeof ApiService>
 
 // Reset le store avant chaque test
 beforeEach(() => {
   useAppStore.getState().reset()
+  jest.clearAllMocks()
 })
 
 describe('useAppStore - état initial', () => {
@@ -269,5 +282,55 @@ describe('useAppStore - reset', () => {
     expect(state.isLoading).toBe(false)
     expect(state.error).toBeNull()
     expect(state.isLoggingOut).toBe(false)
+  })
+})
+
+describe('useAppStore - addRequest (mise à jour optimiste locale pure)', () => {
+  const baseUser = {
+    id: 'user_1',
+    name: 'Jean',
+    kycStatus: 'verified' as const,
+    ratingAvg: 5,
+  }
+
+  it('ajoute l’intention au store avec l’id réel fourni par l’appelant', () => {
+    useAppStore.getState().setUser(baseUser)
+
+    useAppStore.getState().addRequest({
+      id: 'real-1',
+      type: 'SEND',
+      amount: 100,
+      currency: 'EUR',
+      originCountry: 'FR',
+      destCountry: 'MA',
+    })
+
+    const requests = useAppStore.getState().requests
+    expect(requests).toHaveLength(1)
+    expect(requests[0]).toEqual({
+      id: 'real-1',
+      type: 'SEND',
+      amount: 100,
+      currency: 'EUR',
+      originCountry: 'FR',
+      destCountry: 'MA',
+      status: 'OPEN',
+    })
+  })
+
+  it('n’appelle PAS ApiService.createRequest (la persistance est gérée par l’écran)', () => {
+    useAppStore.getState().setUser(baseUser)
+
+    useAppStore.getState().addRequest({
+      id: 'real-2',
+      type: 'RECEIVE',
+      amount: 200,
+      currency: 'USD',
+      originCountry: 'CA',
+      destCountry: 'ML',
+    })
+
+    expect(mockedApi.createRequest).not.toHaveBeenCalled()
+    expect(mockedApi.queueOfflineAction).not.toHaveBeenCalled()
   })
 })

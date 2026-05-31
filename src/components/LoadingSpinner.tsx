@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ActivityIndicator, Text } from 'react-native'
+import { View, ActivityIndicator, Text, type ViewProps } from 'react-native'
 
 interface LoadingSpinnerProps {
   size?: 'small' | 'large'
@@ -39,7 +39,12 @@ export function LoadingCard({ message }: { message?: string }) {
   )
 }
 
-export function LoadingButton({ children, loading, ...props }: any) {
+interface LoadingButtonProps extends ViewProps {
+  children?: React.ReactNode
+  loading?: boolean
+}
+
+export function LoadingButton({ children, loading, ...props }: LoadingButtonProps) {
   return (
     <View {...props}>
       {loading ? (

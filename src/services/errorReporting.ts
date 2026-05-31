@@ -13,6 +13,8 @@
 
 // import * as Sentry from '@sentry/react-native'
 
+import { logger } from '@/utils/logger'
+
 export type ErrorSeverity = 'fatal' | 'error' | 'warning' | 'info' | 'debug'
 
 export interface ErrorContext {
@@ -55,7 +57,7 @@ class ErrorReportingService {
       // }
 
       this.isInitialized = true
-      if (__DEV__) console.log('Error reporting service initialized')
+      logger.debug('Error reporting service initialized')
 
       // Process queued errors
       this.processQueue()
@@ -120,9 +122,7 @@ class ErrorReportingService {
     data?: Record<string, unknown>,
     _level: ErrorSeverity = 'info'
   ): void {
-    if (__DEV__) {
-      console.log(`[${category}] ${message}`, data)
-    }
+    logger.debug(`[${category}] ${message}`, data)
 
     // Uncomment to enable Sentry breadcrumbs:
     // Sentry.addBreadcrumb({
@@ -184,10 +184,10 @@ class ErrorReportingService {
     if (__DEV__) {
       const logMethod =
         report.severity === 'error' || report.severity === 'fatal'
-          ? console.error
+          ? logger.error
           : report.severity === 'warning'
-            ? console.warn
-            : console.log
+            ? logger.warn
+            : logger.debug
 
       logMethod(`[${report.severity.toUpperCase()}] ${report.message}`, {
         error: report.error,

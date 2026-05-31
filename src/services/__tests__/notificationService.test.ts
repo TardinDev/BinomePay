@@ -14,6 +14,15 @@ jest.mock('expo-notifications', () => ({
   setBadgeCountAsync: jest.fn(() => Promise.resolve()),
   AndroidImportance: { HIGH: 4, DEFAULT: 3 },
   AndroidNotificationPriority: { HIGH: 'high' },
+  SchedulableTriggerInputTypes: {
+    TIME_INTERVAL: 'timeInterval',
+    DATE: 'date',
+    DAILY: 'daily',
+    WEEKLY: 'weekly',
+    YEARLY: 'yearly',
+    CALENDAR: 'calendar',
+    MONTHLY: 'monthly',
+  },
 }))
 
 // Mock expo-constants sans appOwnership (= pas Expo Go)
@@ -22,7 +31,6 @@ jest.mock('expo-constants', () => ({
 }))
 
 import * as Notifications from 'expo-notifications'
-import Constants from 'expo-constants'
 
 const mockNotifications = Notifications as any
 
@@ -89,7 +97,7 @@ describe('notificationService', () => {
 
       expect(mockNotifications.scheduleNotificationAsync).toHaveBeenCalledWith(
         expect.objectContaining({
-          trigger: { seconds: 10 },
+          trigger: { type: 'timeInterval', seconds: 10 },
         })
       )
     })
@@ -303,68 +311,70 @@ describe('notificationService', () => {
     })
 
     it('navigue vers messages pour match_accepted', () => {
-      const navigation = { navigate: jest.fn() }
+      const router = { push: jest.fn() }
 
-      handleNotificationResponse(makeResponse({ type: 'match_accepted' }) as any, navigation)
+      handleNotificationResponse(makeResponse({ type: 'match_accepted' }) as any, router)
 
-      expect(navigation.navigate).toHaveBeenCalledWith('(Protected)', {
-        screen: '(tabs)',
-        params: { screen: 'messages' },
-      })
+      expect(router.push).toHaveBeenCalledWith('/(Protected)/(tabs)/messages')
     })
 
     it('navigue vers la conversation pour new_message', () => {
-      const navigation = { navigate: jest.fn() }
+      const router = { push: jest.fn() }
 
       handleNotificationResponse(
         makeResponse({ type: 'new_message', conversationId: 'conv_99' }) as any,
-        navigation
+        router
       )
 
-      expect(navigation.navigate).toHaveBeenCalledWith('(Protected)', {
-        screen: 'messages',
-        params: { screen: 'conv_99' },
-      })
+      expect(router.push).toHaveBeenCalledWith('/(Protected)/messages/conv_99')
     })
 
     it('navigue vers home pour match_expired', () => {
-      const navigation = { navigate: jest.fn() }
+      const router = { push: jest.fn() }
 
-      handleNotificationResponse(makeResponse({ type: 'match_expired' }) as any, navigation)
+      handleNotificationResponse(makeResponse({ type: 'match_expired' }) as any, router)
 
-      expect(navigation.navigate).toHaveBeenCalledWith('(Protected)', {
-        screen: '(tabs)',
-        params: { screen: 'index' },
-      })
+      expect(router.push).toHaveBeenCalledWith('/(Protected)/(tabs)')
     })
 
     it('navigue vers profile pour kyc_update', () => {
-      const navigation = { navigate: jest.fn() }
+      const router = { push: jest.fn() }
 
-      handleNotificationResponse(makeResponse({ type: 'kyc_update' }) as any, navigation)
+      handleNotificationResponse(makeResponse({ type: 'kyc_update' }) as any, router)
 
-      expect(navigation.navigate).toHaveBeenCalledWith('(Protected)', {
-        screen: 'profile',
-      })
+      expect(router.push).toHaveBeenCalledWith('/(Protected)/profile')
     })
 
     it('navigue vers home pour new_suggestion', () => {
-      const navigation = { navigate: jest.fn() }
+      const router = { push: jest.fn() }
 
-      handleNotificationResponse(makeResponse({ type: 'new_suggestion' }) as any, navigation)
+      handleNotificationResponse(makeResponse({ type: 'new_suggestion' }) as any, router)
 
-      expect(navigation.navigate).toHaveBeenCalledWith('(Protected)', {
-        screen: '(tabs)',
-        params: { screen: 'index' },
-      })
+      expect(router.push).toHaveBeenCalledWith('/(Protected)/(tabs)')
     })
 
-    it('ne navigue pas pour new_message sans conversationId', () => {
-      const navigation = { navigate: jest.fn() }
+    it('redirige vers la liste des messages pour new_message sans conversationId', () => {
+      const router = { push: jest.fn() }
 
-      handleNotificationResponse(makeResponse({ type: 'new_message' }) as any, navigation)
+      handleNotificationResponse(makeResponse({ type: 'new_message' }) as any, router)
 
-      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(router.push).toHaveBeenCalledWith('/(Protected)/(tabs)/messages')
+    })
+
+    it('utilise navigate en fallback si push est absent', () => {
+      const router = { navigate: jest.fn() }
+
+      handleNotificationResponse(makeResponse({ type: 'kyc_update' }) as any, router)
+
+      expect(router.navigate).toHaveBeenCalledWith('/(Protected)/profile')
+    })
+
+    it('ne navigue pas si le type est absent', () => {
+      const router = { push: jest.fn() }
+
+      handleNotificationResponse(makeResponse({}) as any, router)
+
+      expect(router.push).not.toHaveBeenCalled()
     })
   })
 

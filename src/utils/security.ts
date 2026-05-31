@@ -316,7 +316,7 @@ export const formatSecurityWarnings = (check: SecurityCheck): string => {
  */
 export const logSecurityEvent = (
   event: 'login' | 'transaction' | 'message' | 'suspicious_activity',
-  details: Record<string, any>,
+  details: Record<string, unknown>,
   riskLevel: SecurityCheck['riskLevel']
 ): void => {
   const logData = {
