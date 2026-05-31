@@ -14,26 +14,27 @@ const errors = []
 const warnings = []
 
 // 1. Vérifier les variables d'environnement
-console.log('📋 Vérification des variables d\'environnement...')
+console.log("📋 Vérification des variables d'environnement...")
 
 const envProdPath = path.join(__dirname, '..', '.env.production')
 if (!fs.existsSync(envProdPath)) {
   errors.push('❌ Fichier .env.production manquant')
 } else {
   const envContent = fs.readFileSync(envProdPath, 'utf8')
-  
+
   // Vérifier les variables critiques
   const requiredVars = [
     'EXPO_PUBLIC_API_URL',
-    'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY'
+    'EXPO_PUBLIC_SUPABASE_URL',
+    'EXPO_PUBLIC_SUPABASE_ANON_KEY',
   ]
-  
-  requiredVars.forEach(varName => {
+
+  requiredVars.forEach((varName) => {
     if (!envContent.includes(varName) || envContent.includes(`${varName}=your-`)) {
       errors.push(`❌ Variable ${varName} non configurée dans .env.production`)
     }
   })
-  
+
   // Vérifier que MOCK_API est désactivé
   if (envContent.includes('EXPO_PUBLIC_MOCK_API=true')) {
     errors.push('❌ EXPO_PUBLIC_MOCK_API doit être false en production')
@@ -44,25 +45,20 @@ if (!fs.existsSync(envProdPath)) {
 console.log('🔍 Recherche de secrets potentiels dans le code...')
 
 const searchPatterns = [
-  /sk_live_[a-zA-Z0-9]+/g,  // Clés Stripe live
-  /pk_live_[a-zA-Z0-9]+/g,  // Clés publiques Stripe live exposées dans le code
-  /[0-9a-f]{32}/g,          // Hash MD5 potentiels
+  /sk_live_[a-zA-Z0-9]+/g, // Clés Stripe live
+  /pk_live_[a-zA-Z0-9]+/g, // Clés publiques Stripe live exposées dans le code
+  /[0-9a-f]{32}/g, // Hash MD5 potentiels
   /password\s*=\s*["'][^"']+["']/gi, // Mots de passe en dur
 ]
 
-const filesToCheck = [
-  'src/**/*.ts',
-  'src/**/*.tsx',
-  'src/**/*.js',
-  'app.config.ts'
-]
+const filesToCheck = ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.js', 'app.config.ts']
 
 // Fonction simple de recherche (sans glob pour éviter les dépendances)
 function checkFileForSecrets(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf8')
-    
-    searchPatterns.forEach(pattern => {
+
+    searchPatterns.forEach((pattern) => {
       const matches = content.match(pattern)
       if (matches) {
         warnings.push(`⚠️ Secret potentiel détecté dans ${filePath}: ${matches[0]}`)
@@ -79,11 +75,11 @@ console.log('⚙️ Vérification de app.config.ts...')
 const appConfigPath = path.join(__dirname, '..', 'app.config.ts')
 if (fs.existsSync(appConfigPath)) {
   const appConfig = fs.readFileSync(appConfigPath, 'utf8')
-  
+
   if (!appConfig.includes('com.binomepay.app')) {
     errors.push('❌ Package name Android non configuré')
   }
-  
+
   if (!appConfig.includes('versionCode')) {
     warnings.push('⚠️ Version code Android manquant')
   }
@@ -99,11 +95,11 @@ if (!fs.existsSync(easConfigPath)) {
   errors.push('❌ eas.json manquant')
 } else {
   const easConfig = JSON.parse(fs.readFileSync(easConfigPath, 'utf8'))
-  
+
   if (!easConfig.build?.production?.android?.buildType) {
     errors.push('❌ Configuration build production Android manquante')
   }
-  
+
   if (easConfig.build.production.android.buildType !== 'aab') {
     warnings.push('⚠️ Build type recommandé: aab (Android App Bundle)')
   }
@@ -116,10 +112,10 @@ const requiredAssets = [
   'assets/icon.png',
   'assets/adaptive-icon.png',
   'assets/splash-icon.png',
-  'assets/favicon.png'
+  'assets/favicon.png',
 ]
 
-requiredAssets.forEach(asset => {
+requiredAssets.forEach((asset) => {
   const assetPath = path.join(__dirname, '..', asset)
   if (!fs.existsSync(assetPath)) {
     warnings.push(`⚠️ Asset manquant: ${asset}`)
@@ -130,22 +126,24 @@ requiredAssets.forEach(asset => {
 console.log('\n📊 Résultats de la vérification:\n')
 
 if (errors.length === 0 && warnings.length === 0) {
-  console.log('✅ Aucun problème détecté ! L\'application est prête pour le déploiement.')
+  console.log("✅ Aucun problème détecté ! L'application est prête pour le déploiement.")
 } else {
   if (errors.length > 0) {
     console.log('🚨 ERREURS CRITIQUES (à corriger avant déploiement):')
-    errors.forEach(error => console.log(`   ${error}`))
+    errors.forEach((error) => console.log(`   ${error}`))
     console.log('')
   }
-  
+
   if (warnings.length > 0) {
     console.log('⚠️ AVERTISSEMENTS (recommandé de corriger):')
-    warnings.forEach(warning => console.log(`   ${warning}`))
+    warnings.forEach((warning) => console.log(`   ${warning}`))
     console.log('')
   }
-  
+
   if (errors.length > 0) {
-    console.log('❌ Le déploiement n\'est PAS recommandé tant que les erreurs critiques ne sont pas corrigées.')
+    console.log(
+      "❌ Le déploiement n'est PAS recommandé tant que les erreurs critiques ne sont pas corrigées."
+    )
     process.exit(1)
   } else {
     console.log('✅ Le déploiement peut continuer, mais vérifiez les avertissements.')
@@ -155,5 +153,5 @@ if (errors.length === 0 && warnings.length === 0) {
 console.log('\n🎯 Prochaines étapes:')
 console.log('   1. Corriger les erreurs et avertissements ci-dessus')
 console.log('   2. Exécuter: npm run build:android:production')
-console.log('   3. Tester l\'APK/AAB avant soumission')
+console.log("   3. Tester l'APK/AAB avant soumission")
 console.log('   4. Exécuter: npm run submit:android')
