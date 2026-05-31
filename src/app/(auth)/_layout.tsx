@@ -44,6 +44,11 @@ export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
+        // animation:'none' désactive l'animation de transition native de
+        // react-native-screens. Sur SDK 54 (New Arch), cette animation déclenche
+        // un crash natif (reanimated reçoit un payload mal typé via
+        // dispatchTransitionProgressEvent). Transition instantanée = pas de crash.
+        animation: 'none',
         headerStyle: { backgroundColor: '#000000' },
         headerTintColor: '#FFFFFF',
         headerTitleAlign: 'center',

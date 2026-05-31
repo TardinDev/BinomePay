@@ -88,7 +88,8 @@ export default function ProtectedLayout() {
   return (
     <View className="flex-1 bg-black">
       <ConnectionStatus />
-      <Stack screenOptions={{ headerShown: false }} />
+      {/* animation:'none' évite le crash natif de transition screens/reanimated sur SDK 54 (New Arch) */}
+      <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
     </View>
   )
 }
