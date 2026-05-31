@@ -1,5 +1,8 @@
 import React from 'react'
+import { Ionicons } from '@expo/vector-icons'
 import CustomModal from './CustomModal'
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name']
 
 interface ConfirmationDialogProps {
   visible: boolean
@@ -10,7 +13,7 @@ interface ConfirmationDialogProps {
   confirmText?: string
   cancelText?: string
   confirmStyle?: 'primary' | 'danger'
-  icon?: string
+  icon?: IoniconName
   iconColor?: string
   loading?: boolean
 }

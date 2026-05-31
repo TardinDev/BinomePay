@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { View, Text, TextInput, Pressable, FlatList } from 'react-native'
+import { nanoid } from 'nanoid/non-secure'
 import useAppStore from '@/store/useAppStore'
 
 export default function RequestsPage() {
@@ -73,7 +74,16 @@ export default function RequestsPage() {
           onPress={() => {
             const amt = Number(amount) || 0
             if (amt <= 0) return
-            addRequest({ type, amount: amt, currency, originCountry, destCountry })
+            // addRequest est désormais une mise à jour locale pure : l'appelant
+            // fournit l'id. (Écran de dev non routé.)
+            addRequest({
+              id: 'temp_' + nanoid(8),
+              type,
+              amount: amt,
+              currency,
+              originCountry,
+              destCountry,
+            })
           }}
           className="mt-4 items-center rounded-xl bg-yellow-400 px-5 py-3"
         >

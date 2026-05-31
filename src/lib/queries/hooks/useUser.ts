@@ -4,6 +4,7 @@ import ApiService from '@/services/apiService'
 import { queryKeys } from '../keys'
 import { UserSchema } from '@/lib/schemas'
 import type { User } from '@/lib/schemas'
+import type { User as StoreUser } from '@/store/useAppStore'
 
 export const useUserProfile = () => {
   const { userId } = useAuth()
@@ -26,7 +27,7 @@ export const useUpdateUserProfile = () => {
   return useMutation({
     mutationFn: async (userData: Partial<User>) => {
       if (!userId) throw new Error('User not authenticated')
-      return await ApiService.updateUserProfile(userId, userData as any)
+      return await ApiService.updateUserProfile(userId, userData as Partial<StoreUser>)
     },
     onSuccess: () => {
       if (userId) {

@@ -94,7 +94,7 @@ export default function LogoMark({ size = 300, animated = true, rounded = true }
       cancelAnimation(ringPulse2)
       cancelAnimation(ringPulse3)
     }
-  }, [animated])
+  }, [animated, rotation1, rotation2, pulse, haloPulse, ringPulse, ringPulse2, ringPulse3])
 
   const arc1Props = useAnimatedProps(() => ({ transform: `rotate(${rotation1.value})` }))
   const arc2Props = useAnimatedProps(() => ({ transform: `rotate(${rotation2.value})` }))

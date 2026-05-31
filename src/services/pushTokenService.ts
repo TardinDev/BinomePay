@@ -17,11 +17,10 @@ const Notifications: typeof NotificationsType | null = isExpoGo
   : (require('expo-notifications') as typeof NotificationsType)
 
 const getProjectId = (): string | undefined => {
-  return (
-    (Constants.expoConfig?.extra as any)?.eas?.projectId ||
-    (Constants.easConfig as any)?.projectId ||
-    process.env.EXPO_PUBLIC_EAS_PROJECT_ID
-  )
+  const extraEas = (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)
+    ?.eas
+  const easConfig = Constants.easConfig as { projectId?: string } | null | undefined
+  return extraEas?.projectId || easConfig?.projectId || process.env.EXPO_PUBLIC_EAS_PROJECT_ID
 }
 
 export const requestPushPermissions = async (): Promise<boolean> => {

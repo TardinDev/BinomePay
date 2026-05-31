@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { User, RequestItem, MatchItem, Conversation, SuggestedItem } from '@/store/useAppStore'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/utils/logger'
 
 // Types pour les messages
 export type Message = {
@@ -47,6 +48,9 @@ export type OfflineAction =
   | UpdateProfileAction
 
 export class ApiService {
+  // Garde anti-réentrance: évite deux vidages concurrents de la file hors ligne
+  private static isProcessingQueue = false
+
   // ================================
   // GESTION UTILISATEUR
   // ================================
@@ -104,7 +108,7 @@ export class ApiService {
 
       if (error) throw error
 
-      if (__DEV__) console.log('Profil utilisateur assuré dans Supabase')
+      logger.debug('Profil utilisateur assuré dans Supabase')
 
       return {
         id: data.auth_id,
@@ -689,6 +693,9 @@ export class ApiService {
   }
 
   static async processOfflineQueue(): Promise<void> {
+    // Ignorer si un vidage est déjà en cours (interval 30s + événement connectivité)
+    if (this.isProcessingQueue) return
+    this.isProcessingQueue = true
     try {
       const offlineQueue = await AsyncStorage.getItem('offline_queue')
       if (!offlineQueue) return
@@ -705,7 +712,7 @@ export class ApiService {
         }
       }
 
-      // Supprimer les actions traitées
+      // Supprimer uniquement les actions traitées (ack serveur) — pas de perte
       const remainingQueue = queue.filter(
         (action) => !processedActions.includes(action.timestamp.toString())
       )
@@ -713,6 +720,8 @@ export class ApiService {
       await AsyncStorage.setItem('offline_queue', JSON.stringify(remainingQueue))
     } catch (error) {
       if (__DEV__) console.error('Erreur traitement queue hors ligne:', error)
+    } finally {
+      this.isProcessingQueue = false
     }
   }
 
@@ -739,7 +748,9 @@ export class ApiService {
 
   static async checkApiHealth(): Promise<boolean> {
     try {
-      const { error } = await supabase.from('users').select('id', { head: true, count: 'exact' })
+      const { error } = await supabase
+        .from('users')
+        .select('auth_id', { head: true, count: 'exact' })
       return !error
     } catch {
       return false

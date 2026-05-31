@@ -47,10 +47,11 @@ export function useRateLimit(
 
   // Update time until reset every second when limited
   useEffect(() => {
-    if (state.resetTime) {
+    const resetTime = state.resetTime
+    if (resetTime) {
       intervalRef.current = setInterval(() => {
         const now = Date.now()
-        const timeUntilReset = Math.max(0, state.resetTime! - now)
+        const timeUntilReset = Math.max(0, resetTime - now)
 
         if (timeUntilReset === 0) {
           // Reset when time is up

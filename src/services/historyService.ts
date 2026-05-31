@@ -1,4 +1,18 @@
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/utils/logger'
+
+/**
+ * Free-form metadata attached to a history entry. Known numeric fields are typed
+ * explicitly for the stats calculations; arbitrary extra keys are allowed.
+ */
+export interface TransactionDetails {
+  completionTime?: number
+  fees?: number
+  matchId?: string
+  intentionId?: string
+  intentionType?: string
+  [key: string]: unknown
+}
 
 export interface TransactionHistory {
   id: string
@@ -17,7 +31,7 @@ export interface TransactionHistory {
   currency?: string
   corridor?: string
   description: string
-  details: Record<string, any>
+  details: TransactionDetails
   timestamp: number
   status: 'success' | 'pending' | 'failed' | 'cancelled'
 }
@@ -53,6 +67,21 @@ export interface FilterOptions {
   counterpartName?: string
 }
 
+interface TransactionHistoryRow {
+  id: string
+  type: TransactionHistory['type']
+  user_id: string
+  counterpart_id?: string | null
+  counterpart_name?: string | null
+  amount?: number | null
+  currency?: string | null
+  corridor?: string | null
+  description: string
+  details?: TransactionDetails | null
+  created_at: string
+  status: TransactionHistory['status']
+}
+
 class HistoryService {
   private readonly STORAGE_KEY = '@binomepay_history'
 
@@ -74,7 +103,7 @@ class HistoryService {
 
       if (error) throw error
 
-      if (__DEV__) console.log('Nouvelle entrée historique ajoutée')
+      logger.debug('Nouvelle entrée historique ajoutée')
     } catch (error) {
       if (__DEV__) console.error("Erreur lors de l'ajout à l'historique:", error)
     }
@@ -96,7 +125,7 @@ class HistoryService {
 
       if (error) throw error
 
-      return (data ?? []).map((row: any) => ({
+      return (data ?? []).map((row: TransactionHistoryRow) => ({
         id: row.id,
         type: row.type,
         userId: row.user_id,

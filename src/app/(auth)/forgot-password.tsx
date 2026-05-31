@@ -24,6 +24,7 @@ export default function ForgotPasswordScreen() {
   const [step, setStep] = useState<'email' | 'code'>('email')
 
   const handleSendCode = async () => {
+    if (loading) return
     if (!email.includes('@')) {
       setError('Veuillez entrer un email valide.')
       return
@@ -42,14 +43,15 @@ export default function ForgotPasswordScreen() {
       }
 
       setStep('code')
-    } catch (e: any) {
-      setError(e?.message ?? "Erreur lors de l'envoi du code.")
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur lors de l'envoi du code.")
     } finally {
       setLoading(false)
     }
   }
 
   const handleResetPassword = async () => {
+    if (loading) return
     if (!code.trim()) {
       setError('Veuillez entrer le code reçu par email.')
       return
@@ -99,8 +101,8 @@ export default function ForgotPasswordScreen() {
       }
 
       router.replace('/(Protected)/(tabs)')
-    } catch (e: any) {
-      setError(e?.message ?? 'Erreur lors de la réinitialisation.')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur lors de la réinitialisation.')
     } finally {
       setLoading(false)
     }

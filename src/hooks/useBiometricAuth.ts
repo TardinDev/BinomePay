@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import * as LocalAuthentication from 'expo-local-authentication'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { logger } from '@/utils/logger'
 
 const BIOMETRIC_ENABLED_KEY = '@binomepay_biometric_enabled'
 
@@ -80,10 +81,10 @@ export function useBiometricAuth(): UseBiometricAuthResult {
         })
 
         if (result.success) {
-          if (__DEV__) console.log('Biometric authentication successful')
+          logger.debug('Biometric authentication successful')
           return true
         } else {
-          if (__DEV__) console.log('Biometric authentication failed:', result.error)
+          logger.debug('Biometric authentication failed:', result.error)
           return false
         }
       } catch (error) {

@@ -1,4 +1,19 @@
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/utils/logger'
+
+interface RatingRow {
+  id: string
+  from_user_id: string
+  to_user_id: string
+  transaction_id: string
+  rating: number
+  comment?: string | null
+  punctuality: number
+  communication: number
+  reliability: number
+  created_at: string
+  is_anonymous: boolean
+}
 
 export interface Rating {
   id: string
@@ -138,7 +153,7 @@ class RatingService {
 
       if (error) throw error
 
-      const ratings: Rating[] = (data ?? []).map((row: any) => ({
+      const ratings: Rating[] = (data ?? []).map((row: RatingRow) => ({
         id: row.id,
         fromUserId: row.from_user_id,
         toUserId: row.to_user_id,
@@ -207,7 +222,7 @@ class RatingService {
 
     if (error) throw error
 
-    if (__DEV__) console.log('Nouvelle note créée:', data)
+    logger.debug('Nouvelle note créée:', data)
 
     return {
       id: data.id,

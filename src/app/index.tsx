@@ -2,9 +2,10 @@ import React from 'react'
 import { Redirect } from 'expo-router'
 import { useAuth } from '@/lib/auth'
 import { View, Text } from 'react-native'
+import { logger } from '@/utils/logger'
 
 export default function RootIndex() {
-  if (__DEV__) console.log('RootIndex rendering...')
+  logger.debug('RootIndex rendering...')
 
   const { isLoaded, isSignedIn } = useAuth()
 

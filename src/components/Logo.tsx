@@ -40,7 +40,7 @@ export default function Logo({
     )
     wordmarkOpacity.value = withDelay(220, withTiming(1, { duration: 400 }))
     taglineOpacity.value = withDelay(440, withTiming(1, { duration: 400 }))
-  }, [animated])
+  }, [animated, wordmarkTranslate, wordmarkOpacity, taglineOpacity])
 
   const wordmarkStyleAnim = useAnimatedStyle(() => ({
     opacity: wordmarkOpacity.value,

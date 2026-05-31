@@ -12,6 +12,9 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useReportRateLimit, formatTimeRemaining } from '@/hooks/useRateLimit'
+import { logger } from '@/utils/logger'
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name']
 
 interface ReportUserModalProps {
   visible: boolean
@@ -21,14 +24,14 @@ interface ReportUserModalProps {
   onReport?: (reason: string, details: string) => Promise<void>
 }
 
-const REPORT_REASONS = [
+const REPORT_REASONS: { id: string; label: string; icon: IoniconName }[] = [
   { id: 'fraud', label: 'Tentative de fraude', icon: 'warning-outline' },
   { id: 'scam', label: 'Arnaque', icon: 'alert-circle-outline' },
   { id: 'harassment', label: 'Harcelement', icon: 'hand-left-outline' },
   { id: 'fake_profile', label: 'Faux profil', icon: 'person-remove-outline' },
   { id: 'inappropriate', label: 'Contenu inapproprie', icon: 'eye-off-outline' },
   { id: 'other', label: 'Autre raison', icon: 'ellipsis-horizontal-outline' },
-] as const
+]
 
 type ReportReasonId = (typeof REPORT_REASONS)[number]['id']
 
@@ -44,6 +47,12 @@ export default function ReportUserModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { recordAction, state: rateLimitState } = useReportRateLimit()
+
+  const handleClose = useCallback(() => {
+    setSelectedReason(null)
+    setDetails('')
+    onClose()
+  }, [onClose])
 
   const handleSubmit = useCallback(async () => {
     if (!selectedReason) {
@@ -68,9 +77,7 @@ export default function ReportUserModal({
         await onReport(selectedReason, details)
       } else {
         // Default behavior - log and show success
-        if (__DEV__) {
-          console.log('Report submitted:', { userId, reason: selectedReason, details })
-        }
+        logger.debug('Report submitted:', { userId, reason: selectedReason, details })
       }
 
       Alert.alert(
@@ -83,13 +90,15 @@ export default function ReportUserModal({
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedReason, details, userId, onReport, recordAction, rateLimitState.timeUntilReset])
-
-  const handleClose = useCallback(() => {
-    setSelectedReason(null)
-    setDetails('')
-    onClose()
-  }, [onClose])
+  }, [
+    selectedReason,
+    details,
+    userId,
+    onReport,
+    recordAction,
+    rateLimitState.timeUntilReset,
+    handleClose,
+  ])
 
   return (
     <Modal
@@ -139,7 +148,7 @@ export default function ReportUserModal({
                   style={{ backgroundColor: '#0B1220' }}
                 >
                   <Ionicons
-                    name={reason.icon as any}
+                    name={reason.icon}
                     color={selectedReason === reason.id ? '#EAB308' : '#6B7280'}
                     size={20}
                   />

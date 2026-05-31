@@ -5,12 +5,11 @@ import { createClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Constants from 'expo-constants'
 
-const supabaseUrl =
-  (Constants.expoConfig?.extra as any)?.SUPABASE_URL ||
-  (process.env.EXPO_PUBLIC_SUPABASE_URL as string)
+const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string | undefined>
+
+const supabaseUrl = extra.SUPABASE_URL || (process.env.EXPO_PUBLIC_SUPABASE_URL as string)
 const supabaseAnonKey =
-  (Constants.expoConfig?.extra as any)?.SUPABASE_ANON_KEY ||
-  (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string)
+  extra.SUPABASE_ANON_KEY || (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string)
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

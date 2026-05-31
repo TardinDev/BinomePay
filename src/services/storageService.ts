@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Conversation, MatchItem, RequestItem, SuggestedItem, User } from '@/store/useAppStore'
+import { logger } from '@/utils/logger'
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -74,8 +75,8 @@ class StorageManager {
     // Check if data is older than 24 hours
     const isStale =
       Date.now() - ((userData as { lastUpdated?: number }).lastUpdated || 0) > 24 * 60 * 60 * 1000
-    if (isStale && __DEV__) {
-      console.log('User data is stale, should refresh from server')
+    if (isStale) {
+      logger.debug('User data is stale, should refresh from server')
     }
 
     return userData

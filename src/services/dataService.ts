@@ -14,7 +14,7 @@ export class DataService {
    */
   static async syncUserWithSupabase(authUser: {
     id: string
-    user_metadata?: Record<string, any>
+    user_metadata?: Record<string, unknown>
   }): Promise<User> {
     const firstName = (authUser.user_metadata?.firstName as string) || 'Utilisateur'
 
@@ -105,15 +105,18 @@ export class DataService {
 
       if (error) throw error
 
-      return (data || []).map((intent) => ({
-        id: intent.id,
-        amount: intent.amount,
-        currency: intent.currency,
-        originCountryName: intent.origin_country,
-        destCountryName: intent.dest_country,
-        senderName: (intent as any).user_name || 'Utilisateur',
-        createdAt: new Date(intent.created_at).getTime(),
-      }))
+      return (data || []).map((intent) => {
+        const row = intent as typeof intent & { user_name?: string | null }
+        return {
+          id: intent.id,
+          amount: intent.amount,
+          currency: intent.currency,
+          originCountryName: intent.origin_country,
+          destCountryName: intent.dest_country,
+          senderName: row.user_name || 'Utilisateur',
+          createdAt: new Date(intent.created_at).getTime(),
+        }
+      })
     } catch (error) {
       if (__DEV__) console.error('Error fetching suggestions:', error)
       return []

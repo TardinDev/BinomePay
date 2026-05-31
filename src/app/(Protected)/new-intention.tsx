@@ -76,23 +76,29 @@ export default function NewIntentionPage() {
       const userName = (user?.user_metadata?.firstName as string) || 'Utilisateur'
 
       // Persister dans Supabase (visible par tous les autres utilisateurs)
-      const { error: supabaseError } = await supabase.from('intents').insert([
-        {
-          user_id: user.id,
-          user_name: userName,
-          direction,
-          amount: Number(amount),
-          currency,
-          origin_country: originCountry,
-          dest_country: destCountry,
-          status: 'OPEN',
-        },
-      ])
+      const { data: inserted, error: supabaseError } = await supabase
+        .from('intents')
+        .insert([
+          {
+            user_id: user.id,
+            user_name: userName,
+            direction,
+            amount: Number(amount),
+            currency,
+            origin_country: originCountry,
+            dest_country: destCountry,
+            status: 'OPEN',
+          },
+        ])
+        .select('id')
+        .single()
 
       if (supabaseError) throw supabaseError
 
-      // Mise à jour locale immédiate (optimiste)
+      // Mise à jour locale immédiate (optimiste) avec l'id réel du serveur.
+      // addRequest ne fait QU'une mise à jour locale (aucun second insert).
       addRequest({
+        id: inserted.id,
         type: direction,
         amount: Number(amount),
         currency,
@@ -101,8 +107,9 @@ export default function NewIntentionPage() {
       })
 
       router.replace('/(Protected)/intention-success')
-    } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Une erreur est survenue')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue'
+      Alert.alert('Erreur', message)
     }
   }
 

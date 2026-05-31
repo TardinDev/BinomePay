@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import { logger } from '@/utils/logger'
 
 interface RetryConfig {
   maxRetries?: number
@@ -113,9 +114,7 @@ export function useRetry<T>(
       } catch (error) {
         lastError = error
 
-        if (__DEV__) {
-          console.log(`Retry attempt ${attempt + 1}/${maxRetries + 1} failed:`, error)
-        }
+        logger.debug(`Retry attempt ${attempt + 1}/${maxRetries + 1} failed:`, error)
 
         // Check if we should retry
         if (attempt < maxRetries && retryCondition(error)) {
@@ -204,9 +203,7 @@ export async function retryAsync<T>(
     } catch (error) {
       lastError = error
 
-      if (__DEV__) {
-        console.log(`Retry attempt ${attempt + 1}/${maxRetries + 1} failed:`, error)
-      }
+      logger.debug(`Retry attempt ${attempt + 1}/${maxRetries + 1} failed:`, error)
 
       if (attempt < maxRetries && retryCondition(error)) {
         const delay = calculateDelay(attempt)
