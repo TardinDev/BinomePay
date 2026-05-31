@@ -11,6 +11,22 @@ const supabaseUrl = extra.SUPABASE_URL || (process.env.EXPO_PUBLIC_SUPABASE_URL 
 const supabaseAnonKey =
   extra.SUPABASE_ANON_KEY || (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string)
 
+// Garde-fou démarrage: en build EAS, ces valeurs sont figées au build depuis
+// app.config.ts (extra) ou les variables EXPO_PUBLIC_*. Si le profil de build dans
+// eas.json ne lie pas son "environment" EAS, elles arrivent à `undefined` et
+// createClient lève une exception à l'import → l'app se ferme instantanément (avant
+// tout rendu React, donc l'ErrorBoundary ne peut rien attraper). On lève ici un
+// message explicite, visible dans `adb logcat`, pour diagnostiquer en quelques secondes.
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    '[BinomePay] Configuration Supabase manquante au démarrage: ' +
+      `SUPABASE_URL=${supabaseUrl ? 'ok' : 'MANQUANT'}, ` +
+      `SUPABASE_ANON_KEY=${supabaseAnonKey ? 'ok' : 'MANQUANT'}. ` +
+      'Vérifie que le profil de build dans eas.json définit "environment" et que les ' +
+      'variables existent dans cet environnement EAS (eas env:list).'
+  )
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
