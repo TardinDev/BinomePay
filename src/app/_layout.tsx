@@ -1,8 +1,15 @@
+// Doit rester la TOUTE première ligne: react-native-gesture-handler doit être
+// importé avant tout autre module natif (requis par expo-router/react-native-screens
+// pour le pipeline d'animation de transition de la pile). Sans cet import + le
+// <GestureHandlerRootView> ci-dessous, les transitions d'écran crashent nativement
+// en build release (reanimated reçoit un payload mal typé). Voir crash APK 05/2026.
+import 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import '../../global.css'
 import React, { useEffect } from 'react'
 import { Slot } from 'expo-router'
 import * as Linking from 'expo-linking'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import ToastProvider from '@/components/ToastProvider'
 import QueryProvider from '@/components/QueryProvider'
@@ -39,17 +46,19 @@ export default function RootLayout() {
   }, [])
 
   return (
-    <ErrorBoundary>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <QueryProvider>
-            <SafeAreaView className="flex-1 bg-black">
-              <Slot />
-              <ToastProvider />
-            </SafeAreaView>
-          </QueryProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
-    </ErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <AuthProvider>
+            <QueryProvider>
+              <SafeAreaView className="flex-1 bg-black">
+                <Slot />
+                <ToastProvider />
+              </SafeAreaView>
+            </QueryProvider>
+          </AuthProvider>
+        </SafeAreaProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   )
 }
