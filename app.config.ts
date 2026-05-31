@@ -23,6 +23,13 @@ const config: ExpoConfig = {
     policy: 'sdkVersion',
   },
 
+  // OTA EAS Update: permet de pousser des correctifs JS sur les builds installés
+  // sans rebuild natif (~1 min au lieu de ~20 min). Le runtimeVersion ci-dessus
+  // garantit qu'un update n'est livré qu'aux builds du même SDK.
+  updates: {
+    url: 'https://u.expo.dev/41fc888a-a918-40d3-a691-eac339936be5',
+  },
+
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.binomepay.app',
