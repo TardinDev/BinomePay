@@ -88,8 +88,10 @@ const config: ExpoConfig = {
       'expo-build-properties',
       {
         android: {
-          compileSdkVersion: 35,
-          targetSdkVersion: 35,
+          // SDK 55 / RN 0.83: les libs AndroidX (activity 1.11, core 1.17) exigent
+          // de compiler contre l'API 36 (Android 16). Sinon échec CheckAarMetadata au build.
+          compileSdkVersion: 36,
+          targetSdkVersion: 36,
           minSdkVersion: 24,
         },
       },
