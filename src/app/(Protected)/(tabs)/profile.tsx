@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { View, Text, Pressable, ScrollView, Alert, Image, Modal } from 'react-native'
-import { router } from 'expo-router'
+import { router, type Href } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 import { useAuth } from '@/lib/auth'
@@ -134,6 +134,7 @@ export default function ProfileTabScreen() {
         </Pressable>
 
         <Pressable
+          onPress={() => router.push('/(Protected)/settings/notifications' as Href)}
           className="flex-row items-center justify-between border-b p-4"
           style={{ borderColor: '#334155' }}
         >
@@ -150,6 +151,7 @@ export default function ProfileTabScreen() {
         </Pressable>
 
         <Pressable
+          onPress={() => router.push('/(Protected)/settings/security' as Href)}
           className="flex-row items-center justify-between border-b p-4"
           style={{ borderColor: '#334155' }}
         >
@@ -165,7 +167,10 @@ export default function ProfileTabScreen() {
           <Ionicons name="chevron-forward" color="#6B7280" size={20} />
         </Pressable>
 
-        <Pressable className="flex-row items-center justify-between p-4">
+        <Pressable
+          onPress={() => router.push('/(Protected)/settings/help' as Href)}
+          className="flex-row items-center justify-between p-4"
+        >
           <View className="flex-row items-center">
             <View
               className="h-10 w-10 items-center justify-center rounded-full"

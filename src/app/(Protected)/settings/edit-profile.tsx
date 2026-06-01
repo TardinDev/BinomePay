@@ -62,10 +62,14 @@ export default function EditProfileScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1, backgroundColor: '#000' }}
     >
-      <ScrollView className="flex-1 px-5 pt-6" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        className="flex-1 px-5 pt-6"
+        contentContainerStyle={{ paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="mb-6 flex-row items-center">
           <Pressable
             onPress={() => router.back()}

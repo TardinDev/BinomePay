@@ -77,7 +77,7 @@ export default function VerifyEmailScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1, backgroundColor: '#000' }}
     >
       <ScrollView className="flex-1 bg-black px-5 pt-10" keyboardShouldPersistTaps="handled">
