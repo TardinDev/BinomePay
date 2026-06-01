@@ -7,7 +7,7 @@ const config: ExpoConfig = {
   scheme: 'binomepay',
   description: 'BinomePay - Application de change de devises entre particuliers',
 
-  version: '1.0.2',
+  version: '1.0.3',
   orientation: 'portrait',
   userInterfaceStyle: 'dark',
   newArchEnabled: true,
@@ -43,7 +43,7 @@ const config: ExpoConfig = {
 
   android: {
     package: 'com.binomepay.app',
-    versionCode: 3, // ↗︎ incrémente à chaque release
+    versionCode: 4, // ↗︎ incrémente à chaque release
 
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
