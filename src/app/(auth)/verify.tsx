@@ -1,13 +1,6 @@
 import React, { useState } from 'react'
-import {
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native'
+import { Text, TextInput, Pressable, ScrollView, Alert, Platform } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { useLocalSearchParams, router } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 

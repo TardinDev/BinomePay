@@ -10,6 +10,7 @@ import React, { useEffect } from 'react'
 import { Slot } from 'expo-router'
 import * as Linking from 'expo-linking'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import ToastProvider from '@/components/ToastProvider'
 import QueryProvider from '@/components/QueryProvider'
@@ -47,18 +48,20 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ErrorBoundary>
-        <SafeAreaProvider>
-          <AuthProvider>
-            <QueryProvider>
-              <SafeAreaView className="flex-1 bg-black">
-                <Slot />
-                <ToastProvider />
-              </SafeAreaView>
-            </QueryProvider>
-          </AuthProvider>
-        </SafeAreaProvider>
-      </ErrorBoundary>
+      <KeyboardProvider>
+        <ErrorBoundary>
+          <SafeAreaProvider>
+            <AuthProvider>
+              <QueryProvider>
+                <SafeAreaView className="flex-1 bg-black">
+                  <Slot />
+                  <ToastProvider />
+                </SafeAreaView>
+              </QueryProvider>
+            </AuthProvider>
+          </SafeAreaProvider>
+        </ErrorBoundary>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   )
 }

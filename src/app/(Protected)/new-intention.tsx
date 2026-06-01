@@ -1,14 +1,6 @@
 import React, { useState } from 'react'
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native'
+import { View, Text, TextInput, Pressable, Alert, ScrollView, Platform } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'

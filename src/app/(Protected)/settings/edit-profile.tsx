@@ -6,10 +6,10 @@ import {
   Pressable,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/lib/auth'
