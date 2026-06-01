@@ -96,8 +96,11 @@ export default function LogoMark({ size = 300, animated = true, rounded = true }
     }
   }, [animated, rotation1, rotation2, pulse, haloPulse, ringPulse, ringPulse2, ringPulse3])
 
-  const arc1Props = useAnimatedProps(() => ({ transform: `rotate(${rotation1.value})` }))
-  const arc2Props = useAnimatedProps(() => ({ transform: `rotate(${rotation2.value})` }))
+  // reanimated 4.2+ (SDK 55) refuse `transform: 'rotate(<nombre>)'` sans unité.
+  // On utilise la prop native `rotation` de react-native-svg (degrés, autour de
+  // origin="0, 0" défini sur le <AnimatedG>) — visuel identique, pas de parsing d'unité.
+  const arc1Props = useAnimatedProps(() => ({ rotation: rotation1.value }))
+  const arc2Props = useAnimatedProps(() => ({ rotation: rotation2.value }))
   const anchorPulseProps = useAnimatedProps(() => ({
     r: interpolate(pulse.value, [0, 1], [7, 11]),
   }))
