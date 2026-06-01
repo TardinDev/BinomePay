@@ -4,6 +4,8 @@ import useAppStore, { Conversation } from '@/store/useAppStore'
 import { Ionicons } from '@expo/vector-icons'
 import { useFormattedDate } from '@/utils/dateUtils'
 import { router } from 'expo-router'
+import { NoConversationsEmpty } from '@/components/EmptyState'
+import { ConversationsListSkeleton } from '@/components/SkeletonLoader'
 
 const ConversationItem = ({
   item,
@@ -50,34 +52,43 @@ const ConversationItem = ({
 export default function MessagesPage() {
   const conversations = useAppStore((s) => s.conversations)
   const markConversationRead = useAppStore((s) => s.markConversationRead)
+  const isLoading = useAppStore((s) => s.isLoading)
+
+  const showSkeleton = isLoading && conversations.length === 0
 
   return (
     <View className="flex-1 bg-black px-5 pt-6">
       <Text className="text-xl font-extrabold text-white">Messages</Text>
-      <FlatList
-        className="mt-5"
-        data={conversations}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={() => <Text className="text-gray-400">Aucune conversation.</Text>}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={6}
-        windowSize={12}
-        initialNumToRender={8}
-        getItemLayout={(data, index) => ({
-          length: 90,
-          offset: 90 * index + (index > 0 ? 12 * index : 0),
-          index,
-        })}
-        renderItem={({ item }) => (
-          <ConversationItem
-            item={item}
-            onPress={(id) => {
-              markConversationRead(id)
-              router.push(`/(Protected)/messages/${id}`)
-            }}
-          />
-        )}
-      />
+      {showSkeleton ? (
+        <View className="mt-5">
+          <ConversationsListSkeleton count={5} />
+        </View>
+      ) : (
+        <FlatList
+          className="mt-5"
+          data={conversations}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={() => <NoConversationsEmpty />}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={6}
+          windowSize={12}
+          initialNumToRender={8}
+          getItemLayout={(data, index) => ({
+            length: 90,
+            offset: 90 * index + (index > 0 ? 12 * index : 0),
+            index,
+          })}
+          renderItem={({ item }) => (
+            <ConversationItem
+              item={item}
+              onPress={(id) => {
+                markConversationRead(id)
+                router.push(`/(Protected)/messages/${id}`)
+              }}
+            />
+          )}
+        />
+      )}
     </View>
   )
 }

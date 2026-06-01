@@ -5,12 +5,30 @@ import { Ionicons } from '@expo/vector-icons'
 import useAppStore from '@/store/useAppStore'
 import { useAuth } from '@/lib/auth'
 import { unregisterPushTokenForUser } from '@/services/pushTokenService'
+import historyService from '@/services/historyService'
+import { logger } from '@/utils/logger'
+
+const MONTHS_FR = [
+  'janv.',
+  'févr.',
+  'mars',
+  'avr.',
+  'mai',
+  'juin',
+  'juil.',
+  'août',
+  'sept.',
+  'oct.',
+  'nov.',
+  'déc.',
+]
 
 export default function ProfileTabScreen() {
   const user = useAppStore((s) => s.user)
   const setLoggingOut = useAppStore((s) => s.setLoggingOut)
   const { signOut, user: authUser } = useAuth()
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [txCount, setTxCount] = useState<number | null>(null)
   const isMounted = useRef(true)
 
   useEffect(() => {
@@ -19,8 +37,30 @@ export default function ProfileTabScreen() {
     }
   }, [])
 
+  // Nombre de transactions réel (depuis l'historique)
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const history = await historyService.getHistory()
+        if (isMounted.current) setTxCount(history.length)
+      } catch (e) {
+        logger.error('load tx count', e)
+        if (isMounted.current) setTxCount(0)
+      }
+    })()
+  }, [])
+
   const firstName = (authUser?.user_metadata?.firstName as string) || ''
   const avatarUrl = (authUser?.user_metadata?.avatar_url as string) || ''
+
+  // "Membre depuis" à partir de la date de création du compte Supabase
+  const memberSince = (() => {
+    const created = authUser?.created_at
+    if (!created) return '—'
+    const d = new Date(created)
+    if (Number.isNaN(d.getTime())) return '—'
+    return `${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`
+  })()
 
   const handleLogout = async () => {
     if (!isMounted.current) return
@@ -106,11 +146,11 @@ export default function ProfileTabScreen() {
           </View>
           <View className="flex-1 items-center">
             <Text className="text-xs text-gray-400">Transactions</Text>
-            <Text className="mt-1 text-lg font-bold text-white">—</Text>
+            <Text className="mt-1 text-lg font-bold text-white">{txCount ?? '—'}</Text>
           </View>
           <View className="flex-1 items-center">
             <Text className="text-xs text-gray-400">Membre depuis</Text>
-            <Text className="mt-1 text-lg font-bold text-white">—</Text>
+            <Text className="mt-1 text-base font-bold text-white">{memberSince}</Text>
           </View>
         </View>
       </View>
