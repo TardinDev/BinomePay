@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BinomePay Web
 
-## Getting Started
+Version web (Next.js) de BinomePay — port 1:1 de l'app mobile Expo, partageant le **même backend Supabase**.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript strict**
+- **Tailwind CSS v4** (config CSS-first via `@theme` dans `src/app/globals.css`)
+- **@supabase/ssr** — auth par cookies (clients browser / serveur / proxy)
+- **@tanstack/react-query** — cache + polling (parité mobile)
+- **zod** + **react-hook-form** — validation et formulaires
+- **pnpm** (le mobile reste sur npm — les deux apps sont indépendantes)
+
+> **Note Next 16 :** le fichier `middleware` a été renommé **`proxy`** (`src/proxy.ts`, export `proxy`). `cookies()` et les `params` de routes dynamiques sont **asynchrones**. Voir `node_modules/next/dist/docs/` (et `AGENTS.md`).
+
+## Développement
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd web
+pnpm install
+pnpm dev            # http://localhost:3000
+pnpm type-check     # tsc --noEmit
+pnpm lint
+pnpm build && pnpm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Variables d'environnement
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copier `.env.example` → `.env.local` et renseigner (mêmes valeurs que le mobile) :
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SITE_URL=https://binomepay.com   # utilisé par sitemap/robots/OG (optionnel en dev)
+```
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/(auth)/` — écrans publics : login, register, verify (OTP), forgot-password, terms.
+- `src/app/(protected)/app/` — espace connecté : accueil, new-intention, suggested/[id], messages, messages/[id], profile, history. Protégé par `src/proxy.ts`.
+- `src/lib/supabase/` — clients SSR (`client.ts` navigateur, `server.ts` RSC/actions, `proxy.ts` refresh + garde de routes).
+- `src/lib/queries/` — hooks React Query (lecture, polling).
+- `src/lib/actions/` — Server Actions (createIntention, acceptSuggestion, sendMessage, profile…).
+- `src/lib/schemas/` — **copie synchronisée** des schémas Zod du mobile (`/src/lib/schemas`). Toute modif doit être répercutée des deux côtés.
+- `src/components/ui/` — primitives maison ; `src/components/marketing/` — landing ; `src/components/app/` — composants métier.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Déploiement Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Nouveau projet Vercel pointant sur ce dépôt, **Root Directory = `web/`**. Framework Next.js et pnpm auto-détectés (via `pnpm-lock.yaml`).
+2. Variables d'env : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`.
+3. Déployer une **preview**, vérifier que l'auth par cookies fonctionne en HTTPS (login → /app), puis tester un parcours complet.
+4. Vérifier que les **policies RLS** Supabase autorisent les mêmes accès depuis le web (même anon key que le mobile).
+5. Promouvoir en production.
 
-## Deploy on Vercel
+## État de la QA
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Vérifié (build prod + navigateur) : landing (responsive, 0 erreur console), pages auth (rendu + validation de formulaire), garde de routes (`/app` → `/login`), `type-check`/`lint`/`build` au vert (17 routes).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Reste à valider avec un compte réel** (nécessite des identifiants Supabase) : accueil (intentions/suggestions/matches), création d'intention, acceptation de match, messagerie, profil, historique. Le code de ces écrans est un port fidèle du mobile (mêmes tables/colonnes/séquences) et compile proprement, mais n'a pas encore été exercé contre des données live côté web.
