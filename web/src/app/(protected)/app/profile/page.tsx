@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { Avatar, Badge, Button, Card, Input, Skeleton } from '@/components/ui'
@@ -60,6 +60,7 @@ export default function ProfilePage() {
 
       {/* Name editor */}
       <NameEditor
+        key={user.name}
         userId={id}
         currentName={user.name}
         onSaved={() => queryClient.invalidateQueries({ queryKey: queryKeys.profile(id) })}
@@ -122,15 +123,12 @@ function NameEditor({
   currentName: string
   onSaved: () => void
 }) {
+  // Remounted via `key={currentName}` by the parent, so initial state stays in
+  // sync with the latest profile without a state-syncing effect.
   const [name, setName] = useState(currentName)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-
-  // Keep the field in sync if the underlying profile changes (e.g. after refetch).
-  useEffect(() => {
-    setName(currentName)
-  }, [currentName])
 
   const trimmed = name.trim()
   const dirty = trimmed !== currentName.trim()
