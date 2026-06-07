@@ -1,8 +1,39 @@
+import type { Metadata } from 'next'
+import { Hero } from '@/components/marketing/Hero'
+import { Features } from '@/components/marketing/Features'
+import { HowItWorks } from '@/components/marketing/HowItWorks'
+import { CTA } from '@/components/marketing/CTA'
+import { Footer } from '@/components/marketing/Footer'
+
+const title = 'BinomePay — Échange de devises entre particuliers, sans intermédiaire'
+const description =
+  'BinomePay met en relation les personnes qui veulent envoyer de l’argent avec celles qui veulent en recevoir. Échange direct, sans frais cachés, profils vérifiés (KYC) et messagerie intégrée.'
+
+export const metadata: Metadata = {
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    type: 'website',
+    locale: 'fr_FR',
+    siteName: 'BinomePay',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
+}
+
 export default function Home() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-      <h1 className="text-foreground text-2xl font-semibold tracking-tight">BinomePay</h1>
-      <p className="max-w-md text-sm text-neutral-400">Échange de devises entre particuliers.</p>
+    <main>
+      <Hero />
+      <Features />
+      <HowItWorks />
+      <CTA />
+      <Footer />
     </main>
   )
 }
