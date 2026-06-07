@@ -64,3 +64,4 @@ web/.next
 web/out
 web/.vercel
 web/.env*.local
+.gstack/
