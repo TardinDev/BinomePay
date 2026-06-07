@@ -57,3 +57,11 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Web (Next.js)
+web/node_modules
+web/.next
+web/out
+web/.vercel
+web/.env*.local
+.gstack/

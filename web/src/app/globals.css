@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   BinomePay — dark + yellow design system (Tailwind v4 CSS-first config)
+   Tokens declared via @theme auto-generate utilities:
+     --color-brand-yellow      -> bg-brand-yellow / text-brand-yellow / ...
+     --color-surface           -> bg-surface / border-surface / ...
+   --------------------------------------------------------------------------- */
+@theme {
+  /* Brand */
+  --color-brand-yellow: #eab308;
+  --color-brand-yellow-soft: #fde68a;
+  --color-brand-blue: #3b82f6;
+  --color-brand-blue-soft: #60a5fa;
+
+  /* Base surfaces */
+  --color-background: #000000;
+  --color-foreground: #f5f5f5;
+  --color-surface: #171717; /* neutral-900 */
+  --color-surface-raised: #262626; /* neutral-800 */
+  --color-border: #1f2937; /* gray-800 */
+
+  /* Fonts (wired from next/font in layout.tsx) */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Force-dark: no light-mode fallback. */
+
+/* Accessibility: respect reduced-motion by neutralizing animation/transition. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
