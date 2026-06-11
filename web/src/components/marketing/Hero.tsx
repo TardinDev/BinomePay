@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui'
 import { CtaLink } from './CtaLink'
+import { CurrencyConverter } from './CurrencyConverter'
 
 /**
  * Landing hero — value proposition + CTAs and a CSS/SVG-only brand visual.
@@ -90,6 +91,8 @@ export function Hero() {
           </div>
         </div>
       </div>
+
+      <CurrencyConverter />
     </section>
   )
 }
