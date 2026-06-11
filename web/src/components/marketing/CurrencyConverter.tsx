@@ -37,7 +37,7 @@ export function CurrencyConverter() {
     'rounded-xl border border-gray-700 bg-black/50 px-3 py-3 text-sm font-medium text-white focus:border-brand-yellow focus:outline-none cursor-pointer'
 
   return (
-    <div className="mx-auto mt-12 max-w-6xl rounded-2xl border border-gray-800 bg-neutral-900/80 p-5 backdrop-blur-sm">
+    <div className="rounded-2xl border border-gray-800 bg-neutral-900/80 p-5 backdrop-blur-sm">
       <p className="mb-4 text-xs font-medium uppercase tracking-wide text-neutral-500">
         Calculez votre échange
       </p>

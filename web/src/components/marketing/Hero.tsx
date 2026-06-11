@@ -90,9 +90,11 @@ export function Hero() {
             </div>
           </div>
         </div>
+        {/* Currency converter — full width, 3rd row */}
+        <div className="lg:col-span-2">
+          <CurrencyConverter />
+        </div>
       </div>
-
-      <CurrencyConverter />
     </section>
   )
 }
