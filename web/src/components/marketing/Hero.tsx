@@ -68,31 +68,31 @@ export function Hero() {
           </ul>
         </div>
 
-        {/* Visual column — stylized SEND → RECEIVE corridor on a mock app card */}
-        <div className="relative">
-          <div
-            aria-hidden="true"
-            className="from-brand-yellow/20 to-brand-blue/20 absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br via-transparent blur-2xl"
-          />
-          <div className="rounded-3xl border border-gray-800 bg-neutral-900/70 p-5 shadow-2xl backdrop-blur-sm sm:p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                Mise en relation
-              </span>
-              <Badge status="MATCHED">Binôme trouvé</Badge>
-            </div>
+        {/* Visual column */}
+        <div className="flex flex-col gap-4">
+          <CurrencyConverter />
 
-            <CorridorVisual />
+          <div className="relative">
+            <div
+              aria-hidden="true"
+              className="from-brand-yellow/20 to-brand-blue/20 absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br via-transparent blur-2xl"
+            />
+            <div className="rounded-3xl border border-gray-800 bg-neutral-900/70 p-5 shadow-2xl backdrop-blur-sm sm:p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                  Mise en relation
+                </span>
+                <Badge status="MATCHED">Binôme trouvé</Badge>
+              </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <Stat label="Vous envoyez" value="500 €" sub="France" tone="yellow" />
-              <Stat label="Votre binôme reçoit" value="5 450 MAD" sub="Maroc" tone="blue" />
+              <CorridorVisual />
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <Stat label="Vous envoyez" value="500 €" sub="France" tone="yellow" />
+                <Stat label="Votre binôme reçoit" value="5 450 MAD" sub="Maroc" tone="blue" />
+              </div>
             </div>
           </div>
-        </div>
-        {/* Currency converter — full width, 3rd row */}
-        <div className="lg:col-span-2">
-          <CurrencyConverter />
         </div>
       </div>
     </section>
