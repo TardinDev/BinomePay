@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { MarketingNav } from '@/components/marketing/MarketingNav'
 import { Hero } from '@/components/marketing/Hero'
 import { Features } from '@/components/marketing/Features'
 import { HowItWorks } from '@/components/marketing/HowItWorks'
@@ -28,12 +29,15 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main>
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <CTA />
-      <Footer />
-    </main>
+    <>
+      <MarketingNav />
+      <main>
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <CTA />
+        <Footer />
+      </main>
+    </>
   )
 }
