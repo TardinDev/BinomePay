@@ -29,13 +29,7 @@ export function Hero() {
           </p>
 
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-            <CtaLink href="/register" variant="primary" size="lg" className="px-7">
-              Créer un compte
-            </CtaLink>
-            <CtaLink href="/login" variant="ghost" size="lg" className="px-7">
-              Se connecter
-            </CtaLink>
-            <CtaLink href="#comment-ca-fonctionne" variant="ghost" size="lg" className="px-7">
+            <CtaLink href="#comment-ca-fonctionne" variant="primary" size="lg" className="px-7">
               Comment ça fonctionne
             </CtaLink>
           </div>
