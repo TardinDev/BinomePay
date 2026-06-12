@@ -6,6 +6,13 @@ import { HowItWorks } from '@/components/marketing/HowItWorks'
 import { CTA } from '@/components/marketing/CTA'
 import { Footer } from '@/components/marketing/Footer'
 
+/**
+ * ISR : la page statique se régénère au plus toutes les heures pour que la
+ * rotation hebdomadaire des intentions vitrines (IntentionAds) se mette à
+ * jour sans redéploiement.
+ */
+export const revalidate = 3600
+
 const title = 'BinomePay — Échange de devises entre particuliers, sans intermédiaire'
 const description =
   'BinomePay met en relation les personnes qui veulent envoyer de l’argent avec celles qui veulent en recevoir. Échange direct, sans frais cachés, profils vérifiés (KYC) et messagerie intégrée.'

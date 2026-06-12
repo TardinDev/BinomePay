@@ -1,10 +1,10 @@
-import { Badge } from '@/components/ui'
 import { CtaLink } from './CtaLink'
 import { CurrencyConverter } from './CurrencyConverter'
+import { IntentionAds } from './IntentionAds'
 
 /**
- * Landing hero — value proposition + CTAs and a CSS/SVG-only brand visual.
- * Server Component: zero client JS, motion handled by CSS (reduced-motion safe).
+ * Landing hero — value proposition + CTAs and the weekly intention showcase.
+ * Server Component: zero client JS.
  */
 export function Hero() {
   return (
@@ -57,102 +57,15 @@ export function Hero() {
                 <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Mise en relation
                 </span>
-                <Badge status="MATCHED">Binôme trouvé</Badge>
+                <span className="text-xs text-neutral-500">Cette semaine</span>
               </div>
 
-              <CorridorVisual />
-
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <Stat label="Vous envoyez" value="500 €" sub="France" tone="yellow" />
-                <Stat label="Votre binôme reçoit" value="5 450 MAD" sub="Maroc" tone="blue" />
-              </div>
+              <IntentionAds />
             </div>
           </div>
         </div>
       </div>
     </section>
-  )
-}
-
-type StatTone = 'yellow' | 'blue'
-
-function Stat({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string
-  value: string
-  sub: string
-  tone: StatTone
-}) {
-  const accent = tone === 'yellow' ? 'text-brand-yellow-soft' : 'text-brand-blue-soft'
-  return (
-    <div className="rounded-2xl border border-gray-800 bg-black/40 p-4">
-      <p className="text-[0.7rem] uppercase tracking-wide text-neutral-500">{label}</p>
-      <p className={`mt-1 text-xl font-bold ${accent}`}>{value}</p>
-      <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>
-    </div>
-  )
-}
-
-/** Decorative SEND → RECEIVE corridor built entirely in SVG. */
-function CorridorVisual() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 320 120"
-      className="h-auto w-full"
-      role="presentation"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      {/* Connecting corridor */}
-      <path
-        d="M58 60 H262"
-        stroke="#404040"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeDasharray="2 10"
-        opacity="0.8"
-      />
-      <path d="M58 60 H262" stroke="#EAB308" strokeWidth="3" strokeLinecap="round">
-        <animate
-          attributeName="stroke-dasharray"
-          values="0 204; 70 134; 0 204"
-          dur="3.2s"
-          repeatCount="indefinite"
-        />
-      </path>
-
-      {/* SEND node */}
-      <circle cx="58" cy="60" r="22" fill="#EAB308" />
-      <path
-        d="M52 60 h10 M58 55 l5 5 -5 5"
-        stroke="#000"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <text x="58" y="100" textAnchor="middle" fontSize="11" fill="#a3a3a3" fontWeight="600">
-        ENVOIE
-      </text>
-
-      {/* RECEIVE node */}
-      <circle cx="262" cy="60" r="22" fill="#3B82F6" />
-      <path
-        d="M268 60 h-10 M262 55 l-5 5 5 5"
-        stroke="#fff"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <text x="262" y="100" textAnchor="middle" fontSize="11" fill="#a3a3a3" fontWeight="600">
-        REÇOIT
-      </text>
-    </svg>
   )
 }
 
