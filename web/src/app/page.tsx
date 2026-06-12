@@ -33,8 +33,8 @@ export default function Home() {
       <MarketingNav />
       <main>
         <Hero />
-        <Features />
         <HowItWorks />
+        <Features />
         <CTA />
         <Footer />
       </main>

@@ -35,6 +35,9 @@ export function Hero() {
             <CtaLink href="/login" variant="ghost" size="lg" className="px-7">
               Se connecter
             </CtaLink>
+            <CtaLink href="#comment-ca-fonctionne" variant="ghost" size="lg" className="px-7">
+              Comment ça fonctionne
+            </CtaLink>
           </div>
 
           <ul className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-neutral-500">
