@@ -20,13 +20,11 @@ const base =
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    'bg-gradient-to-b from-brand-yellow to-brand-yellow text-black shadow-sm ' +
-    'hover:from-brand-yellow-soft hover:to-brand-yellow hover:shadow-md ' +
-    'disabled:bg-none disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none',
+    'bg-brand-yellow text-black shadow-sm hover:bg-brand-yellow-soft hover:shadow-md ' +
+    'disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none',
   secondary:
-    'bg-gradient-to-b from-brand-blue-soft to-brand-blue text-white shadow-sm ' +
-    'hover:shadow-md hover:brightness-110 ' +
-    'disabled:bg-none disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none',
+    'bg-brand-blue text-white shadow-sm hover:bg-brand-blue-soft hover:shadow-md ' +
+    'disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none',
   ghost:
     'bg-transparent text-foreground hover:bg-neutral-800 ' +
     'disabled:bg-transparent disabled:text-neutral-600',

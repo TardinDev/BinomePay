@@ -9,21 +9,6 @@ import { CurrencyConverter } from './CurrencyConverter'
 export function Hero() {
   return (
     <section className="relative overflow-hidden px-5 pb-20 pt-16 sm:pb-28 sm:pt-24">
-      {/* Ambient brand mesh — purely decorative */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="bg-brand-yellow/12 absolute -top-40 left-1/2 h-[28rem] w-[44rem] -translate-x-1/2 rounded-full blur-[120px]" />
-        <div className="bg-brand-blue/10 absolute -right-24 top-32 h-80 w-80 rounded-full blur-[100px]" />
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
-            backgroundSize: '56px 56px',
-            maskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%)',
-          }}
-        />
-      </div>
-
       <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
         {/* Copy column */}
         <div className="flex flex-col items-start gap-6">
@@ -34,10 +19,7 @@ export function Hero() {
 
           <h1 className="text-foreground max-w-2xl text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Envoyez et recevez de l&apos;argent{' '}
-            <span className="from-brand-yellow to-brand-yellow-soft bg-gradient-to-r bg-clip-text text-transparent">
-              sans intermédiaire
-            </span>
-            .
+            <span className="text-brand-yellow">sans intermédiaire</span>.
           </h1>
 
           <p className="max-w-xl text-base leading-relaxed text-neutral-400 sm:text-lg">
@@ -73,11 +55,7 @@ export function Hero() {
           <CurrencyConverter />
 
           <div className="relative">
-            <div
-              aria-hidden="true"
-              className="from-brand-yellow/20 to-brand-blue/20 absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br via-transparent blur-2xl"
-            />
-            <div className="rounded-3xl border border-gray-800 bg-neutral-900/70 p-5 shadow-2xl backdrop-blur-sm sm:p-6">
+            <div className="rounded-3xl border border-gray-800 bg-neutral-900 p-5 sm:p-6">
               <div className="mb-5 flex items-center justify-between">
                 <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Mise en relation
@@ -132,31 +110,16 @@ function CorridorVisual() {
       role="presentation"
       preserveAspectRatio="xMidYMid meet"
     >
-      <defs>
-        <linearGradient id="corridor" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#EAB308" />
-          <stop offset="100%" stopColor="#3B82F6" />
-        </linearGradient>
-        <radialGradient id="nodeY" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#FDE68A" />
-          <stop offset="100%" stopColor="#EAB308" />
-        </radialGradient>
-        <radialGradient id="nodeB" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#60A5FA" />
-          <stop offset="100%" stopColor="#3B82F6" />
-        </radialGradient>
-      </defs>
-
       {/* Connecting corridor */}
       <path
         d="M58 60 H262"
-        stroke="url(#corridor)"
+        stroke="#404040"
         strokeWidth="3"
         strokeLinecap="round"
         strokeDasharray="2 10"
-        opacity="0.55"
+        opacity="0.8"
       />
-      <path d="M58 60 H262" stroke="url(#corridor)" strokeWidth="3" strokeLinecap="round">
+      <path d="M58 60 H262" stroke="#EAB308" strokeWidth="3" strokeLinecap="round">
         <animate
           attributeName="stroke-dasharray"
           values="0 204; 70 134; 0 204"
@@ -166,7 +129,7 @@ function CorridorVisual() {
       </path>
 
       {/* SEND node */}
-      <circle cx="58" cy="60" r="22" fill="url(#nodeY)" />
+      <circle cx="58" cy="60" r="22" fill="#EAB308" />
       <path
         d="M52 60 h10 M58 55 l5 5 -5 5"
         stroke="#000"
@@ -180,7 +143,7 @@ function CorridorVisual() {
       </text>
 
       {/* RECEIVE node */}
-      <circle cx="262" cy="60" r="22" fill="url(#nodeB)" />
+      <circle cx="262" cy="60" r="22" fill="#3B82F6" />
       <path
         d="M268 60 h-10 M262 55 l-5 5 5 5"
         stroke="#fff"

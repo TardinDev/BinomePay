@@ -19,11 +19,8 @@ const base =
   'focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-black'
 
 const variants: Record<CtaVariant, string> = {
-  primary:
-    'from-brand-yellow to-brand-yellow bg-gradient-to-b text-black shadow-sm ' +
-    'hover:from-brand-yellow-soft hover:to-brand-yellow hover:shadow-md',
-  secondary:
-    'from-brand-blue-soft to-brand-blue bg-gradient-to-b text-white shadow-sm hover:shadow-md hover:brightness-110',
+  primary: 'bg-brand-yellow text-black shadow-sm hover:bg-brand-yellow-soft hover:shadow-md',
+  secondary: 'bg-brand-blue text-white shadow-sm hover:bg-brand-blue-soft hover:shadow-md',
   ghost:
     'border border-gray-800 bg-neutral-900/60 text-foreground hover:border-neutral-700 hover:bg-neutral-800',
 }

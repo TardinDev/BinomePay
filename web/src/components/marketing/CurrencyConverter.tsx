@@ -73,9 +73,7 @@ export function CurrencyConverter() {
         </select>
 
         <div className="flex items-baseline gap-2">
-          <span className="from-brand-yellow to-brand-yellow-soft bg-gradient-to-r bg-clip-text text-2xl font-extrabold text-transparent">
-            {fmt(result, to)}
-          </span>
+          <span className="text-brand-yellow text-2xl font-extrabold">{fmt(result, to)}</span>
           <span className="text-sm font-semibold text-neutral-400">{to}</span>
         </div>
       </div>

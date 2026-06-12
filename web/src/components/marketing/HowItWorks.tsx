@@ -22,7 +22,7 @@ export function HowItWorks() {
             >
               <span
                 aria-hidden="true"
-                className="from-brand-yellow to-brand-yellow-soft text-brand-yellow-soft mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-base font-bold text-black"
+                className="bg-brand-yellow mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full text-base font-bold text-black"
               >
                 {i + 1}
               </span>

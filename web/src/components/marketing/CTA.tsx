@@ -6,12 +6,7 @@ import { CtaLink } from './CtaLink'
 export function CTA() {
   return (
     <section className="px-5 py-20 sm:py-28">
-      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-gray-800 bg-neutral-900 px-6 py-14 text-center sm:px-12">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-          <div className="bg-brand-yellow/15 absolute -top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-[110px]" />
-          <div className="bg-brand-blue/10 absolute -bottom-24 right-0 h-64 w-64 rounded-full blur-[90px]" />
-        </div>
-
+      <div className="mx-auto max-w-4xl rounded-3xl border border-gray-800 bg-neutral-900 px-6 py-14 text-center sm:px-12">
         <h2 className="text-foreground text-balance text-3xl font-bold tracking-tight sm:text-4xl">
           Prêt à trouver votre binôme&nbsp;?
         </h2>
