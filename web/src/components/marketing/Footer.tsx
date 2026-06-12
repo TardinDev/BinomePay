@@ -46,6 +46,18 @@ export function Footer() {
 
         <p className="text-xs text-neutral-500">© 2026 BinomePay</p>
       </div>
+
+      <p className="mt-8 text-center text-xs text-neutral-500">
+        Créé par{' '}
+        <a
+          href="https://evoubap.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="focus-visible:ring-brand-yellow rounded text-neutral-400 transition-colors hover:text-neutral-200 focus-visible:outline-none focus-visible:ring-2"
+        >
+          evoubap.com
+        </a>
+      </p>
     </footer>
   )
 }
