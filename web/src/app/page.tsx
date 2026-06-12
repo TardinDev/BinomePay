@@ -20,6 +20,7 @@ const description =
 export const metadata: Metadata = {
   title,
   description,
+  alternates: { canonical: '/' },
   openGraph: {
     title,
     description,
@@ -34,9 +35,47 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Données structurées schema.org — lues par Google (rich results) et par les
+ * moteurs génératifs (ChatGPT, Perplexity…) pour citer correctement le service.
+ */
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://binomepay.com/#organization',
+      name: 'BinomePay',
+      url: 'https://binomepay.com',
+      logo: 'https://binomepay.com/icon.png',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://binomepay.com/#website',
+      name: 'BinomePay',
+      url: 'https://binomepay.com',
+      inLanguage: 'fr-FR',
+      publisher: { '@id': 'https://binomepay.com/#organization' },
+    },
+    {
+      '@type': 'MobileApplication',
+      name: 'BinomePay',
+      operatingSystem: 'ANDROID, IOS',
+      applicationCategory: 'FinanceApplication',
+      description,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+      publisher: { '@id': 'https://binomepay.com/#organization' },
+    },
+  ],
+}
+
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <MarketingNav />
       <main>
         <Hero />

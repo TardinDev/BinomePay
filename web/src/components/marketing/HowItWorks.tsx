@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { Reveal } from './Reveal'
 
 /**
  * Three-step explainer with photo illustrations. Server Component.
@@ -11,40 +12,44 @@ export function HowItWorks() {
       className="scroll-mt-20 border-y border-gray-800/60 bg-neutral-950 px-5 py-20 sm:py-24"
     >
       <div className="mx-auto max-w-6xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-foreground text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            Comment ça fonctionne
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-neutral-400">
-            Trois étapes, de la publication à l’échange.
-          </p>
-        </div>
+        <Reveal>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-foreground text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+              Comment ça fonctionne
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-neutral-400">
+              Trois étapes, de la publication à l’échange.
+            </p>
+          </div>
+        </Reveal>
 
         <ol className="mt-14 grid gap-6 md:grid-cols-3">
           {STEPS.map((step, i) => (
-            <li
-              key={step.title}
-              className="overflow-hidden rounded-2xl border border-gray-800 bg-neutral-900"
-            >
-              <div className="relative aspect-[3/2]">
-                <Image
-                  src={step.image}
-                  alt={step.imageAlt}
-                  fill
-                  sizes="(min-width: 768px) 33vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-7">
-                <span
-                  aria-hidden="true"
-                  className="bg-brand-yellow mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full text-base font-bold text-black"
-                >
-                  {i + 1}
-                </span>
-                <h3 className="text-foreground text-lg font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-400">{step.body}</p>
-              </div>
+            <li key={step.title}>
+              <Reveal
+                delay={i * 120}
+                className="h-full overflow-hidden rounded-2xl border border-gray-800 bg-neutral-900"
+              >
+                <div className="relative aspect-[3/2]">
+                  <Image
+                    src={step.image}
+                    alt={step.imageAlt}
+                    fill
+                    sizes="(min-width: 768px) 33vw, 100vw"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-7">
+                  <span
+                    aria-hidden="true"
+                    className="bg-brand-yellow mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full text-base font-bold text-black"
+                  >
+                    {i + 1}
+                  </span>
+                  <h3 className="text-foreground text-lg font-semibold">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-neutral-400">{step.body}</p>
+                </div>
+              </Reveal>
             </li>
           ))}
         </ol>

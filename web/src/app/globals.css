@@ -39,6 +39,19 @@ body {
 
 /* Force-dark: no light-mode fallback. */
 
+/* Apparition au scroll (composant Reveal) — masque puis révèle en douceur. */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* Accessibility: respect reduced-motion by neutralizing animation/transition. */
 @media (prefers-reduced-motion: reduce) {
   *,

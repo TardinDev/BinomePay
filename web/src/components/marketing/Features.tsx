@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Reveal } from './Reveal'
 
 /**
  * Feature grid — why BinomePay. Icons are inline SVG (no emoji, no raster).
@@ -8,28 +9,29 @@ export function Features() {
   return (
     <section className="px-5 py-20 sm:py-24">
       <div className="mx-auto max-w-6xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-foreground text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            Un change direct, pensé pour la confiance
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-neutral-400">
-            Pas de bureau de change, pas de commission opaque. Juste deux personnes dont les besoins
-            se complètent, mises en relation en toute sécurité.
-          </p>
-        </div>
+        <Reveal>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-foreground text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+              Un change direct, pensé pour la confiance
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-neutral-400">
+              Pas de bureau de change, pas de commission opaque. Juste deux personnes dont les
+              besoins se complètent, mises en relation en toute sécurité.
+            </p>
+          </div>
+        </Reveal>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map((f) => (
-            <article
-              key={f.title}
-              className="group rounded-2xl border border-gray-800 bg-neutral-900 p-6 transition-colors duration-200 hover:border-neutral-700"
-            >
-              <div className="ring-brand-yellow/15 bg-brand-yellow/10 text-brand-yellow flex h-11 w-11 items-center justify-center rounded-xl ring-1 ring-inset">
-                {f.icon}
-              </div>
-              <h3 className="text-foreground mt-5 text-base font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-400">{f.body}</p>
-            </article>
+          {FEATURES.map((f, i) => (
+            <Reveal key={f.title} delay={i * 100} className="h-full">
+              <article className="group h-full rounded-2xl border border-gray-800 bg-neutral-900 p-6 transition-colors duration-200 hover:border-neutral-700">
+                <div className="ring-brand-yellow/15 bg-brand-yellow/10 text-brand-yellow flex h-11 w-11 items-center justify-center rounded-xl ring-1 ring-inset">
+                  {f.icon}
+                </div>
+                <h3 className="text-foreground mt-5 text-base font-semibold">{f.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-400">{f.body}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { CtaLink } from './CtaLink'
+import { Reveal } from './Reveal'
 
 /**
  * Final conversion band. Server Component.
@@ -6,7 +7,7 @@ import { CtaLink } from './CtaLink'
 export function CTA() {
   return (
     <section className="px-5 py-20 sm:py-28">
-      <div className="mx-auto max-w-4xl rounded-3xl border border-gray-800 bg-neutral-900 px-6 py-14 text-center sm:px-12">
+      <Reveal className="mx-auto max-w-4xl rounded-3xl border border-gray-800 bg-neutral-900 px-6 py-14 text-center sm:px-12">
         <h2 className="text-foreground text-balance text-3xl font-bold tracking-tight sm:text-4xl">
           Prêt à trouver votre binôme&nbsp;?
         </h2>
@@ -24,7 +25,7 @@ export function CTA() {
         </div>
 
         <p className="mt-6 text-xs text-neutral-500">Également disponible sur Android et iOS.</p>
-      </div>
+      </Reveal>
     </section>
   )
 }

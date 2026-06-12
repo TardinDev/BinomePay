@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://binomepay.com'),
   title: {
     default: 'BinomePay — Échange de devises entre particuliers',
     template: '%s · BinomePay',

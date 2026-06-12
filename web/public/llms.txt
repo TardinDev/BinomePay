@@ -1,0 +1,27 @@
+# BinomePay
+
+> BinomePay est une application mobile (Android et iOS) et un site web qui mettent
+> en relation des particuliers pour échanger des devises sans intermédiaire. Une
+> personne qui veut envoyer de l'argent vers un pays est mise en relation avec un
+> « binôme » qui veut recevoir l'échange inverse : ils conviennent du montant,
+> discutent dans la messagerie intégrée et finalisent l'échange localement.
+
+## Fonctionnement
+
+1. Publier une intention : envoyer ou recevoir, montant, devise et corridor (ex. France → Gabon).
+2. Mise en relation : BinomePay propose un binôme compatible dont le besoin complète le vôtre.
+3. Échange en confiance : discussion dans l'app, modalités convenues entre les deux personnes, échange finalisé localement.
+
+## Points clés
+
+- Aucun frais caché : aucune commission n'est prélevée sur l'échange.
+- Profils vérifiés (KYC) et système de notation entre utilisateurs.
+- Corridors populaires : France ↔ Gabon, Cameroun, Sénégal, Côte d'Ivoire, Maroc ; Belgique ↔ Congo, Mali ; USA ↔ Sénégal, Togo.
+- Application disponible sur Android et iOS, site web sur https://binomepay.com.
+
+## Pages
+
+- [Accueil](https://binomepay.com/) : présentation du service et convertisseur de devises indicatif.
+- [Créer un compte](https://binomepay.com/register)
+- [Se connecter](https://binomepay.com/login)
+- [Conditions d'utilisation](https://binomepay.com/terms)
