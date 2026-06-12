@@ -12,7 +12,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="from-brand-yellow to-brand-yellow-soft focus-visible:ring-brand-yellow mt-2 inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-b px-6 text-sm font-semibold text-black transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+        className="bg-brand-yellow hover:bg-brand-yellow-soft focus-visible:ring-brand-yellow mt-2 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold text-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
       >
         Retour à l’accueil
       </Link>

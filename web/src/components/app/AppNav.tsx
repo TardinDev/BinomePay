@@ -78,7 +78,7 @@ export function AppNav({ unreadCount = 0 }: { unreadCount?: number }) {
           href="/app"
           className="focus-visible:ring-brand-yellow group mr-1 inline-flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-1 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
-          <span className="from-brand-yellow to-brand-yellow-soft flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br font-black text-black shadow-sm">
+          <span className="bg-brand-yellow flex h-8 w-8 items-center justify-center rounded-lg font-black text-black shadow-sm">
             B
           </span>
           <span className="text-foreground hidden text-base font-bold tracking-tight sm:inline">
@@ -124,7 +124,7 @@ export function AppNav({ unreadCount = 0 }: { unreadCount?: number }) {
           <Link
             href="/app/new-intention"
             className={cn(
-              'from-brand-yellow to-brand-yellow-soft inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-b px-3 py-2 text-sm font-semibold text-black shadow-sm transition-[transform,box-shadow]',
+              'bg-brand-yellow hover:bg-brand-yellow-soft inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-black shadow-sm transition-[transform,box-shadow]',
               'hover:shadow-md active:scale-[0.98]',
               'focus-visible:ring-brand-yellow outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black'
             )}

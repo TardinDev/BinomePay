@@ -8,12 +8,6 @@ import type { ReactNode } from 'react'
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-5 py-12">
-      {/* Ambient brand glow */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="bg-brand-yellow/10 absolute -top-32 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full blur-3xl" />
-        <div className="bg-brand-blue/10 absolute bottom-0 right-0 h-64 w-64 rounded-full blur-3xl" />
-      </div>
-
       <div className="w-full max-w-md">
         {/* Wordmark */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
@@ -21,7 +15,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             href="/"
             className="focus-visible:ring-brand-yellow group inline-flex items-center gap-2.5 rounded-xl px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
-            <span className="from-brand-yellow to-brand-yellow-soft flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br font-black text-black shadow-sm">
+            <span className="bg-brand-yellow flex h-9 w-9 items-center justify-center rounded-xl font-black text-black shadow-sm">
               B
             </span>
             <span className="text-foreground text-xl font-bold tracking-tight">
