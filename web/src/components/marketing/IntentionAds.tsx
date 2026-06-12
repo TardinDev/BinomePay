@@ -1,7 +1,7 @@
 /**
  * Liste d'intentions « vitrines » affichée dans la carte Mise en relation du hero.
  * Rotation automatique chaque semaine (déterministe, calculée au rendu serveur) :
- * France → Gabon est toujours affichée, seul son montant change ; les trois
+ * France → Gabon est toujours affichée, seul son montant change ; les huit
  * autres lignes tournent dans le pool ci-dessous. Aucune base de données.
  */
 
@@ -17,7 +17,7 @@ type IntentionAd = {
 /** Montants hebdomadaires pour France → Gabon. */
 const GABON_AMOUNTS = ['250 €', '300 €', '180 €', '350 €', '220 €', '400 €']
 
-/** Pool de rotation — la semaine 0 affiche les trois premières entrées. */
+/** Pool de rotation — la semaine 0 affiche les premières entrées. */
 const ROTATION: IntentionAd[] = [
   { type: 'RÉCEPTION', from: 'France', to: 'Cameroun', amount: '200 €' },
   { type: 'ENVOI', from: 'Belgique', to: 'Congo', amount: '250 €' },
@@ -27,6 +27,14 @@ const ROTATION: IntentionAd[] = [
   { type: 'ENVOI', from: 'USA', to: 'Togo', amount: '180 $' },
   { type: 'RÉCEPTION', from: 'France', to: 'Bénin', amount: '220 €' },
   { type: 'ENVOI', from: 'Belgique', to: 'Maroc', amount: '400 €' },
+  { type: 'ENVOI', from: 'Canada', to: 'Cameroun', amount: '480 $' },
+  { type: 'RÉCEPTION', from: 'France', to: 'Sénégal', amount: '120 €' },
+  { type: 'ENVOI', from: 'Allemagne', to: 'Togo', amount: '275 €' },
+  { type: 'RÉCEPTION', from: 'Espagne', to: 'Maroc', amount: '90 €' },
+  { type: 'ENVOI', from: 'Italie', to: 'Tunisie', amount: '340 €' },
+  { type: 'RÉCEPTION', from: 'France', to: 'Guinée', amount: '520 €' },
+  { type: 'ENVOI', from: 'Royaume-Uni', to: 'Nigeria', amount: '260 £' },
+  { type: 'RÉCEPTION', from: 'Suisse', to: 'RD Congo', amount: '430 CHF' },
 ]
 
 /** Lundi 2026-06-08 : semaine 0 de la rotation. */
@@ -45,13 +53,13 @@ export function weeklyIntentions(): IntentionAd[] {
     to: 'Gabon',
     amount: GABON_AMOUNTS[week % GABON_AMOUNTS.length],
   }
-  const others = [0, 1, 2].map((i) => ROTATION[(week * 3 + i) % ROTATION.length])
+  const others = Array.from({ length: 8 }, (_, i) => ROTATION[(week * 8 + i) % ROTATION.length])
   return [gabon, ...others]
 }
 
 export function IntentionAds() {
   return (
-    <ul className="divide-y divide-gray-800">
+    <ul className="max-h-72 divide-y divide-gray-800 overflow-y-auto overscroll-contain pr-2">
       {weeklyIntentions().map((ad) => (
         <li
           key={`${ad.from}-${ad.to}`}
